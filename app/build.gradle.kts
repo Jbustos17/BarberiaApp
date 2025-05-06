@@ -1,3 +1,5 @@
+import org.gradle.kotlin.dsl.implementation
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -51,6 +53,12 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.navigation.compose)
     implementation("io.coil-kt:coil-compose:2.7.0")
+    // Retrofit
+    implementation ("com.squareup.retrofit2:retrofit:2.9.0")
+    // Convertidor (Gson para manejar JSON automáticamente)
+    implementation ("com.squareup.retrofit2:converter-gson:2.9.0")
+    // Corrutinas para llamadas asincrónicas (si las estás usando)
+    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
