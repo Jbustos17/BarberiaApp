@@ -7,17 +7,31 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import androidx.navigation.NavType
 
-
 @Composable
 fun Navegacion(navController: NavHostController) {
     NavHost(navController = navController, startDestination = "servicios") {
+
+
+        //composable("administradores") {
+        //            AdministradorScreen()
+        //        }
+
+
         composable("servicios") {
             ServicioScreen()
         }
 
-        // Ejemplo de otra pantalla:
-        // composable("barberos") {
-        //     BarberoScreen()
-        // }
+        composable("barberos") {
+            BarberoScreen()
+        }
+
+        //composable("horarios") {
+         //   DisponibilidadScreen()
+        //}
+
+        //composable("reservas") {
+         //   ReservaScreen()
+       // }
     }
 }
+
