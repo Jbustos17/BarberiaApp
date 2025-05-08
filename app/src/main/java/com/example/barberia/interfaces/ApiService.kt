@@ -25,17 +25,23 @@ interface ApiService {
 
 
    //Servicios
-    @GET("/api/servicios")
-    suspend fun obtenerServicios(): List<Servicio>
+   @GET("servicios")
+   suspend fun obtenerServicios(): List<Servicio>
 
-    @GET("/api/servicios/{id}")
-    suspend fun obtenerServicio(@Path("id") id: Long): Servicio
+ @GET("servicios/{id}")
+ suspend fun obtenerServicio(@Path("id") id: Long): Servicio
 
-    @POST("/api/servicios")
-    suspend fun guardarServicio(@Body servicio: Servicio): Servicio
+ @POST("servicios")
+ suspend fun guardarServicio(
+  @Body servicio: Servicio,
+  @Query("idAdministrador") idAdmin: Long
+ ): Servicio
 
-    @DELETE("/api/servicios/{id}")
-    suspend fun eliminarServicio(@Path("id") id: Long)
+ @DELETE("servicios/{id}")
+ suspend fun eliminarServicio(
+  @Path("id") id: Long,
+  @Query("idAdministrador") idAdmin: Long
+ )
 
 
     //horariodisponible

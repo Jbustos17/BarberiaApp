@@ -21,18 +21,19 @@ class ServicioViewModel : ViewModel() {
         }
     }
 
-    fun guardarServicio(servicio: Servicio) {
+    fun guardarServicio(servicio: Servicio, idAdmin: Long) {
         viewModelScope.launch {
-            repository.guardarServicio(servicio)
+            repository.guardarServicio(servicio, idAdmin)
             cargarServicios()
         }
     }
 
-    fun eliminarServicio(id: Long) {
+    fun eliminarServicio(id: Long, idAdmin: Long) {
         viewModelScope.launch {
-            repository.eliminarServicio(id)
+            repository.eliminarServicio(id, idAdmin)
             cargarServicios()
         }
     }
+
 }
 

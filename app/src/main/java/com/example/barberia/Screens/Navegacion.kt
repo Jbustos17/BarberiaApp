@@ -8,47 +8,16 @@ import androidx.navigation.navArgument
 import androidx.navigation.NavType
 
 
-
 @Composable
-fun AppNavigation(navController: NavHostController) {
+fun Navegacion(navController: NavHostController) {
     NavHost(navController = navController, startDestination = "servicios") {
-
-        // Pantalla 1: Servicios
         composable("servicios") {
-            ServiciosScreen(navController)
+            ServicioScreen()
         }
 
-        // Pantalla 2: Barberos
-        composable("barberos") {
-            BarberosScreen(navController)
-        }
-
-        // Pantalla 3: Disponibilidad de Barbero
-        composable(
-            route = "disponibilidad/{nombreBarbero}",
-            arguments = listOf(
-                navArgument("nombreBarbero") {
-                    type = NavType.StringType
-                }
-            )
-        ) { backStackEntry ->
-            val nombreBarbero = backStackEntry.arguments?.getString("nombreBarbero") ?: ""
-            DisponibilidadScreen(navController, nombreBarbero)
-        }
-
-        // Pantalla 4: Reserva
-        composable(
-            route = "reserva/{nombreBarbero}/{dia}/{hora}",
-            arguments = listOf(
-                navArgument("nombreBarbero") { type = NavType.StringType },
-                navArgument("dia") { type = NavType.StringType },
-                navArgument("hora") { type = NavType.StringType }
-            )
-        ) { backStackEntry ->
-            val nombreBarbero = backStackEntry.arguments?.getString("nombreBarbero") ?: ""
-            val dia = backStackEntry.arguments?.getString("dia") ?: ""
-            val hora = backStackEntry.arguments?.getString("hora") ?: ""
-            ReservaScreen(navController, nombreBarbero, dia, hora)
-        }
+        // Ejemplo de otra pantalla:
+        // composable("barberos") {
+        //     BarberoScreen()
+        // }
     }
 }

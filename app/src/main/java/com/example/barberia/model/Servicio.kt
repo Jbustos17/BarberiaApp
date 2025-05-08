@@ -1,9 +1,10 @@
 package com.example.barberia.model
 
+import com.google.gson.annotations.SerializedName
 
 data class Servicio(
-    val id_servicio: Long,
-    val nombre: String,
-    val descripcion: String,
-    val precio: Double
+    @SerializedName("idServicio") val id: Long,
+    @SerializedName("nombreServicio") val nombre: String?,
+    @SerializedName("descripcion") val descripcion: String?
 )
+

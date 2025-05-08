@@ -13,12 +13,13 @@ class ServicioRepository {
         return RetrofitClient.apiService.obtenerServicio(id)
     }
 
-    suspend fun guardarServicio(servicio: Servicio): Servicio {
-        return RetrofitClient.apiService.guardarServicio(servicio)
+    suspend fun guardarServicio(servicio: Servicio, idAdmin: Long): Servicio {
+        return RetrofitClient.apiService.guardarServicio(servicio, idAdmin)
     }
 
-    suspend fun eliminarServicio(id: Long) {
-        RetrofitClient.apiService.eliminarServicio(id)
+    suspend fun eliminarServicio(id: Long, idAdmin: Long) {
+        RetrofitClient.apiService.eliminarServicio(id, idAdmin)
     }
+
 }
 
