@@ -1,9 +1,12 @@
 package com.example.barberia.model
 
+import com.google.gson.annotations.SerializedName
+
 data class Barbero(
-    val id_barbero: Long,
+    val id: Long,
     val nombre: String,
-    val especialidad: String,
+    val correo: String,
     val telefono: String,
-    val correo: String
+    val especialidad: String
 )
+

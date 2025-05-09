@@ -2,35 +2,38 @@ package com.example.barberia.ViewModel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.barberia.interfaces.RetrofitClient
 import com.example.barberia.model.Barbero
-import com.example.barberia.Repository.BarberoRepository
-import kotlinx.coroutines.launch
+import com.example.barberia.repository.BarberoRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 
 class BarberoViewModel : ViewModel() {
 
-    private val repository = BarberoRepository()
+    private val barberoRepository = BarberoRepository(RetrofitClient.apiService)
+
+    // ✅ Nuevo: MutableStateFlow para exponer los barberos
     private val _barberos = MutableStateFlow<List<Barbero>>(emptyList())
     val barberos: StateFlow<List<Barbero>> = _barberos
 
-    fun cargarBarberos() {
+    // Método para guardar un barbero
+    fun guardarBarbero(barbero: Barbero, idAdministrador: Long) {
         viewModelScope.launch {
-            _barberos.value = repository.obtenerBarberos()
+            val response = barberoRepository.guardarBarbero(barbero, idAdministrador)
+            if (response.isSuccessful) {
+                obtenerBarberos() // Recargar barberos después de guardar
+            }
         }
     }
 
-    fun agregarBarbero(barbero: Barbero) {
+    // ✅ Actualizado: ahora guarda en el StateFlow
+    fun obtenerBarberos() {
         viewModelScope.launch {
-            repository.guardarBarbero(barbero)
-            cargarBarberos()
-        }
-    }
-
-    fun eliminarBarbero(id: Long) {
-        viewModelScope.launch {
-            repository.eliminarBarbero(id)
-            cargarBarberos()
+            val response = barberoRepository.obtenerBarberos()
+            if (response.isSuccessful) {
+                _barberos.value = response.body() ?: emptyList()
+            }
         }
     }
 }

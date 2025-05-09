@@ -1,6 +1,7 @@
 package com.example.barberia.Screens
 
-
+import ServicioViewModel
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -8,17 +9,24 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.barberia.ViewModel.ServicioViewModel
+import androidx.navigation.NavHostController
 
 @Composable
-fun ServicioScreen(viewModel: ServicioViewModel = viewModel()) {
+fun ServicioScreen(
+    navController: NavHostController,
+    viewModel: ServicioViewModel = viewModel()
+) {
+    // Obtenemos la lista de servicios desde el ViewModel (asegurándose de usar StateFlow)
     val servicios by viewModel.servicios.collectAsState()
 
+    // Llamamos a cargar los servicios, asegurándonos de que se pase un idAdministrador correcto
     LaunchedEffect(Unit) {
-        viewModel.cargarServicios()
+        viewModel.cargarServicios(idAdministrador = 1L)  // Pasa el id correcto del administrador
     }
 
+    // Mostrar los servicios en la UI
     Column(modifier = Modifier.padding(16.dp)) {
         Text("Servicios", style = MaterialTheme.typography.headlineSmall)
 
@@ -28,10 +36,13 @@ fun ServicioScreen(viewModel: ServicioViewModel = viewModel()) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(8.dp)
+                        .clickable {
+                            navController.navigate("barberos")
+                        }
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text(text = "Nombre: ${servicio.nombre}")
-                        Text(text = "Descripción: ${servicio.descripcion}")
+                        Text(text = "Nombre: ${servicio.nombre ?: "No disponible"}")
+                        Text(text = "Descripción: ${servicio.descripcion ?: "No disponible"}")
                     }
                 }
             }

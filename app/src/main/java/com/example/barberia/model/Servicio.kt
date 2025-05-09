@@ -7,4 +7,3 @@ data class Servicio(
     @SerializedName("nombreServicio") val nombre: String?,
     @SerializedName("descripcion") val descripcion: String?
 )
-
