@@ -1,4 +1,4 @@
-package com.example.barberia.Screens
+package com.example.barberia.screens
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*

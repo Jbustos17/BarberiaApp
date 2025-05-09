@@ -1,5 +1,6 @@
-package com.example.barberia.ui.screens
+package com.example.barberia.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -9,23 +10,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import com.example.barberia.ViewModel.BarberoViewModel
+import com.example.barberia.viewmodel.BarberoViewModel
 import com.example.barberia.model.Barbero
 
 @Composable
 fun BarberoScreen(
-    navController: NavHostController,
+    navController: NavHostController, // Asegúrate de que esta línea esté presente
     viewModel: BarberoViewModel = viewModel()
 ) {
-    // Observa la lista de barberos
     val barberos by viewModel.barberos.collectAsState()
 
-    // Llama a obtenerBarberos una sola vez
     LaunchedEffect(Unit) {
         viewModel.obtenerBarberos()
     }
 
-    // UI
     Column(modifier = Modifier
         .fillMaxSize()
         .padding(16.dp)
@@ -38,18 +36,23 @@ fun BarberoScreen(
 
         LazyColumn {
             items(barberos) { barbero: Barbero ->
-                BarberoCard(barbero)
+                BarberoCard(barbero, navController)  // Pasamos el navController aquí
             }
         }
     }
 }
 
+
 @Composable
-fun BarberoCard(barbero: Barbero) {
+fun BarberoCard(barbero: Barbero, navController: NavHostController) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp),
+            .padding(vertical = 8.dp)
+            .clickable {
+                // Navegar a la pantalla de horarios, pasando el ID del barbero
+                navController.navigate("horarios/${barbero.id}")
+            },
         shape = MaterialTheme.shapes.medium,
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
@@ -61,3 +64,4 @@ fun BarberoCard(barbero: Barbero) {
         }
     }
 }
+

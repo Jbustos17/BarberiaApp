@@ -2,6 +2,7 @@ package com.example.barberia.interfaces
 
 import com.example.barberia.model.Administrador
 import com.example.barberia.model.Barbero
+import com.example.barberia.model.HorarioDisponible
 import com.example.barberia.model.Servicio
 import retrofit2.Response
 import retrofit2.http.Body
@@ -61,4 +62,33 @@ interface ApiService {
 
  @DELETE("/api/administradores/{id}")
  suspend fun eliminarAdministrador(@Path("id") id: Long)
-}
+
+
+  // Obtener los horarios de un barbero específico
+  @GET("/horarios")
+  suspend fun obtenerHorarios(
+   @Query("barberoId") barberoId: Long
+  ): List<HorarioDisponible>
+
+ @GET("/horarios/disponibles")
+ suspend fun obtenerHorariosDisponibles(
+  @Query("barberoId") barberoId: Long,
+  @Query("fecha") fecha: String // formato "yyyy-MM-dd"
+ ): List<String> // o List<LocalTime> si usas un adaptador de fecha/hora
+
+
+ // Obtener un horario específico por su ID
+  @GET("/horarios/{id}")
+  suspend fun obtenerHorario(@Path("id") id: Long): HorarioDisponible
+
+  // Guardar un nuevo horario
+  @POST("/horarios")
+  suspend fun guardarHorario(@Body horario: HorarioDisponible): HorarioDisponible
+
+  // Eliminar un horario por su ID
+  @DELETE("/horarios/{id}")
+  suspend fun eliminarHorario(@Path("id") id: Long)
+ }
+
+
+

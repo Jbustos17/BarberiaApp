@@ -1,4 +1,4 @@
-package com.example.barberia.Screens
+package com.example.barberia.screens
 
 import ServicioViewModel
 import androidx.compose.foundation.clickable
@@ -9,7 +9,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 

@@ -1,4 +1,4 @@
-package com.example.barberia.ViewModel
+package com.example.barberia.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
