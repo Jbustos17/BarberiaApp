@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import java.net.URLDecoder
 
 @Composable
 fun Navegacion(navController: NavHostController) {
@@ -13,24 +14,43 @@ fun Navegacion(navController: NavHostController) {
     ) {
         composable("inicio") { InicioScreen(navController) }
         composable("login") { LoginScreen(navController) }
+        composable("adminPanel") { AdminPanelScreen(navController) }
         composable("servicios") { ServicioScreen(navController) }
         composable("barberos") { BarberoScreen(navController) }
-        composable("horarios/{barberoId}") { backStackEntry ->
-            val barberoId = backStackEntry.arguments?.getString("barberoId")?.toLongOrNull()
-            if (barberoId != null) {
-                HorarioDisponibleScreen(barberoId = barberoId, navController = navController)
+
+        // Corregido: nombre del parámetro en minúscula
+        composable("horarios/{idBarbero}") { backStackEntry ->
+            val idBarbero = backStackEntry.arguments?.getString("idBarbero")?.toLongOrNull()
+            if (idBarbero != null) {
+                HorarioDisponibleScreen(idBarbero = idBarbero, navController = navController)
             }
         }
-        composable("reserva/{barberoId}/{fecha}/{hora}") { backStackEntry ->
-            val barberoId = backStackEntry.arguments?.getString("barberoId")?.toLongOrNull()
+
+        composable(
+            route = "reserva/{idBarbero}/{fecha}/{hora}/{servicioId}/{horarioDisponibleId}/{idAdministrador}"
+        ) { backStackEntry ->
+            // Extracción de parámetros con nombres consistentes
+            val idBarbero = backStackEntry.arguments?.getString("idBarbero")?.toLongOrNull()
             val fecha = backStackEntry.arguments?.getString("fecha")
-            val hora = backStackEntry.arguments?.getString("hora")
-            if (barberoId != null && fecha != null && hora != null) {
-                ReservaScreen(barberoId = barberoId, fecha = fecha, hora = hora, navController = navController)
+            val hora = backStackEntry.arguments?.getString("hora")?.let { URLDecoder.decode(it, "UTF-8") }
+            val servicioId = backStackEntry.arguments?.getString("servicioId")?.toLongOrNull()
+            val horarioDisponibleId = backStackEntry.arguments?.getString("horarioDisponibleId")?.toLongOrNull()
+            val idAdministrador = backStackEntry.arguments?.getString("idAdministrador")?.toLongOrNull()
+
+            if (
+                idBarbero != null && fecha != null && hora != null &&
+                servicioId != null && horarioDisponibleId != null && idAdministrador != null
+            ) {
+                ReservaScreen(
+                    idBarbero = idBarbero,
+                    fecha = fecha,
+                    hora = hora,
+                    servicioId = servicioId,
+                    horarioDisponibleId = horarioDisponibleId,
+                    idAdministrador = idAdministrador,
+                    navController = navController
+                )
             }
         }
     }
 }
-
-
-

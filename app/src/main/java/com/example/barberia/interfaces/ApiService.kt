@@ -2,7 +2,9 @@ package com.example.barberia.interfaces
 
 import com.example.barberia.model.Administrador
 import com.example.barberia.model.Barbero
+import com.example.barberia.model.Cliente
 import com.example.barberia.model.HorarioDisponible
+import com.example.barberia.model.Reserva
 import com.example.barberia.model.Servicio
 import retrofit2.Response
 import retrofit2.http.Body
@@ -63,32 +65,73 @@ interface ApiService {
  @DELETE("/api/administradores/{id}")
  suspend fun eliminarAdministrador(@Path("id") id: Long)
 
-
-  // Obtener los horarios de un barbero específico
   @GET("/horarios")
   suspend fun obtenerHorarios(
-   @Query("barberoId") barberoId: Long
+   @Query("idbarbero") idBarbero: Long // <--- minúscula
   ): List<HorarioDisponible>
 
- @GET("/horarios/disponibles")
- suspend fun obtenerHorariosDisponibles(
-  @Query("barberoId") barberoId: Long,
-  @Query("fecha") fecha: String // formato "yyyy-MM-dd"
- ): List<String> // o List<LocalTime> si usas un adaptador de fecha/hora
-
+  @GET("/horarios/disponibles")
+  suspend fun obtenerHorariosDisponibles(
+   @Query("idbarbero") idBarbero: Long, // <--- minúscula
+   @Query("fecha") fecha: String
+  ): List<String>
 
  // Obtener un horario específico por su ID
-  @GET("/horarios/{id}")
-  suspend fun obtenerHorario(@Path("id") id: Long): HorarioDisponible
+ @GET("/horarios/{id}")
+ suspend fun obtenerHorario(@Path("id") id: Long): HorarioDisponible
 
-  // Guardar un nuevo horario
-  @POST("/horarios")
-  suspend fun guardarHorario(@Body horario: HorarioDisponible): HorarioDisponible
+ // Guardar un nuevo horario
+ @POST("/horarios")
+ suspend fun guardarHorario(@Body horario: HorarioDisponible): HorarioDisponible
 
-  // Eliminar un horario por su ID
-  @DELETE("/horarios/{id}")
-  suspend fun eliminarHorario(@Path("id") id: Long)
- }
+ // Eliminar un horario por su ID
+ @DELETE("/horarios/{id}")
+ suspend fun eliminarHorario(@Path("id") id: Long)
 
+
+ @GET("/api/reservas")
+ suspend fun obtenerReservas(): List<Reserva>
+
+ @GET("/api/reservas/{id}")
+ suspend fun obtenerReserva(@Path("id") id: Long): Reserva
+
+
+ @POST("/reservas")
+ suspend fun guardarReserva(
+  @Body reserva: Reserva,
+  @Query("idAdministrador") idAdministrador: Long
+ ): retrofit2.Response<Reserva>
+
+
+ @DELETE("/reservas/{id}")
+ suspend fun eliminarReserva(
+  @Path("id") id: Long,
+  @Query("idAdministrador") idAdministrador: Long
+ )
+
+
+ @POST("/clientes")
+ suspend fun guardarCliente(
+  @Body cliente: Cliente,
+  @Query("idAdministrador") idAdministrador: Long
+ ): Cliente
+
+ @DELETE("/clientes/{id}")
+ suspend fun eliminarCliente(
+  @Path("id") id: Long,
+  @Query("idAdministrador") idAdministrador: Long
+ )
+
+
+ @GET("/clientes")
+ suspend fun obtenerClientes(): List<Cliente>
+
+ @GET("/clientes/{id}")
+ suspend fun obtenerCliente(@Path("id") id: Long): Cliente
+
+
+
+
+}
 
 

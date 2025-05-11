@@ -16,11 +16,11 @@ import io.github.boguszpawlowski.composecalendar.rememberSelectableCalendarState
 import io.github.boguszpawlowski.composecalendar.selection.SelectionMode
 import kotlinx.datetime.Clock
 import kotlinx.datetime.toLocalDateTime
-
+import java.net.URLEncoder
 
 @Composable
 fun HorarioDisponibleScreen(
-    barberoId: Long,
+    idBarbero: Long,
     navController: NavHostController,
     viewModel: HorarioDisponibleViewModel = viewModel()
 ) {
@@ -33,8 +33,8 @@ fun HorarioDisponibleScreen(
     val horasDisponibles by viewModel.horasDisponibles.collectAsState()
     var horaSeleccionada by remember { mutableStateOf<String?>(null) }
 
-    LaunchedEffect(barberoId, fechaSeleccionada) {
-        viewModel.cargarHorasDisponibles(barberoId, fechaSeleccionada)
+    LaunchedEffect(idBarbero, fechaSeleccionada) {
+        viewModel.cargarHorasDisponibles(idBarbero, fechaSeleccionada)
         horaSeleccionada = null
     }
 
@@ -100,12 +100,22 @@ fun HorarioDisponibleScreen(
 
         Button(
             onClick = {
-                navController.navigate("reserva/$barberoId/$fechaSeleccionada/$horaSeleccionada")
+                // Codifica la hora
+                val horaCodificada = URLEncoder.encode(horaSeleccionada, "UTF-8")
+                // Obtén los demás parámetros (ejemplo con valores hardcodeados para prueba)
+                val servicioId = 1L // Reemplaza con el valor real
+                val horarioDisponibleId = 1L // Reemplaza con el valor real
+                val idAdministrador = 1L // Reemplaza con el valor real
+
+                navController.navigate(
+                    "reserva/$idBarbero/$fechaSeleccionada/$horaCodificada/$servicioId/$horarioDisponibleId/$idAdministrador"
+                )
             },
             enabled = horaSeleccionada != null,
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Confirmar")
         }
+
     }
 }

@@ -10,7 +10,7 @@ import kotlinx.coroutines.launch
 
 class HorarioDisponibleViewModel : ViewModel() {
     private val repository = HorarioDisponibleRepository()
-    private var barberoId: Long? = null
+    private var idBarbero: Long? = null
 
     private val _horarios = MutableStateFlow<List<HorarioDisponible>>(emptyList())
     val horarios: StateFlow<List<HorarioDisponible>> = _horarios
@@ -18,30 +18,30 @@ class HorarioDisponibleViewModel : ViewModel() {
     private val _horasDisponibles = MutableStateFlow<List<String>>(emptyList())
     val horasDisponibles: StateFlow<List<String>> = _horasDisponibles
 
-    fun cargarHorarios(barberoId: Long) {
-        this.barberoId = barberoId
+    fun cargarHorarios(idBarbero: Long) {
+        this.idBarbero = idBarbero
         viewModelScope.launch {
-            _horarios.value = repository.obtenerHorarios(barberoId)
+            _horarios.value = repository.obtenerHorarios(idBarbero)
         }
     }
 
-    fun cargarHorasDisponibles(barberoId: Long, fecha: String) {
+    fun cargarHorasDisponibles(idBarbero: Long, fecha: String) {
         viewModelScope.launch {
-            _horasDisponibles.value = repository.obtenerHorariosDisponibles(barberoId, fecha)
+            _horasDisponibles.value = repository.obtenerHorariosDisponibles(idBarbero, fecha)
         }
     }
 
     fun guardarHorario(horario: HorarioDisponible) {
         viewModelScope.launch {
             repository.guardarHorario(horario)
-            barberoId?.let { cargarHorarios(it) }
+            idBarbero?.let { cargarHorarios(it) }
         }
     }
 
     fun eliminarHorario(id: Long) {
         viewModelScope.launch {
             repository.eliminarHorario(id)
-            barberoId?.let { cargarHorarios(it) }
+            idBarbero?.let { cargarHorarios(it) }
         }
     }
 }

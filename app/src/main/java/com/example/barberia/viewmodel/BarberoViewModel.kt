@@ -1,5 +1,6 @@
 package com.example.barberia.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.barberia.interfaces.RetrofitClient
@@ -27,13 +28,28 @@ class BarberoViewModel : ViewModel() {
         }
     }
 
-    // ✅ Actualizado: ahora guarda en el StateFlow
     fun obtenerBarberos() {
         viewModelScope.launch {
-            val response = barberoRepository.obtenerBarberos()
-            if (response.isSuccessful) {
-                _barberos.value = response.body() ?: emptyList()
+            try {
+                val response = barberoRepository.obtenerBarberos()
+                if (response.isSuccessful) {
+                    _barberos.value = response.body() ?: emptyList()
+                } else {
+                    Log.e("API", "Error obteniendo barberos: ${response.code()}")
+                }
+            } catch (e: Exception) {
+                Log.e("API", "Error fatal: ${e.printStackTrace()}")
             }
         }
     }
+
+    fun eliminarBarbero(id: Long, idAdministrador: Long) {
+        viewModelScope.launch {
+            val response = barberoRepository.eliminarBarbero(id, idAdministrador)
+            if (response.isSuccessful) {
+                obtenerBarberos() // Recarga la lista después de eliminar
+            }
+        }
+    }
+
 }

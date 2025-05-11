@@ -5,5 +5,5 @@ data class HorarioDisponible(
     val fecha: String,
     val horaInicio: String,
     val horaFin: String,
-    val barberoId: Long
+    val idBarbero: Long
 )

@@ -1,3 +1,5 @@
+import org.gradle.kotlin.dsl.implementation
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -58,7 +60,10 @@ dependencies {
     implementation("io.github.boguszpawlowski.composecalendar:composecalendar:1.4.0")
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.2") // última versión recomendada[3]
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.0") // última versión recomendada[1][5]
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+    implementation ("androidx.compose.material:material-icons-extended:1.5.3")
+// última versión recomendada[1][5]
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
