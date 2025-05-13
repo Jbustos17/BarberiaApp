@@ -1,4 +1,4 @@
-package com.example.barberia.Repository
+package com.example.barberia.repository
 
 
 import com.example.barberia.interfaces.RetrofitClient

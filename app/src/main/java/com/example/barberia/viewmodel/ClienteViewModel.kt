@@ -1,10 +1,10 @@
-package com.example.barberia.ViewModel
+package com.example.barberia.viewmodel
 
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.barberia.model.Cliente
-import com.example.barberia.Repository.ClienteRepository
+import com.example.barberia.repository.ClienteRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -22,17 +22,15 @@ class ClienteViewModel : ViewModel() {
         }
     }
 
-    fun guardarCliente(cliente: Cliente) {
+    suspend fun guardarCliente(cliente: Cliente, idAdministrador: Long): Cliente {
+        return repository.guardarCliente(cliente, idAdministrador)
+    }
+
+    fun eliminarCliente(id: Long, idAdministrador: Long) {
         viewModelScope.launch {
-            repository.guardarCliente(cliente)
+            repository.eliminarCliente(id, idAdministrador)
             cargarClientes()
         }
     }
 
-    fun eliminarCliente(id: Long) {
-        viewModelScope.launch {
-            repository.eliminarCliente(id)
-            cargarClientes()
-        }
-    }
 }

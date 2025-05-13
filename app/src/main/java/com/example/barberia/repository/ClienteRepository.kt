@@ -1,4 +1,4 @@
-package com.example.barberia.Repository
+package com.example.barberia.repository
 
 import com.example.barberia.interfaces.RetrofitClient
 import com.example.barberia.model.Cliente
@@ -13,11 +13,12 @@ class ClienteRepository {
         return RetrofitClient.apiService.obtenerCliente(id)
     }
 
-    suspend fun guardarCliente(cliente: Cliente): Cliente {
-        return RetrofitClient.apiService.guardarCliente(cliente)
+    suspend fun guardarCliente(cliente: Cliente, idAdministrador: Long): Cliente {
+        return RetrofitClient.apiService.guardarCliente(cliente, idAdministrador)
     }
 
-    suspend fun eliminarCliente(id: Long) {
-        RetrofitClient.apiService.eliminarCliente(id)
+    suspend fun eliminarCliente(id: Long, idAdministrador: Long) {
+        RetrofitClient.apiService.eliminarCliente(id, idAdministrador)
     }
+
 }

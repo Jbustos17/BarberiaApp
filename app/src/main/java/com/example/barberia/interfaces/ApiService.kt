@@ -5,104 +5,133 @@ import com.example.barberia.model.Barbero
 import com.example.barberia.model.Cliente
 import com.example.barberia.model.HorarioDisponible
 import com.example.barberia.model.Reserva
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
 import com.example.barberia.model.Servicio
-import retrofit2.http.*
+import retrofit2.Response
+import retrofit2.http.Body
+import retrofit2.http.DELETE
+import retrofit2.http.GET
+import retrofit2.http.POST
+import retrofit2.http.Path
+import retrofit2.http.Query
 
 interface ApiService {
-    @GET("/api/barberos")
-    suspend fun obtenerBarberos(): List<Barbero>
 
-    @GET("/api/barberos/{id}")
-    suspend fun obtenerBarbero(@Path("id") id: Long): Barbero
+ // Obtener lista de barberos
+ @GET("/barberos")
+ suspend fun obtenerBarberos(): Response<List<Barbero>>
 
-    @POST("/api/barberos")
-    suspend fun guardarBarbero(@Body barbero: Barbero): Barbero
+ @POST("/barberos")
+ suspend fun guardarBarbero(
+  @Body barbero: Barbero,
+  @Query("idAdministrador") idAdministrador: Long
+ ): Response<Barbero>
 
-    @DELETE("/api/barberos/{id}")
-    suspend fun eliminarBarbero(@Path("id") id: Long)
 
+ @DELETE("/barberos/{id}")
+ suspend fun eliminarBarbero(
+  @Path("id") id: Long,
+  @Query("idAdministrador") idAdministrador: Long
+ ): Response<Void>
 
-   //Servicios
-   @GET("servicios")
-   suspend fun obtenerServicios(): List<Servicio>
+ @GET("/servicios")
+ suspend fun obtenerServicios(
+  @Query("idAdministrador") idAdministrador: Long
+ ): Response<List<Servicio>>
 
- @GET("servicios/{id}")
- suspend fun obtenerServicio(@Path("id") id: Long): Servicio
-
- @POST("servicios")
+ // Guardar un servicio
+ @POST("/servicios")
  suspend fun guardarServicio(
   @Body servicio: Servicio,
-  @Query("idAdministrador") idAdmin: Long
- ): Servicio
+  @Query("idAdministrador") idAdministrador: Long
+ ): Response<Servicio>
 
- @DELETE("servicios/{id}")
+ // Eliminar un servicio
+ @DELETE("/servicios/{id}")
  suspend fun eliminarServicio(
   @Path("id") id: Long,
-  @Query("idAdministrador") idAdmin: Long
+  @Query("idAdministrador") idAdministrador: Long
+ ): Response<Void>
+
+
+ @GET("/api/administradores")
+ suspend fun obtenerAdministradores(): List<Administrador>
+
+ @GET("/api/administradores/{id}")
+ suspend fun obtenerAdministrador(@Path("id") id: Long): Administrador
+
+ @POST("/api/administradores")
+ suspend fun guardarAdministrador(@Body administrador: Administrador): Administrador
+
+ @DELETE("/api/administradores/{id}")
+ suspend fun eliminarAdministrador(@Path("id") id: Long)
+
+  @GET("/horarios")
+  suspend fun obtenerHorarios(
+   @Query("idbarbero") idBarbero: Long // <--- minúscula
+  ): List<HorarioDisponible>
+
+  @GET("/horarios/disponibles")
+  suspend fun obtenerHorariosDisponibles(
+   @Query("idbarbero") idBarbero: Long, // <--- minúscula
+   @Query("fecha") fecha: String
+  ): List<String>
+
+ // Obtener un horario específico por su ID
+ @GET("/horarios/{id}")
+ suspend fun obtenerHorario(@Path("id") id: Long): HorarioDisponible
+
+ // Guardar un nuevo horario
+ @POST("/horarios")
+ suspend fun guardarHorario(@Body horario: HorarioDisponible): HorarioDisponible
+
+ // Eliminar un horario por su ID
+ @DELETE("/horarios/{id}")
+ suspend fun eliminarHorario(@Path("id") id: Long)
+
+
+ @GET("/api/reservas")
+ suspend fun obtenerReservas(): List<Reserva>
+
+ @GET("/api/reservas/{id}")
+ suspend fun obtenerReserva(@Path("id") id: Long): Reserva
+
+
+ @POST("/reservas")
+ suspend fun guardarReserva(
+  @Body reserva: Reserva,
+  @Query("idAdministrador") idAdministrador: Long
+ ): retrofit2.Response<Reserva>
+
+
+ @DELETE("/reservas/{id}")
+ suspend fun eliminarReserva(
+  @Path("id") id: Long,
+  @Query("idAdministrador") idAdministrador: Long
  )
 
 
-    //horariodisponible
-    @GET("/api/horarios")
-    suspend fun obtenerHorarios(): List<HorarioDisponible>
+ @POST("/clientes")
+ suspend fun guardarCliente(
+  @Body cliente: Cliente,
+  @Query("idAdministrador") idAdministrador: Long
+ ): Cliente
 
-    @GET("/api/horarios/{id}")
-    suspend fun obtenerHorario(@Path("id") id: Long): HorarioDisponible
-
-    @POST("/api/horarios")
-    suspend fun guardarHorario(@Body horario: HorarioDisponible): HorarioDisponible
-
-    @DELETE("/api/horarios/{id}")
-    suspend fun eliminarHorario(@Path("id") id: Long)
-
-
-//cliente
-
-    @GET("/api/clientes")
-    suspend fun obtenerClientes(): List<Cliente>
-
-    @GET("/api/clientes/{id}")
-    suspend fun obtenerCliente(@Path("id") id: Long): Cliente
-
-    @POST("/api/clientes")
-    suspend fun guardarCliente(@Body cliente: Cliente): Cliente
-
-    @DELETE("/api/clientes/{id}")
-    suspend fun eliminarCliente(@Path("id") id: Long)
+ @DELETE("/clientes/{id}")
+ suspend fun eliminarCliente(
+  @Path("id") id: Long,
+  @Query("idAdministrador") idAdministrador: Long
+ )
 
 
-//Reserva
+ @GET("/clientes")
+ suspend fun obtenerClientes(): List<Cliente>
 
-    @GET("/api/reservas")
-    suspend fun obtenerReservas(): List<Reserva>
-
-    @GET("/api/reservas/{id}")
-    suspend fun obtenerReserva(@Path("id") id: Long): Reserva
-
-    @POST("/api/reservas")
-    suspend fun guardarReserva(@Body reserva: Reserva): Reserva
-
-    @DELETE("/api/reservas/{id}")
-    suspend fun eliminarReserva(@Path("id") id: Long)
+ @GET("/clientes/{id}")
+ suspend fun obtenerCliente(@Path("id") id: Long): Cliente
 
 
-    //administrador
-    @GET("/api/administradores")
-    suspend fun obtenerAdministradores(): List<Administrador>
-
-    @GET("/api/administradores/{id}")
-    suspend fun obtenerAdministrador(@Path("id") id: Long): Administrador
-
-    @POST("/api/administradores")
-    suspend fun guardarAdministrador(@Body administrador: Administrador): Administrador
-
-    @DELETE("/api/administradores/{id}")
-    suspend fun eliminarAdministrador(@Path("id") id: Long)
 
 
 }
-
 
 
