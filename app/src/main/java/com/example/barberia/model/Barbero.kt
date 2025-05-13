@@ -6,7 +6,9 @@ data class Barbero(
     val idBarbero: Long? = null,
     val nombre: String,
     val especialidad: String?,
-    val telefono: String?
+    val telefono: String?,
+    val usuario: String?,
+    val contraseña: String?
 ) {
     fun fotoResId(): Int = when (nombre.lowercase().trim()) {
         "andrés ramirez" -> R.drawable.foto_andres_ramirez

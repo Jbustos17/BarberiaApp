@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.barberia.model.Barbero
 import com.example.barberia.model.Servicio
@@ -30,8 +31,8 @@ import com.example.barberia.R
 @Composable
 fun AdminPanelScreen(
     navController: NavHostController,
-    barberoViewModel: BarberoViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
-    servicioViewModel: ServicioViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
+    barberoViewModel: BarberoViewModel = viewModel(),
+    servicioViewModel: ServicioViewModel = viewModel(),
     idAdministrador: Long = 1L
 ) {
     val tabTitles = listOf("Barberos", "Servicios")
@@ -301,7 +302,9 @@ fun BarberoDialog(
                             idBarbero = initialBarbero?.idBarbero,
                             nombre = nombre,
                             telefono = telefono,
-                            especialidad = especialidad
+                            especialidad = especialidad,
+                            usuario = TODO(),
+                            contraseña = TODO()
                         )
                     )
                 }
