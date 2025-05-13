@@ -18,7 +18,17 @@ fun Navegacion(navController: NavHostController) {
         composable("servicios") { ServicioScreen(navController) }
         composable("barberos") { BarberoScreen(navController) }
 
-        // Corregido: nombre del parámetro en minúscula
+        // Nuevo: login de barbero
+        composable("barberoLogin") { BarberoLoginScreen(navController) }
+
+        // Nuevo: panel de barbero con idBarbero como parámetro
+        composable("barberoPanel/{idBarbero}") { backStackEntry ->
+            val idBarbero = backStackEntry.arguments?.getString("idBarbero")?.toLongOrNull()
+            if (idBarbero != null) {
+                BarberoPanelScreen(idBarbero = idBarbero, navController = navController)
+            }
+        }
+
         composable("horarios/{idBarbero}") { backStackEntry ->
             val idBarbero = backStackEntry.arguments?.getString("idBarbero")?.toLongOrNull()
             if (idBarbero != null) {
@@ -29,7 +39,6 @@ fun Navegacion(navController: NavHostController) {
         composable(
             route = "reserva/{idBarbero}/{fecha}/{hora}/{servicioId}/{horarioDisponibleId}/{idAdministrador}"
         ) { backStackEntry ->
-            // Extracción de parámetros con nombres consistentes
             val idBarbero = backStackEntry.arguments?.getString("idBarbero")?.toLongOrNull()
             val fecha = backStackEntry.arguments?.getString("fecha")
             val hora = backStackEntry.arguments?.getString("hora")?.let { URLDecoder.decode(it, "UTF-8") }
