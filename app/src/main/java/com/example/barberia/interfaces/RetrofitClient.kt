@@ -27,4 +27,9 @@ object RetrofitClient {
             .build()
             .create(ApiService::class.java)
     }
+<<<<<<< HEAD
+
 }
+=======
+}
+>>>>>>> df850e16c6be315159ca7d97ed8a34942d239c39

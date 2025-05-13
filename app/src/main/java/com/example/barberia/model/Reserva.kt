@@ -28,3 +28,5 @@ data class Reserva(
     @SerializedName("celularCliente") val celularCliente: String,
     @SerializedName("correoCliente") val correoCliente: String
 )
+
+

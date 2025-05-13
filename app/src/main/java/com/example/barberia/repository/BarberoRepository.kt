@@ -18,4 +18,5 @@ class BarberoRepository(private val apiService: ApiService) {
     suspend fun eliminarBarbero(id: Long, idAdministrador: Long): Response<Void> {
         return apiService.eliminarBarbero(id, idAdministrador)
     }
+
 }
