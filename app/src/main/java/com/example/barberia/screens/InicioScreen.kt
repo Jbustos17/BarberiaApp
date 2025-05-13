@@ -1,5 +1,6 @@
 package com.example.barberia.screens
 
+import android.util.Log
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -167,16 +168,21 @@ fun InicioScreen(navController: NavHostController) {
                 Text("Soy Cliente", fontSize = 18.sp, fontWeight = FontWeight.Medium)
             }
             Spacer(modifier = Modifier.height(16.dp))
-            Button(
-                onClick = { navController.navigate("barberoLogin") },
-                colors = ButtonDefaults.buttonColors(containerColor = AzulClaroBarberia),
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
-            ) {
-                Text("Soy Barbero", fontSize = 18.sp, fontWeight = FontWeight.Medium)
-            }
+
+                    Button(
+                        onClick = {
+                            Log.d("BarberoDebug", "Botón 'Soy Barbero' presionado")
+                            navController.navigate("barberoLogin")
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = AzulClaroBarberia),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp)
+                    ) {
+                        Text("Soy Barbero", fontSize = 18.sp, fontWeight = FontWeight.Medium)
+                    }
+
         }
     }
 }

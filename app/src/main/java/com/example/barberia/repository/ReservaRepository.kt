@@ -1,13 +1,18 @@
 package com.example.barberia.repository
 
 import com.example.barberia.interfaces.RetrofitClient
+import com.example.barberia.interfaces.RetrofitClient.apiService
 import com.example.barberia.model.Reserva
 
 class ReservaRepository {
 
-    suspend fun obtenerReservas(): List<Reserva> {
+    /*suspend fun obtenerReservas(): List<Reserva> {
         return RetrofitClient.apiService.obtenerReservas()
+    }*/
+    suspend fun obtenerReservas(): List<Reserva> {
+        return apiService.obtenerReservas()
     }
+
 
     suspend fun obtenerReserva(id: Long): Reserva {
         return RetrofitClient.apiService.obtenerReserva(id)
@@ -19,5 +24,8 @@ class ReservaRepository {
 
     suspend fun eliminarReserva(id: Long, idAdministrador: Long) {
         RetrofitClient.apiService.eliminarReserva(id, idAdministrador)
+    }
+    suspend fun obtenerReservasPorBarbero(idBarbero: Long): List<Reserva> {
+        return apiService.obtenerReservasPorBarbero(idBarbero)
     }
 }

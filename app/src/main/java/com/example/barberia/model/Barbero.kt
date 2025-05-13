@@ -1,6 +1,7 @@
 package com.example.barberia.model
 
 import com.example.barberia.R
+import com.google.gson.annotations.SerializedName
 
 data class Barbero(
     val idBarbero: Long? = null,
@@ -8,7 +9,7 @@ data class Barbero(
     val especialidad: String?,
     val telefono: String?,
     val usuario: String?,
-    val contraseña: String?
+    @SerializedName("contraseña") val contrasenia: String
 ) {
     fun fotoResId(): Int = when (nombre.lowercase().trim()) {
         "andrés ramirez" -> R.drawable.foto_andres_ramirez

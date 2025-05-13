@@ -63,8 +63,3 @@ fun Navegacion(navController: NavHostController) {
         }
     }
 }
-
-@Composable
-fun BarberoPanelScreen(idBarbero: Long, navController: NavHostController) {
-
-}

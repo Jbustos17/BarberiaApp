@@ -2,37 +2,42 @@ package com.example.barberia.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.content.MediaType.Companion.Text
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.barberia.viewmodel.ReservaViewModel
+import com.example.barberia.model.Reserva
+import com.example.barberia.model.Servicio
+import com.example.barberia.viewmodel.BarberoViewModel
+import com.example.barberia.viewmodel.ServicioViewModel
 
 @Composable
 fun BarberoPanelScreen(
     idBarbero: Long,
     navController: NavHostController,
-    reservaViewModel: ReservaViewModel = viewModel()
+    reservaViewModel: ReservaViewModel = viewModel(),
+    barberoViewModel: BarberoViewModel = viewModel()
 ) {
-    val reservas by reservaViewModel.reservasPorBarbero(idBarbero).collectAsState(initial = emptyList())
+    // Cargar reservas y datos del barbero
+    val reservas by reservaViewModel.reservas.collectAsState()
+    val barberos by barberoViewModel.barberos.collectAsState()
+    val barbero = barberos.find { it.idBarbero == idBarbero }
 
+    // Efecto para cargar datos al entrar
     LaunchedEffect(idBarbero) {
+        barberoViewModel.obtenerBarberos()
         reservaViewModel.cargarReservasPorBarbero(idBarbero)
     }
 
@@ -44,24 +49,35 @@ fun BarberoPanelScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp)
+                .padding(20.dp)
         ) {
+            // Header
             Text(
-                "Mis Reservas",
-                style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+                text = "Panel de ${barbero?.nombre ?: "Barbero"}",
+                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
                 color = AzulBarberi,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp),
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                modifier = Modifier.padding(bottom = 8.dp)
             )
+            if (!barbero?.especialidad.isNullOrBlank()) {
+                Text(
+                    text = barbero?.especialidad ?: "",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.Gray,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+            }
 
+            // Lista de reservas
             if (reservas.isEmpty()) {
                 Box(
-                    modifier = Modifier.fillMaxSize(),
+                    Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("No tienes reservas asignadas.", color = Color.Gray)
+                    Text(
+                        "No tienes reservas asignadas.",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = Color.Gray
+                    )
                 }
             } else {
                 LazyColumn(
@@ -69,21 +85,53 @@ fun BarberoPanelScreen(
                     modifier = Modifier.fillMaxSize()
                 ) {
                     items(reservas) { reserva ->
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(14.dp),
-                            elevation = CardDefaults.cardElevation(6.dp)
-                        ) {
-                            Column(Modifier.padding(16.dp)) {
-                                Text("Cliente: ${reserva.nombreCliente}", fontWeight = FontWeight.Bold)
-                                Text("Fecha: ${reserva.fecha}")
-                                Text("Hora: ${reserva.hora}")
-                                Text("Servicio: ${reserva.servicio?.nombre ?: "N/A"}")
-                            }
-                        }
+                        ReservaCard(reserva)
                     }
                 }
             }
         }
     }
 }
+
+@Composable
+fun ReservaCard(reserva: Reserva) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(4.dp)
+    ) {
+        Column(Modifier.padding(16.dp)) {
+            Text(
+                text = "Cliente: ${reserva.nombreCliente}",
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = "Servicio: ${reserva.servicio.idServicio}",
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Text(
+                text = "Fecha y hora: ${obtenerFechaHora(reserva)}",
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = "Celular: ${reserva.celularCliente}",
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.Gray
+            )
+            Text(
+                text = "Correo: ${reserva.correoCliente}",
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.Gray
+            )
+        }
+    }
+}
+
+// Utilidad para mostrar la fecha y hora legible
+fun obtenerFechaHora(reserva: Reserva): String {
+    // Aquí deberías obtener la fecha y hora real desde el objeto HorarioDisponible si lo necesitas
+    return "ID Horario: ${reserva.horarioDisponible.idHorario}"
+}
+

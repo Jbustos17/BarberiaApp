@@ -19,6 +19,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -283,6 +284,10 @@ fun BarberoDialog(
     var nombre by remember { mutableStateOf(initialBarbero?.nombre ?: "") }
     var telefono by remember { mutableStateOf(initialBarbero?.telefono ?: "") }
     var especialidad by remember { mutableStateOf(initialBarbero?.especialidad ?: "") }
+    var usuario by remember { mutableStateOf(initialBarbero?.usuario ?: "") }
+    var contrasenia by remember { mutableStateOf(initialBarbero?.contrasenia ?: "") }
+
+
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -292,19 +297,40 @@ fun BarberoDialog(
                 OutlinedTextField(value = nombre, onValueChange = { nombre = it }, label = { Text("Nombre") })
                 OutlinedTextField(value = telefono, onValueChange = { telefono = it }, label = { Text("Teléfono") })
                 OutlinedTextField(value = especialidad, onValueChange = { especialidad = it }, label = { Text("Especialidad") })
+                OutlinedTextField(
+                    value = usuario,
+                    onValueChange = { usuario = it },
+                    label = { Text("Usuario") },
+                    singleLine = true,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 12.dp)
+                )
+
+                OutlinedTextField(
+                    value = contrasenia,
+                    onValueChange = { contrasenia = it },
+                    label = { Text("Contraseña") },
+                    singleLine = true,
+                    visualTransformation = PasswordVisualTransformation(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 12.dp)
+                )
+
             }
         },
         confirmButton = {
             Button(onClick = {
-                if (nombre.isNotBlank() && telefono.isNotBlank() && especialidad.isNotBlank()) {
+                if (nombre.isNotBlank() && telefono.isNotBlank() && especialidad.isNotBlank() && usuario.isNotBlank() && contrasenia.isNotBlank()) {
                     onSave(
                         Barbero(
                             idBarbero = initialBarbero?.idBarbero,
                             nombre = nombre,
                             telefono = telefono,
                             especialidad = especialidad,
-                            usuario = TODO(),
-                            contraseña = TODO()
+                            usuario = usuario,
+                            contrasenia = contrasenia
                         )
                     )
                 }

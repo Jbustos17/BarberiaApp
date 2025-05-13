@@ -1,5 +1,6 @@
 package com.example.barberia.screens
 
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
@@ -62,8 +63,6 @@ fun BarberoLoginScreen(
             .fillMaxSize()
             .background(GrisClaro)
     ) {
-        // Puedes usar el mismo Canvas decorativo que en LoginScreen
-
         Column(
             modifier = Modifier
                 .align(Alignment.Center)
@@ -120,14 +119,23 @@ fun BarberoLoginScreen(
             Button(
                 onClick = {
                     pressed = true
+
+                    // LOGS PARA DEPURAR
+                    barberos.forEach {
+                        Log.d("BarberoDebug", "Barbero cargado -> Usuario: ${it.usuario}, Contraseña: ${it.contrasenia}")
+                    }
+                    Log.d("BarberoDebug", "Ingresado -> Usuario: $usuario, Contraseña: $contrasenia")
+
                     val barberoMatch = barberos.find {
-                        it.usuario == usuario && it.contraseña == contrasenia
+                        it.usuario?.trim() == usuario.trim() && it.contrasenia?.trim() == contrasenia.trim()
                     }
                     if (barberoMatch != null) {
+                        Log.d("BarberoDebug", "Login exitoso para barbero ID: ${barberoMatch.idBarbero}")
                         navController.navigate("barberoPanel/${barberoMatch.idBarbero}") {
                             popUpTo("barberoLogin") { inclusive = true }
                         }
                     } else {
+                        Log.d("BarberoDebug", "Credenciales incorrectas")
                         error = true
                     }
                 },

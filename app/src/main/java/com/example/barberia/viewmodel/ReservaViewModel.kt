@@ -59,4 +59,17 @@ class ReservaViewModel : ViewModel() {
             cargarReservas()
         }
     }
+    fun cargarReservasPorBarbero(idBarbero: Long) {
+        viewModelScope.launch {
+            try {
+                val reservas = repository.obtenerReservasPorBarbero(idBarbero)
+                _reservas.value = reservas
+            } catch (e: Exception) {
+                // Manejo de error
+            }
+        }
+    }
+
+
 }
+
