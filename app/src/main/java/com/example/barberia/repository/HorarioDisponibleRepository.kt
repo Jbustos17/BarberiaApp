@@ -10,8 +10,8 @@ class HorarioDisponibleRepository {
         return try {
             RetrofitClient.apiService.obtenerHorarios(idBarbero)
         } catch (e: Exception) {
-            // Maneja el error de red o cualquier otra excepción
-            emptyList() // Retorna una lista vacía si ocurre un error
+
+            emptyList()
         }
     }
 
@@ -19,12 +19,12 @@ class HorarioDisponibleRepository {
         return RetrofitClient.apiService.obtenerHorariosDisponibles(idBarbero, fecha)
     }
 
-    // Obtiene un horario específico por su ID
+
     suspend fun obtenerHorario(id: Long): HorarioDisponible? {
         return try {
             RetrofitClient.apiService.obtenerHorario(id)
         } catch (e: Exception) {
-            null // Retorna null si ocurre un error
+            null
         }
     }
 
@@ -33,17 +33,17 @@ class HorarioDisponibleRepository {
         return try {
             RetrofitClient.apiService.guardarHorario(horario)
         } catch (e: Exception) {
-            null // Retorna null si ocurre un error
+            null
         }
     }
 
-    // Elimina un horario específico por su ID
+
     suspend fun eliminarHorario(id: Long): Boolean {
         return try {
             RetrofitClient.apiService.eliminarHorario(id)
-            true // Retorna true si se eliminó correctamente
+            true
         } catch (e: Exception) {
-            false // Retorna false si ocurre un error
+            false
         }
     }
 }

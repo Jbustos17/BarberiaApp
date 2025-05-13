@@ -10,10 +10,15 @@ lifecycleViewmodelCompose = "2.9.0"
 activityCompose = "1.10.1"
 composeBom = "2024.09.00"
 navigationCompose = "2.9.0"
-composeUi = "1.5.1"
+composeUi = "1.6.0"
+composeFoundation = "1.6.0"
+composeMaterial = "1.6.0"
 material3 = "1.2.0"
 composeCalendar = "1.4.0"
 kotlinxDatetime = "0.6.2"
+coilCompose = "2.4.0"
+retrofit = "2.9.0"
+okhttpLogging = "4.12.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -32,9 +37,16 @@ androidx-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-toolin
 androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest", version.ref = "composeUi" }
 androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4", version.ref = "composeUi" }
 androidx-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3" }
+androidx-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "composeFoundation" }
+androidx-material = { group = "androidx.compose.material", name = "material", version.ref = "composeMaterial" }
+androidx-ui-text = { group = "androidx.compose.ui", name = "ui-text", version.ref = "composeUi" }
+
 compose-calendar = { group = "io.github.boguszpawlowski.composecalendar", name = "composecalendar", version.ref = "composeCalendar" }
-compose-calendar-datetime = { group = "io.github.boguszpawlowski.composecalendar", name = "kotlinx-datetime", version.ref = "composeCalendar"}
 kotlinx-datetime = { group = "org.jetbrains.kotlinx", name = "kotlinx-datetime", version.ref = "kotlinxDatetime" }
+coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coilCompose" }
+retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
+retrofit-gson = { group = "com.squareup.retrofit2", name = "converter-gson", version.ref = "retrofit" }
+okhttp-logging = { group = "com.squareup.okhttp3", name = "logging-interceptor", version.ref = "okhttpLogging" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

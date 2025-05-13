@@ -14,16 +14,16 @@ class BarberoViewModel : ViewModel() {
 
     private val barberoRepository = BarberoRepository(RetrofitClient.apiService)
 
-    // ✅ Nuevo: MutableStateFlow para exponer los barberos
+
     private val _barberos = MutableStateFlow<List<Barbero>>(emptyList())
     val barberos: StateFlow<List<Barbero>> = _barberos
 
-    // Método para guardar un barbero
+
     fun guardarBarbero(barbero: Barbero, idAdministrador: Long) {
         viewModelScope.launch {
             val response = barberoRepository.guardarBarbero(barbero, idAdministrador)
             if (response.isSuccessful) {
-                obtenerBarberos() // Recargar barberos después de guardar
+                obtenerBarberos()
             }
         }
     }
@@ -47,7 +47,7 @@ class BarberoViewModel : ViewModel() {
         viewModelScope.launch {
             val response = barberoRepository.eliminarBarbero(id, idAdministrador)
             if (response.isSuccessful) {
-                obtenerBarberos() // Recarga la lista después de eliminar
+                obtenerBarberos()
             }
         }
     }

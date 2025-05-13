@@ -1,5 +1,6 @@
 package com.example.barberia.screens
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -8,9 +9,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.*
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -19,30 +19,92 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.barberia.R
 
+val AzulBarberi = Color(0xFF004A93)
+val AmarilloBarberia = Color(0xFFF3CF54)
+val DoradoBarberia = Color(0xFFFABA2D)
+val AzulClaroBarberia = Color(0xFF147EE0)
+val AzulOscuroBarberia = Color(0xFF004A93)
+val GrisClaro = Color(0xFFF3F4F8)
 
 @Composable
 fun InicioScreen(navController: NavHostController) {
-    // Define los colores personalizados
-        val azulBarberia = Color(red = 0, green = 74, blue = 147)
-    val grisBarberia = Color(0xFFBBB9B9) // Gris claro, puedes ajustar el tono
-
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(
-                        Color(0xFF232526), // Color superior del gradiente
-                        Color(0xFF414345)  // Color inferior del gradiente
+            .background(GrisClaro)
+    ) {
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            drawPath(
+                path = Path().apply {
+                    moveTo(0f, 0f)
+                    lineTo(size.width * 0.2f, 0f)
+                    cubicTo(
+                        size.width * 0.05f, size.height * 0.18f,
+                        size.width * 0.18f, size.height * 0.13f,
+                        0f, size.height * 0.25f
                     )
+                    close()
+                },
+                brush = Brush.linearGradient(
+                    colors = listOf(AmarilloBarberia, DoradoBarberia)
                 )
             )
-    ) {
+
+            drawPath(
+                path = Path().apply {
+                    moveTo(0f, size.height)
+                    lineTo(0f, size.height * 0.8f)
+                    cubicTo(
+                        size.width * 0.18f, size.height * 0.95f,
+                        size.width * 0.13f, size.height * 0.82f,
+                        size.width * 0.25f, size.height
+                    )
+                    close()
+                },
+                brush = Brush.linearGradient(
+                    colors = listOf(AzulClaroBarberia, AzulOscuroBarberia)
+                )
+            )
+
+            drawPath(
+                path = Path().apply {
+                    moveTo(size.width, 0f)
+                    lineTo(size.width * 0.8f, 0f)
+                    cubicTo(
+                        size.width * 0.95f, size.height * 0.18f,
+                        size.width * 0.82f, size.height * 0.13f,
+                        size.width, size.height * 0.25f
+                    )
+                    close()
+                },
+                brush = Brush.linearGradient(
+                    colors = listOf(AzulClaroBarberia,AzulOscuroBarberia )
+                )
+            )
+
+            drawPath(
+                path = Path().apply {
+                    moveTo(size.width, size.height)
+                    lineTo(size.width, size.height * 0.8f)
+                    cubicTo(
+                        size.width * 0.95f, size.height * 0.82f,
+                        size.width * 0.82f, size.height * 0.95f,
+                        size.width * 0.75f, size.height
+                    )
+                    close()
+                },
+                brush = Brush.linearGradient(
+                    colors = listOf(AmarilloBarberia.copy(alpha = 0.7f), DoradoBarberia.copy(alpha = 0.7f))
+                )
+            )
+        }
+
+
         Column(
             modifier = Modifier
                 .align(Alignment.Center)
                 .padding(16.dp)
-                .shadow(8.dp, RoundedCornerShape(24.dp))
+                .clip(RoundedCornerShape(24.dp))
                 .background(Color.White.copy(alpha = 0.97f), RoundedCornerShape(24.dp))
                 .padding(horizontal = 32.dp, vertical = 48.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -52,7 +114,7 @@ fun InicioScreen(navController: NavHostController) {
                 painter = painterResource(id = R.drawable.logo_barberia),
                 contentDescription = "Logo",
                 modifier = Modifier
-                    .size(300.dp)
+                    .size(320.dp)
                     .padding(bottom = 12.dp)
             )
 
@@ -60,7 +122,7 @@ fun InicioScreen(navController: NavHostController) {
                 "Bienvenido a Kalu Barberia",
                 style = MaterialTheme.typography.headlineMedium.copy(
                     fontWeight = FontWeight.Bold,
-                    color = azulBarberia,
+                    color = AzulBarberi,
                     fontSize = 32.sp
                 ),
                 modifier = Modifier
@@ -72,7 +134,7 @@ fun InicioScreen(navController: NavHostController) {
             Text(
                 "¡Reserva tu corte o administra tu negocio fácil y rápido!",
                 style = MaterialTheme.typography.bodyLarge.copy(
-                    color = Color(0xFF404040), // Gris oscuro recomendado[3]
+                    color = Color(0xFF2F2F2F),
                     fontSize = 18.sp
                 ),
                 modifier = Modifier
@@ -83,7 +145,7 @@ fun InicioScreen(navController: NavHostController) {
 
             Button(
                 onClick = { navController.navigate("login") },
-                colors = ButtonDefaults.buttonColors(containerColor = grisBarberia),
+                colors = ButtonDefaults.buttonColors(containerColor = AmarilloBarberia),
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -96,7 +158,7 @@ fun InicioScreen(navController: NavHostController) {
 
             Button(
                 onClick = { navController.navigate("servicios") },
-                colors = ButtonDefaults.buttonColors(containerColor = azulBarberia),
+                colors = ButtonDefaults.buttonColors(containerColor = AzulBarberi),
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier
                     .fillMaxWidth()

@@ -1,5 +1,6 @@
 package com.example.barberia.screens
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -13,7 +14,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.*
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -35,46 +37,78 @@ fun BarberoScreen(
 
     LaunchedEffect(Unit) { viewModel.obtenerBarberos() }
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF5F5F5))
-            .padding(16.dp)
+            .background(GrisClaro)
     ) {
-        Text(
-            text = "Selecciona a un profesional del equipo",
-            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
 
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
-            verticalArrangement = Arrangement.spacedBy(20.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = Modifier.fillMaxSize()
+        Canvas(modifier = Modifier.fillMaxSize()) {
+
+            drawCircle(
+                color = DoradoBarberia.copy(alpha = 0.18f),
+                center = Offset(size.width * 0.85f, size.height * 0.97f),
+                radius = size.width * 0.11f
+            )
+            drawCircle(
+                color = AzulClaroBarberia.copy(alpha = 0.13f),
+                center = Offset(size.width * 0.18f, size.height * 0.92f),
+                radius = size.width * 0.08f
+            )
+            // Línea diagonal abajo
+            drawLine(
+                color = AzulBarberi,
+                start = Offset(0f, size.height),
+                end = Offset(size.width * 0.8f, size.height * 0.82f),
+                strokeWidth = 38f
+            )
+        }
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
         ) {
-            // Opción especial: Cualquier profesional
-            item {
-                BarberoCardEspecial(
-                    nombre = "Cualquier profesional",
-                    descripcion = "Máxima disponibilidad",
-                    iconRes = R.drawable.ic_random, // Usa tu icono de "aleatorio"
-                    onClick = { navController.navigate("horarios/0") }
-                )
-            }
-            // Barberos reales (con clave única)
-            items(
-                barberos,
-                key = { it.idBarbero }
-            ) { barbero ->
-                BarberoCardPersonalizado(
-                    barbero = barbero,
-                    onClick = { navController.navigate("horarios/${barbero.idBarbero}") }
-                )
+            Text(
+                text = "Selecciona a un profesional del equipo",
+                style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+                color = AzulBarberi,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            )
+
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                verticalArrangement = Arrangement.spacedBy(20.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier.fillMaxSize()
+            ) {
+
+                item {
+                    BarberoCardEspecial(
+                        nombre = "Cualquier profesional",
+                        descripcion = "Máxima disponibilidad",
+                        iconRes = R.drawable.ic_random, // Usa tu icono de "aleatorio"
+                        onClick = { navController.navigate("horarios/0") }
+                    )
+                }
+
+                items(
+                    barberos,
+                    key = { it.idBarbero!! }
+                ) { barbero ->
+                    BarberoCardPersonalizado(
+                        barbero = barbero,
+                        onClick = { navController.navigate("horarios/${barbero.idBarbero}") }
+                    )
+                }
             }
         }
     }
 }
+
 
 @Composable
 fun BarberoCardPersonalizado(

@@ -105,7 +105,7 @@ fun AdminPanelScreen(
                         barberoToEdit = it
                         showBarberoDialog = true
                     },
-                    onDelete = { barberoViewModel.eliminarBarbero(it.idBarbero, idAdministrador) }
+                    onDelete = { barberoViewModel.eliminarBarbero(it.idBarbero!!, idAdministrador) }
                 )
                 1 -> ServiciosTab(
                     servicios = servicios,
@@ -113,12 +113,12 @@ fun AdminPanelScreen(
                         servicioToEdit = it
                         showServicioDialog = true
                     },
-                    onDelete = { servicioViewModel.eliminarServicio(it.id, idAdministrador) }
+                    onDelete = { servicioViewModel.eliminarServicio(it.id!!, idAdministrador) }
                 )
             }
         }
 
-        // Diálogo para agregar/editar barbero
+
         if (showBarberoDialog) {
             BarberoDialog(
                 initialBarbero = barberoToEdit,
@@ -137,7 +137,7 @@ fun AdminPanelScreen(
             )
         }
 
-        // Diálogo para agregar/editar servicio
+
         if (showServicioDialog) {
             ServicioDialog(
                 initialServicio = servicioToEdit,
@@ -214,7 +214,7 @@ fun BarberoCardAdmin(
             modifier = Modifier.padding(16.dp)
         ) {
             Image(
-                painter = painterResource(id = R.drawable.ic_barbero), // Usa tu icono/barbero real
+                painter = painterResource(id = R.drawable.ic_barbero),
                 contentDescription = "Foto barbero",
                 modifier = Modifier
                     .size(56.dp)
@@ -224,7 +224,6 @@ fun BarberoCardAdmin(
             Column(modifier = Modifier.weight(1f)) {
                 Text(barbero.nombre, fontWeight = FontWeight.Bold)
                 Text(barbero.especialidad ?: "", color = Color.Gray)
-                Text(barbero.correo ?: "", color = Color.Gray, style = MaterialTheme.typography.bodySmall)
                 Text(barbero.telefono ?: "", color = Color.Gray, style = MaterialTheme.typography.bodySmall)
             }
             IconButton(onClick = onEdit) {
@@ -253,7 +252,7 @@ fun ServicioCardAdmin(
             modifier = Modifier.padding(16.dp)
         ) {
             Image(
-                painter = painterResource(id = R.drawable.ic_barbero), // Usa tu icono/servicio real
+                painter = painterResource(id = R.drawable.ic_barbero),
                 contentDescription = "Icono servicio",
                 modifier = Modifier
                     .size(56.dp)
@@ -281,7 +280,6 @@ fun BarberoDialog(
     onSave: (Barbero) -> Unit
 ) {
     var nombre by remember { mutableStateOf(initialBarbero?.nombre ?: "") }
-    var correo by remember { mutableStateOf(initialBarbero?.correo ?: "") }
     var telefono by remember { mutableStateOf(initialBarbero?.telefono ?: "") }
     var especialidad by remember { mutableStateOf(initialBarbero?.especialidad ?: "") }
 
@@ -291,19 +289,17 @@ fun BarberoDialog(
         text = {
             Column {
                 OutlinedTextField(value = nombre, onValueChange = { nombre = it }, label = { Text("Nombre") })
-                OutlinedTextField(value = correo, onValueChange = { correo = it }, label = { Text("Correo") })
                 OutlinedTextField(value = telefono, onValueChange = { telefono = it }, label = { Text("Teléfono") })
                 OutlinedTextField(value = especialidad, onValueChange = { especialidad = it }, label = { Text("Especialidad") })
             }
         },
         confirmButton = {
             Button(onClick = {
-                if (nombre.isNotBlank() && correo.isNotBlank() && telefono.isNotBlank() && especialidad.isNotBlank()) {
+                if (nombre.isNotBlank() && telefono.isNotBlank() && especialidad.isNotBlank()) {
                     onSave(
                         Barbero(
-                            idBarbero = initialBarbero?.idBarbero ?: 0L,
+                            idBarbero = initialBarbero?.idBarbero,
                             nombre = nombre,
-                            correo = correo,
                             telefono = telefono,
                             especialidad = especialidad
                         )
@@ -342,7 +338,7 @@ fun ServicioDialog(
                 if (!nombre.isNullOrBlank() && !descripcion.isNullOrBlank()) {
                     onSave(
                         Servicio(
-                            id = initialServicio?.id ?: 0L,
+                            id = initialServicio?.id,
                             nombre = nombre,
                             descripcion = descripcion
                         )

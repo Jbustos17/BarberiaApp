@@ -16,7 +16,7 @@ class ReservaViewModel : ViewModel() {
     private val _reservas = MutableStateFlow<List<Reserva>>(emptyList())
     val reservas: StateFlow<List<Reserva>> = _reservas
 
-    // Puedes exponer un estado para el error si quieres mostrarlo en la UI
+
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error
 
