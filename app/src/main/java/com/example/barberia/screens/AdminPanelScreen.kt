@@ -31,10 +31,12 @@ import com.example.barberia.viewmodel.ServicioViewModel
 import com.example.barberia.R
 import com.example.barberia.model.BarberoIdOnly
 import com.example.barberia.model.ClienteIdOnly
+import com.example.barberia.model.HorarioDisponible
 import com.example.barberia.model.HorarioIdOnly
 import com.example.barberia.viewmodel.ReservaViewModel
 import com.example.barberia.model.Reserva
 import com.example.barberia.model.ServicioIdOnly
+import com.example.barberia.viewmodel.HorarioDisponibleViewModel
 import kotlinx.coroutines.launch
 
 @Composable
@@ -69,6 +71,12 @@ fun AdminPanelScreen(
 
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
+    val horarioDisponibleViewModel: HorarioDisponibleViewModel = viewModel()
+    val horarios by horarioDisponibleViewModel.horarios.collectAsState()
+
+
+
+    println("IDs horarios: ${horarios.map { it.idHorario }}")
 
 
 
@@ -77,6 +85,7 @@ fun AdminPanelScreen(
         barberoViewModel.obtenerBarberos()
         servicioViewModel.cargarServicios(idAdministrador)
         reservaViewModel.cargarReservas()
+        horarioDisponibleViewModel.cargarTodosLosHorarios()
 
     }
 
@@ -155,6 +164,7 @@ fun AdminPanelScreen(
                     reservas = reservas,
                     barberos = barberos,
                     servicios = servicios,
+                    horarios = horarios,
                     onEdit = { reservaToEdit = it; showReservaDialog = true },
                     onDelete = { reservaToDelete = it }
                 )
@@ -295,11 +305,18 @@ fun ReservaCardAdmin(
     reserva: Reserva,
     barberos: List<Barbero>,
     servicios: List<Servicio>,
+    horarios: List<HorarioDisponible>,
     onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
     val nombreBarbero = barberos.find { it.idBarbero == reserva.barbero.idBarbero }?.nombre ?: "N/A"
     val nombreServicio = servicios.find { it.id == reserva.servicio.idServicio }?.nombre ?: "N/A"
+    val horario = horarios.find { it.idHorario == reserva.horarioDisponible.idHorario }
+    val textoHorario = if (horario != null) {
+        "Fecha: ${horario.fecha} - Hora: ${horario.horaInicio} a ${horario.horaFin}"
+    } else {
+        "Horario no encontrado"
+    }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -324,7 +341,7 @@ fun ReservaCardAdmin(
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Text(
-                    text = "Horario ID: ${reserva.horarioDisponible.idHorario}",
+                    text = textoHorario,
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Text(
@@ -352,6 +369,7 @@ fun ReservasTab(
     reservas: List<Reserva>,
     barberos: List<Barbero>,
     servicios: List<Servicio>,
+    horarios: List<HorarioDisponible>,
     onEdit: (Reserva) -> Unit,
     onDelete: (Reserva) -> Unit
 ) {
@@ -364,6 +382,7 @@ fun ReservasTab(
                 reserva = reserva,
                 barberos = barberos,
                 servicios = servicios,
+                horarios = horarios,
                 onEdit = { onEdit(reserva) },
                 onDelete = { onDelete(reserva) }
             )

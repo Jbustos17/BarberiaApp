@@ -48,6 +48,12 @@ class HorarioDisponibleViewModel : ViewModel() {
             idBarbero?.let { cargarHorarios(it) }
         }
     }
+    fun cargarTodosLosHorarios() {
+        viewModelScope.launch {
+            _horarios.value = repository.obtenerTodosLosHorarios()
+        }
+    }
+
 }
 
 
