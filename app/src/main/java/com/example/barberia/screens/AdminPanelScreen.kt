@@ -29,15 +29,18 @@ import com.example.barberia.model.Servicio
 import com.example.barberia.viewmodel.BarberoViewModel
 import com.example.barberia.viewmodel.ServicioViewModel
 import com.example.barberia.R
+import com.example.barberia.viewmodel.ReservaViewModel
+import com.example.barberia.model.Reserva
 
 @Composable
 fun AdminPanelScreen(
     navController: NavHostController,
     barberoViewModel: BarberoViewModel = viewModel(),
     servicioViewModel: ServicioViewModel = viewModel(),
+    reservaViewModel: ReservaViewModel = viewModel(),
     idAdministrador: Long = 1L
 ) {
-    val tabTitles = listOf("Barberos", "Servicios","Reservas")
+    val tabTitles = listOf("Barberos", "Servicios", "Reservas")
     var selectedTab by remember { mutableStateOf(0) }
 
     var showBarberoDialog by remember { mutableStateOf(false) }
@@ -48,10 +51,12 @@ fun AdminPanelScreen(
 
     val barberos by barberoViewModel.barberos.collectAsState()
     val servicios by servicioViewModel.servicios.collectAsState()
+    val reservas by reservaViewModel.reservas.collectAsState()
 
     LaunchedEffect(Unit) {
         barberoViewModel.obtenerBarberos()
         servicioViewModel.cargarServicios(idAdministrador)
+        reservaViewModel.cargarReservas()
     }
 
     Scaffold(
@@ -61,7 +66,7 @@ fun AdminPanelScreen(
                     if (selectedTab == 0) {
                         barberoToEdit = null
                         showBarberoDialog = true
-                    } else {
+                    } else if (selectedTab == 1) {
                         servicioToEdit = null
                         showServicioDialog = true
                     }
@@ -91,7 +96,7 @@ fun AdminPanelScreen(
                     Icon(
                         imageVector = Icons.Filled.ArrowBack,
                         contentDescription = "Volver",
-                        tint = AzulBarberi // O el color que prefieras
+                        tint = AzulBarberi
                     )
                 }
             }
@@ -136,48 +141,85 @@ fun AdminPanelScreen(
                     },
                     onDelete = { servicioViewModel.eliminarServicio(it.id!!, idAdministrador) }
                 )
+                2 -> ReservasTab(
+                    reservas = reservas,
+                    barberos = barberos,
+                    servicios = servicios
+                )
             }
         }
+    }
+}
 
 
-        if (showBarberoDialog) {
-            BarberoDialog(
-                initialBarbero = barberoToEdit,
-                onDismiss = { showBarberoDialog = false },
-                onSave = { barbero ->
-                    if (barberoToEdit == null) {
-                        barberoViewModel.guardarBarbero(barbero, idAdministrador)
-                    } else {
-                        barberoViewModel.guardarBarbero(
-                            barbero.copy(idBarbero = barberoToEdit!!.idBarbero),
-                            idAdministrador
-                        )
-                    }
-                    showBarberoDialog = false
-                }
-            )
-        }
 
-
-        if (showServicioDialog) {
-            ServicioDialog(
-                initialServicio = servicioToEdit,
-                onDismiss = { showServicioDialog = false },
-                onSave = { servicio ->
-                    if (servicioToEdit == null) {
-                        servicioViewModel.guardarServicio(servicio, idAdministrador)
-                    } else {
-                        servicioViewModel.guardarServicio(
-                            servicio.copy(id = servicioToEdit!!.id),
-                            idAdministrador
-                        )
-                    }
-                    showServicioDialog = false
-                }
+@Composable
+fun ReservasTab(
+    reservas: List<Reserva>,
+    barberos: List<Barbero>,
+    servicios: List<Servicio>
+) {
+    LazyColumn(
+        contentPadding = PaddingValues(12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        items(reservas) { reserva ->
+            ReservaCardAdmin(
+                reserva = reserva,
+                barberos = barberos,
+                servicios = servicios
             )
         }
     }
 }
+
+
+@Composable
+fun ReservaCardAdmin(
+    reserva: Reserva,
+    barberos: List<Barbero>,
+    servicios: List<Servicio>
+) {
+    val nombreBarbero = barberos.find { it.idBarbero == reserva.barbero.idBarbero }?.nombre ?: "N/A"
+    val nombreServicio = servicios.find { it.id == reserva.servicio.idServicio }?.nombre ?: "N/A"
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(4.dp)
+    ) {
+        Column(Modifier.padding(16.dp)) {
+            Text(
+                text = "Cliente: ${reserva.nombreCliente}",
+                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
+            )
+            Text(
+                text = "Barbero: $nombreBarbero",
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Text(
+                text = "Servicio: $nombreServicio",
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Text(
+                text = "Horario ID: ${reserva.horarioDisponible.idHorario}",
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Text(
+                text = "Celular: ${reserva.celularCliente}",
+                color = Color.Gray,
+                style = MaterialTheme.typography.bodySmall
+            )
+            Text(
+                text = "Correo: ${reserva.correoCliente}",
+                color = Color.Gray,
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
+    }
+}
+
+
 
 @Composable
 fun BarberosTab(
@@ -186,15 +228,35 @@ fun BarberosTab(
     onDelete: (Barbero) -> Unit
 ) {
     LazyColumn(
-        contentPadding = PaddingValues(24.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        contentPadding = PaddingValues(12.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         items(barberos) { barbero ->
-            BarberoCardAdmin(
-                barbero = barbero,
-                onEdit = { onEdit(barbero) },
-                onDelete = { onDelete(barbero) }
-            )
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp),
+                shape = RoundedCornerShape(12.dp),
+                elevation = CardDefaults.cardElevation(2.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(barbero.nombre ?: "Sin nombre", style = MaterialTheme.typography.bodyLarge)
+                    Row {
+                        IconButton(onClick = { onEdit(barbero) }) {
+                            Icon(Icons.Default.Edit, contentDescription = "Editar")
+                        }
+                        IconButton(onClick = { onDelete(barbero) }) {
+                            Icon(Icons.Default.Delete, contentDescription = "Eliminar")
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -206,18 +268,39 @@ fun ServiciosTab(
     onDelete: (Servicio) -> Unit
 ) {
     LazyColumn(
-        contentPadding = PaddingValues(24.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        contentPadding = PaddingValues(12.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         items(servicios) { servicio ->
-            ServicioCardAdmin(
-                servicio = servicio,
-                onEdit = { onEdit(servicio) },
-                onDelete = { onDelete(servicio) }
-            )
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp),
+                shape = RoundedCornerShape(12.dp),
+                elevation = CardDefaults.cardElevation(2.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(servicio.nombre ?: "Sin nombre", style = MaterialTheme.typography.bodyLarge)
+                    Row {
+                        IconButton(onClick = { onEdit(servicio) }) {
+                            Icon(Icons.Default.Edit, contentDescription = "Editar")
+                        }
+                        IconButton(onClick = { onDelete(servicio) }) {
+                            Icon(Icons.Default.Delete, contentDescription = "Eliminar")
+                        }
+                    }
+                }
+            }
         }
     }
 }
+
 
 @Composable
 fun BarberoCardAdmin(
@@ -401,4 +484,3 @@ fun ServicioDialog(
         }
     )
 }
-
