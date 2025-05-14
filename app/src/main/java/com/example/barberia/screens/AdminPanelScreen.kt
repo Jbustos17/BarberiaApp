@@ -1,5 +1,7 @@
 package com.example.barberia.screens
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -10,18 +12,23 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.barberia.model.Barbero
@@ -55,7 +62,7 @@ fun AdminPanelScreen(
     var showServicioDialog by remember { mutableStateOf(false) }
     var servicioToEdit by remember { mutableStateOf<Servicio?>(null) }
 
-    // Para el cuadro de confirmación de eliminación
+
     var barberoToDelete by remember { mutableStateOf<Barbero?>(null) }
     var servicioToDelete by remember { mutableStateOf<Servicio?>(null) }
 
@@ -92,7 +99,7 @@ fun AdminPanelScreen(
     Scaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         floatingActionButton = {
-            if (selectedTab != 2) { // Solo muestra el FAB si NO estás en la pestaña de Reservas
+            if (selectedTab != 2) {
                 FloatingActionButton(
                     onClick = {
                         if (selectedTab == 0) {
@@ -127,11 +134,11 @@ fun AdminPanelScreen(
                 )
             }
             Text(
-                "Panel de Administración",
-                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                "Panel de Administracion",
+                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold,fontSize = 34.sp),
                 color = Color(0xFF004A93),
                 modifier = Modifier
-                    .padding(top = 24.dp, start = 24.dp, end = 24.dp, bottom = 8.dp)
+                    .padding(top = 24.dp, start = 24.dp, end = 24.dp, bottom = 10.dp)
                     .align(Alignment.CenterHorizontally)
             )
 
@@ -318,52 +325,144 @@ fun ReservaCardAdmin(
         "Horario no encontrado"
     }
 
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(4.dp)
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(IntrinsicSize.Min)
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(16.dp)
+        Canvas(
+            modifier = Modifier.matchParentSize()
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = "Cliente: ${reserva.nombreCliente}",
-                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
-                )
-                Text(
-                    text = "Barbero: $nombreBarbero",
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                Text(
-                    text = "Servicio: $nombreServicio",
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                Text(
-                    text = textoHorario,
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                Text(
-                    text = "Celular: ${reserva.celularCliente}",
-                    color = Color.Gray,
-                    style = MaterialTheme.typography.bodySmall
-                )
-                Text(
-                    text = "Correo: ${reserva.correoCliente}",
-                    color = Color.Gray,
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
-            IconButton(onClick = onEdit) {
-                Icon(Icons.Default.Edit, contentDescription = "Editar")
-            }
-            IconButton(onClick = onDelete) {
-                Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = Color.Red)
+            drawRect(
+                color = AzulBarberi.copy(alpha = 0.07f),
+                topLeft = Offset(0f, size.height * 0.30f),
+                size = androidx.compose.ui.geometry.Size(size.width, size.height * 0.40f)
+            )
+            drawCircle(
+                color = AzulBarberi.copy(alpha = 0.13f),
+                radius = size.minDimension * 0.16f,
+                center = Offset(x = size.minDimension * 0.14f, y = size.height * 0.20f)
+            )
+        }
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(4.dp),
+            shape = RoundedCornerShape(22.dp),
+            elevation = CardDefaults.cardElevation(12.dp),
+            border = BorderStroke(2.dp, AzulBarberi.copy(alpha = 0.14f)),
+            colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.98f))
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(20.dp)
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Filled.Person,
+                            contentDescription = "Cliente",
+                            tint = AzulBarberi,
+                            modifier = Modifier.size(26.dp)
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            text = reserva.nombreCliente,
+                            style = MaterialTheme.typography.titleLarge.copy(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 22.sp
+                            ),
+                            color = AzulBarberi
+                        )
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Filled.Person,
+                            contentDescription = "Barbero",
+                            tint = Color(0xFF388E3C),
+                            modifier = Modifier.size(22.dp)
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            text = "Barbero: $nombreBarbero",
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontSize = 19.sp,
+                                fontWeight = FontWeight.SemiBold
+                            ),
+                            color = Color.DarkGray
+                        )
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Filled.Build,
+                            contentDescription = "Servicio",
+                            tint = AzulBarberi,
+                            modifier = Modifier.size(22.dp)
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            text = "Servicio: $nombreServicio",
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontSize = 19.sp,
+                                fontWeight = FontWeight.SemiBold
+                            ),
+                            color = Color.DarkGray
+                        )
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Filled.Schedule,
+                            contentDescription = "Fecha y hora",
+                            tint = AzulBarberi,
+                            modifier = Modifier.size(22.dp)
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            text = textoHorario,
+                            style = MaterialTheme.typography.bodyLarge.copy(
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Medium
+                            ),
+                            color = Color.Black
+                        )
+                    }
+                    Spacer(Modifier.height(10.dp))
+                    Divider(color = AzulBarberi.copy(alpha = 0.13f), thickness = 1.dp)
+                    Spacer(Modifier.height(10.dp))
+                    Text(
+                        text = "Celular: ${reserva.celularCliente}",
+                        style = MaterialTheme.typography.bodyLarge.copy(fontSize = 17.sp),
+                        color = AzulBarberi.copy(alpha = 0.8f)
+                    )
+                    Text(
+                        text = "Correo: ${reserva.correoCliente}",
+                        style = MaterialTheme.typography.bodyLarge.copy(fontSize = 17.sp),
+                        color = AzulBarberi.copy(alpha = 0.8f)
+                    )
+                }
+                Column(
+                    horizontalAlignment = Alignment.End,
+                    verticalArrangement = Arrangement.SpaceBetween
+                ) {
+                    IconButton(onClick = onEdit) {
+                        Icon(Icons.Default.Edit, contentDescription = "Editar")
+                    }
+                    IconButton(onClick = onDelete) {
+                        Icon(
+                            Icons.Default.Delete,
+                            contentDescription = "Eliminar",
+                            tint = Color.Red
+                        )
+                    }
+                }
             }
         }
     }
 }
+
 @Composable
 fun ReservasTab(
     reservas: List<Reserva>,
@@ -374,8 +473,8 @@ fun ReservasTab(
     onDelete: (Reserva) -> Unit
 ) {
     LazyColumn(
-        contentPadding = PaddingValues(12.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(18.dp)
     ) {
         items(reservas) { reserva ->
             ReservaCardAdmin(
@@ -397,8 +496,8 @@ fun BarberosTab(
     onDelete: (Barbero) -> Unit
 ) {
     LazyColumn(
-        contentPadding = PaddingValues(24.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(18.dp)
     ) {
         items(barberos) { barbero ->
             BarberoCardAdmin(
@@ -417,8 +516,8 @@ fun ServiciosTab(
     onDelete: (Servicio) -> Unit
 ) {
     LazyColumn(
-        contentPadding = PaddingValues(24.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(18.dp)
     ) {
         items(servicios) { servicio ->
             ServicioCardAdmin(
@@ -431,44 +530,87 @@ fun ServiciosTab(
 }
 
 
+
 @Composable
 fun BarberoCardAdmin(
     barbero: Barbero,
     onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(4.dp)
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(IntrinsicSize.Min)
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(16.dp)
+        // Canvas decorativo en la tarjeta
+        Canvas(
+            modifier = Modifier.matchParentSize()
         ) {
-            // Foto dinámica según el nombre
-            Image(
-                painter = painterResource(id = barbero.fotoResId()),
-                contentDescription = "Foto barbero",
-                modifier = Modifier
-                    .size(56.dp)
-                    .clip(CircleShape)
+            drawRect(
+                color = AzulBarberi.copy(alpha = 0.07f),
+                topLeft = Offset(0f, size.height * 0.30f),
+                size = androidx.compose.ui.geometry.Size(size.width, size.height * 0.40f)
             )
-            Spacer(Modifier.width(16.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(barbero.nombre, fontWeight = FontWeight.Bold)
-                Text(barbero.especialidad ?: "", color = Color.Gray)
-                Text(barbero.telefono ?: "", color = Color.Gray, style = MaterialTheme.typography.bodySmall)
-            }
-            IconButton(onClick = onEdit) {
-                Icon(Icons.Default.Edit, contentDescription = "Editar")
-            }
-            IconButton(onClick = onDelete) {
-                Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = Color.Red)
+            drawCircle(
+                color = AzulBarberi.copy(alpha = 0.13f),
+                radius = size.minDimension * 0.16f,
+                center = Offset(x = size.minDimension * 0.14f, y = size.height * 0.20f)
+            )
+        }
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(4.dp),
+            shape = RoundedCornerShape(22.dp),
+            elevation = CardDefaults.cardElevation(12.dp),
+            border = BorderStroke(2.dp, AzulBarberi.copy(alpha = 0.14f)),
+            colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.98f))
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(20.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Person,
+                    contentDescription = "Barbero",
+                    tint = AzulBarberi,
+                    modifier = Modifier.size(36.dp)
+                )
+                Spacer(Modifier.width(16.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = barbero.nombre,
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold, fontSize = 22.sp),
+                        color = AzulBarberi
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        text = "Especialidad: ${barbero.especialidad}",
+                        style = MaterialTheme.typography.bodyLarge.copy(fontSize = 18.sp),
+                        color = Color.DarkGray
+                    )
+                    Text(
+                        text = "Usuario: ${barbero.usuario}",
+                        style = MaterialTheme.typography.bodyLarge.copy(fontSize = 17.sp),
+                        color = Color.Gray
+                    )
+                }
+                Column(
+                    horizontalAlignment = Alignment.End,
+                    verticalArrangement = Arrangement.SpaceBetween
+                ) {
+                    IconButton(onClick = onEdit) {
+                        Icon(Icons.Default.Edit, contentDescription = "Editar")
+                    }
+                    IconButton(onClick = onDelete) {
+                        Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = Color.Red)
+                    }
+                }
             }
         }
     }
 }
+
 
 @Composable
 fun ServicioCardAdmin(
@@ -476,37 +618,70 @@ fun ServicioCardAdmin(
     onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(4.dp)
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(IntrinsicSize.Min)
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(16.dp)
+        Canvas(
+            modifier = Modifier.matchParentSize()
         ) {
-            // Puedes cambiar el icono si tienes uno específico por servicio
-            Image(
-                painter = painterResource(id = R.drawable.ic_barbero),
-                contentDescription = "Icono servicio",
-                modifier = Modifier
-                    .size(56.dp)
-                    .clip(CircleShape)
+            drawRect(
+                color = AzulBarberi.copy(alpha = 0.07f),
+                topLeft = Offset(0f, size.height * 0.30f),
+                size = androidx.compose.ui.geometry.Size(size.width, size.height * 0.40f)
             )
-            Spacer(Modifier.width(16.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(servicio.nombre ?: "", fontWeight = FontWeight.Bold)
-                Text(servicio.descripcion ?: "", color = Color.Gray)
-            }
-            IconButton(onClick = onEdit) {
-                Icon(Icons.Default.Edit, contentDescription = "Editar")
-            }
-            IconButton(onClick = onDelete) {
-                Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = Color.Red)
+            drawCircle(
+                color = AzulBarberi.copy(alpha = 0.13f),
+                radius = size.minDimension * 0.16f,
+                center = Offset(x = size.minDimension * 0.14f, y = size.height * 0.20f)
+            )
+        }
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(4.dp),
+            shape = RoundedCornerShape(22.dp),
+            elevation = CardDefaults.cardElevation(12.dp),
+            border = BorderStroke(2.dp, AzulBarberi.copy(alpha = 0.14f)),
+            colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.98f))
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(20.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Build,
+                    contentDescription = "Servicio",
+                    tint = AzulBarberi,
+                    modifier = Modifier.size(34.dp)
+                )
+                Spacer(Modifier.width(16.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = servicio.nombre!!,
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold, fontSize = 22.sp),
+                        color = AzulBarberi
+                    )
+                    Spacer(Modifier.height(8.dp))
+
+                }
+                Column(
+                    horizontalAlignment = Alignment.End,
+                    verticalArrangement = Arrangement.SpaceBetween
+                ) {
+                    IconButton(onClick = onEdit) {
+                        Icon(Icons.Default.Edit, contentDescription = "Editar")
+                    }
+                    IconButton(onClick = onDelete) {
+                        Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = Color.Red)
+                    }
+                }
             }
         }
     }
 }
+
 
 @Composable
 fun BarberoDialog(
@@ -697,12 +872,22 @@ fun DropdownMenuBarbero(
     val nombreSeleccionado = barberos.find { it.idBarbero == seleccionado }?.nombre ?: "Selecciona Barbero"
     Box {
         OutlinedButton(onClick = { expanded = true }) {
-            Text(nombreSeleccionado)
+            Text(
+                nombreSeleccionado,
+                fontSize = 20.sp, // Letra más grande
+                fontWeight = FontWeight.SemiBold
+            )
         }
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             barberos.forEach { barbero ->
                 DropdownMenuItem(
-                    text = { Text(barbero.nombre) },
+                    text = {
+                        Text(
+                            barbero.nombre,
+                            fontSize = 18.sp, // Letra más grande en el menú
+                            fontWeight = FontWeight.Medium
+                        )
+                    },
                     onClick = {
                         onSeleccionado(barbero.idBarbero!!)
                         expanded = false
@@ -723,12 +908,22 @@ fun DropdownMenuServicio(
     val nombreSeleccionado = servicios.find { it.id == seleccionado }?.nombre ?: "Selecciona Servicio"
     Box {
         OutlinedButton(onClick = { expanded = true }) {
-            Text(nombreSeleccionado ?: "")
+            Text(
+                nombreSeleccionado,
+                fontSize = 20.sp, // Letra más grande
+                fontWeight = FontWeight.SemiBold
+            )
         }
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             servicios.forEach { servicio ->
                 DropdownMenuItem(
-                    text = { Text(servicio.nombre ?: "") },
+                    text = {
+                        Text(
+                            servicio.nombre!!,
+                            fontSize = 18.sp, // Letra más grande en el menú
+                            fontWeight = FontWeight.Medium
+                        )
+                    },
                     onClick = {
                         onSeleccionado(servicio.id!!)
                         expanded = false

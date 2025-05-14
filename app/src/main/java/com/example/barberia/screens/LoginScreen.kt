@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -19,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.*
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -27,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.barberia.viewmodel.AdministradorViewModel
+import kotlinx.coroutines.delay
 
 
 @Composable
@@ -53,7 +56,6 @@ fun LoginScreen(
             .fillMaxSize()
             .background(GrisClaro)
     ) {
-
         Canvas(modifier = Modifier.fillMaxSize()) {
 
             drawPath(
@@ -115,121 +117,131 @@ fun LoginScreen(
                 modifier = Modifier.fillMaxSize()
             ) {
 
-                Column(
+                // Card del formulario con sombra y borde azul
+                Card(
                     modifier = Modifier
                         .align(Alignment.Center)
-                        .clip(RoundedCornerShape(36.dp))
-                        .background(Color.White.copy(alpha = 0.97f), RoundedCornerShape(36.dp))
-                        .padding(horizontal = 32.dp, vertical = 40.dp)
                         .fillMaxWidth(0.92f)
-                        .widthIn(max = 400.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
+                        .widthIn(max = 420.dp),
+                    shape = RoundedCornerShape(40.dp),
+                    elevation = CardDefaults.cardElevation(18.dp),
+                    border = BorderStroke(2.dp, AzulBarberi.copy(alpha = 0.17f)),
+                    colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.98f))
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
+                    Column(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 8.dp)
+                            .padding(horizontal = 38.dp, vertical = 48.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
                     ) {
-                        IconButton(
-                            onClick = { navController.navigate("inicio") },
-                            modifier = Modifier.size(70.dp)
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 8.dp)
                         ) {
-                            Icon(
-                                imageVector = Icons.Filled.ArrowBack,
-                                contentDescription = "Volver",
-                                tint = AzulBarberi // O el color que prefieras
+                            IconButton(
+                                onClick = { navController.navigate("inicio") },
+                                modifier = Modifier.size(46.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.ArrowBack,
+                                    contentDescription = "Volver",
+                                    tint = AzulBarberi
+                                )
+                            }
+                        }
+
+                        Text(
+                            "Acceso Administrador",
+                            style = TextStyle(
+                                fontWeight = FontWeight.ExtraBold,
+                                color = AzulBarberi,
+                                fontSize = 34.sp,
+                                letterSpacing = 1.sp
+                            ),
+                            modifier = Modifier
+                                .padding(bottom = 32.dp)
+                                .fillMaxWidth(),
+                            textAlign = TextAlign.Center
+                        )
+
+                        OutlinedTextField(
+                            value = usuario,
+                            onValueChange = { usuario = it },
+                            label = { Text("Usuario", fontSize = 22.sp) },
+                            singleLine = true,
+                            textStyle = TextStyle(fontSize = 22.sp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 16.dp)
+                        )
+
+                        OutlinedTextField(
+                            value = contraseña,
+                            onValueChange = { contraseña = it },
+                            label = { Text("Contraseña", fontSize = 22.sp) },
+                            singleLine = true,
+                            textStyle = TextStyle(fontSize = 22.sp),
+                            visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
+                            trailingIcon = {
+                                val icon = if (showPassword) Icons.Filled.VisibilityOff else Icons.Filled.Visibility
+                                IconButton(onClick = { showPassword = !showPassword }) {
+                                    Icon(imageVector = icon, contentDescription = if (showPassword) "Ocultar contraseña" else "Mostrar contraseña")
+                                }
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 24.dp)
+                        )
+
+                        val scale by animateFloatAsState(if (pressed) 0.97f else 1f, label = "")
+
+                        Button(
+                            onClick = {
+                                pressed = true
+                                val adminMatch = administradores.find {
+                                    it.usuario == usuario && it.contrasenia == contraseña
+                                }
+                                if (adminMatch != null) {
+                                    navController.navigate("adminPanel") {
+                                        popUpTo("login") { inclusive = true }
+                                    }
+                                } else {
+                                    error = true
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = AzulBarberi),
+                            shape = RoundedCornerShape(26.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(60.dp)
+                                .scale(scale)
+                        ) {
+                            Text("Iniciar sesión", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        }
+
+                        LaunchedEffect(pressed) {
+                            if (pressed) {
+                                delay(120)
+                                pressed = false
+                            }
+                        }
+
+                        AnimatedVisibility(
+                            visible = error,
+                            enter = fadeIn(),
+                            exit = fadeOut()
+                        ) {
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                "Credenciales incorrectas",
+                                color = Color(0xFFD32F2F),
+                                style = TextStyle(fontWeight = FontWeight.Bold, fontSize = 20.sp),
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth()
                             )
                         }
-                    }
-
-                    Text(
-                        "Acceso Administrador",
-                        style = MaterialTheme.typography.headlineSmall.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = AzulBarberi,
-                            fontSize = 28.sp
-                        ),
-                        modifier = Modifier
-                            .padding(bottom = 24.dp)
-                            .fillMaxWidth(),
-                        textAlign = TextAlign.Center
-                    )
-
-                    OutlinedTextField(
-                        value = usuario,
-                        onValueChange = { usuario = it },
-                        label = { Text("Usuario") },
-                        singleLine = true,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 12.dp)
-                    )
-
-                    OutlinedTextField(
-                        value = contraseña,
-                        onValueChange = { contraseña = it },
-                        label = { Text("Contraseña") },
-                        singleLine = true,
-                        visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
-                        trailingIcon = {
-                            val icon = if (showPassword) Icons.Filled.VisibilityOff else Icons.Filled.Visibility
-                            IconButton(onClick = { showPassword = !showPassword }) {
-                                Icon(imageVector = icon, contentDescription = if (showPassword) "Ocultar contraseña" else "Mostrar contraseña")
-                            }
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 20.dp)
-                    )
-
-                    val scale by animateFloatAsState(if (pressed) 0.97f else 1f, label = "")
-
-                    Button(
-                        onClick = {
-                            pressed = true
-                            val adminMatch = administradores.find {
-                                it.usuario == usuario && it.contrasenia == contraseña
-                            }
-                            if (adminMatch != null) {
-                                navController.navigate("adminPanel") {
-                                    popUpTo("login") { inclusive = true }
-                                }
-                            } else {
-                                error = true
-                            }
-                        },
-                        colors = ButtonDefaults.buttonColors(containerColor = AzulBarberi),
-                        shape = RoundedCornerShape(26.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(54.dp)
-                            .scale(scale)
-                    ) {
-                        Text("Iniciar sesión", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                    }
-
-                    LaunchedEffect(pressed) {
-                        if (pressed) {
-                            kotlinx.coroutines.delay(120)
-                            pressed = false
-                        }
-                    }
-
-                    AnimatedVisibility(
-                        visible = error,
-                        enter = fadeIn(),
-                        exit = fadeOut()
-                    ) {
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Text(
-                            "Credenciales incorrectas",
-                            color = Color(0xFFD32F2F),
-                            style = MaterialTheme.typography.bodyMedium,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth()
-                        )
                     }
                 }
             }

@@ -1,34 +1,25 @@
 package com.example.barberia.screens
 
-import android.util.Log
+
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.barberia.viewmodel.BarberoViewModel
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -37,13 +28,13 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.Path
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
-import com.example.barberia.R
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Fill
+import androidx.compose.ui.text.TextStyle
+import kotlinx.coroutines.delay
 
 @Composable
 fun BarberoLoginScreen(
@@ -67,7 +58,7 @@ fun BarberoLoginScreen(
             .fillMaxSize()
             .background(GrisClaro)
     ) {
-        // Canvas decorativo más detallado
+        // Canvas de fondo decorativo
         Canvas(
             modifier = Modifier
                 .fillMaxSize()
@@ -75,29 +66,23 @@ fun BarberoLoginScreen(
         ) {
             // Círculo azul grande arriba a la izquierda
             drawCircle(
-                color = AzulBarberi.copy(alpha = 0.14f),
+                color = AzulBarberi.copy(alpha = 0.16f),
                 radius = size.minDimension * 0.55f,
-                center = Offset(x = size.width * -0.2f, y = size.height * -0.1f)
+                center = Offset(x = size.width * -0.18f, y = size.height * -0.1f)
             )
             // Círculo azul pequeño abajo a la derecha
             drawCircle(
-                color = AzulBarberi.copy(alpha = 0.10f),
+                color = AzulBarberi.copy(alpha = 0.11f),
                 radius = size.minDimension * 0.28f,
-                center = Offset(x = size.width * 1.15f, y = size.height * 1.1f)
-            )
-            // Círculo gris claro decorativo arriba a la derecha
-            drawCircle(
-                color = GrisClaro.copy(alpha = 0.30f),
-                radius = size.minDimension * 0.18f,
-                center = Offset(x = size.width * 1.15f, y = size.height * 0.10f)
+                center = Offset(x = size.width * 1.13f, y = size.height * 1.1f)
             )
             // Onda azul suave
             val path = Path().apply {
-                moveTo(0f, size.height * 0.27f)
+                moveTo(0f, size.height * 0.32f)
                 cubicTo(
-                    size.width * 0.25f, size.height * 0.23f,
-                    size.width * 0.75f, size.height * 0.34f,
-                    size.width, size.height * 0.19f
+                    size.width * 0.20f, size.height * 0.28f,
+                    size.width * 0.80f, size.height * 0.36f,
+                    size.width, size.height * 0.22f
                 )
                 lineTo(size.width, 0f)
                 lineTo(0f, 0f)
@@ -105,12 +90,7 @@ fun BarberoLoginScreen(
             }
             drawPath(
                 path = path,
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        AzulBarberi.copy(alpha = 0.10f),
-                        Color.Transparent
-                    )
-                ),
+                color = AzulBarberi.copy(alpha = 0.10f),
                 style = Fill
             )
         }
@@ -120,15 +100,15 @@ fun BarberoLoginScreen(
             modifier = Modifier
                 .align(Alignment.Center)
                 .fillMaxWidth(0.92f)
-                .widthIn(max = 400.dp),
-            shape = RoundedCornerShape(38.dp),
-            elevation = CardDefaults.cardElevation(16.dp),
-            border = BorderStroke(2.dp, AzulBarberi.copy(alpha = 0.15f)),
-            colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.97f))
+                .widthIn(max = 420.dp),
+            shape = RoundedCornerShape(40.dp),
+            elevation = CardDefaults.cardElevation(18.dp),
+            border = BorderStroke(2.dp, AzulBarberi.copy(alpha = 0.17f)),
+            colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.98f))
         ) {
             Column(
                 modifier = Modifier
-                    .padding(horizontal = 36.dp, vertical = 44.dp),
+                    .padding(horizontal = 38.dp, vertical = 48.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
@@ -140,7 +120,7 @@ fun BarberoLoginScreen(
                 ) {
                     IconButton(
                         onClick = { navController.navigate("inicio") },
-                        modifier = Modifier.size(44.dp)
+                        modifier = Modifier.size(46.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Filled.ArrowBack,
@@ -152,14 +132,14 @@ fun BarberoLoginScreen(
 
                 Text(
                     "Acceso Barbero",
-                    style = MaterialTheme.typography.headlineMedium.copy(
+                    style = TextStyle(
                         fontWeight = FontWeight.ExtraBold,
                         color = AzulBarberi,
-                        fontSize = 32.sp,
+                        fontSize = 34.sp,
                         letterSpacing = 1.sp
                     ),
                     modifier = Modifier
-                        .padding(bottom = 28.dp)
+                        .padding(bottom = 32.dp)
                         .fillMaxWidth(),
                     textAlign = TextAlign.Center
                 )
@@ -167,9 +147,9 @@ fun BarberoLoginScreen(
                 OutlinedTextField(
                     value = usuario,
                     onValueChange = { usuario = it },
-                    label = { Text("Usuario", fontSize = 20.sp) },
+                    label = { Text("Usuario", fontSize = 22.sp) },
                     singleLine = true,
-                    textStyle = LocalTextStyle.current.copy(fontSize = 20.sp),
+                    textStyle = TextStyle(fontSize = 22.sp),
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = 16.dp)
@@ -178,9 +158,9 @@ fun BarberoLoginScreen(
                 OutlinedTextField(
                     value = contrasenia,
                     onValueChange = { contrasenia = it },
-                    label = { Text("Contraseña", fontSize = 20.sp) },
+                    label = { Text("Contraseña", fontSize = 22.sp) },
                     singleLine = true,
-                    textStyle = LocalTextStyle.current.copy(fontSize = 20.sp),
+                    textStyle = TextStyle(fontSize = 22.sp),
                     visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
                     trailingIcon = {
                         val icon = if (showPassword) Icons.Filled.VisibilityOff else Icons.Filled.Visibility
@@ -190,7 +170,7 @@ fun BarberoLoginScreen(
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 26.dp)
+                        .padding(bottom = 28.dp)
                 )
 
                 val scale by animateFloatAsState(if (pressed) 0.97f else 1f, label = "")
@@ -213,13 +193,13 @@ fun BarberoLoginScreen(
                     shape = RoundedCornerShape(26.dp),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(60.dp)
+                        .height(62.dp)
                         .scale(scale),
-                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 10.dp)
+                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 12.dp)
                 ) {
                     Text(
                         "Iniciar sesión",
-                        fontSize = 22.sp,
+                        fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White,
                         letterSpacing = 1.sp
@@ -228,7 +208,7 @@ fun BarberoLoginScreen(
 
                 LaunchedEffect(pressed) {
                     if (pressed) {
-                        kotlinx.coroutines.delay(120)
+                        delay(120)
                         pressed = false
                     }
                 }
@@ -242,7 +222,7 @@ fun BarberoLoginScreen(
                     Text(
                         "Credenciales incorrectas",
                         color = Color(0xFFD32F2F),
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, fontSize = 18.sp),
+                        style = TextStyle(fontWeight = FontWeight.Bold, fontSize = 20.sp),
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth()
                     )

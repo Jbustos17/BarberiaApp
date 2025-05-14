@@ -136,7 +136,7 @@ fun InicioScreen(navController: NavHostController) {
                 "¡Reserva tu corte o administra tu negocio fácil y rápido!",
                 style = MaterialTheme.typography.bodyLarge.copy(
                     color = Color(0xFF2F2F2F),
-                    fontSize = 18.sp
+                    fontSize = 22.sp
                 ),
                 modifier = Modifier
                     .padding(bottom = 32.dp)

@@ -1,6 +1,5 @@
 package com.example.barberia.screens
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -12,10 +11,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -24,13 +20,18 @@ import com.example.barberia.model.HorarioDisponible
 import com.example.barberia.viewmodel.ReservaViewModel
 import com.example.barberia.model.Reserva
 import com.example.barberia.viewmodel.BarberoViewModel
-<<<<<<< HEAD
-import androidx.compose.ui.graphics.Path
-
-=======
 import com.example.barberia.viewmodel.HorarioDisponibleViewModel
-import com.example.barberia.viewmodel.ServicioViewModel
->>>>>>> eadb3a93f48991feabb7fc055e9d937df4339d76
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Fill
+import androidx.compose.ui.unit.sp
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.outlined.Campaign
+
 
 @Composable
 fun BarberoPanelScreen(
@@ -45,11 +46,10 @@ fun BarberoPanelScreen(
     val horarioDisponibleViewModel: HorarioDisponibleViewModel = viewModel()
     val horarios by horarioDisponibleViewModel.horarios.collectAsState()
 
-
     LaunchedEffect(idBarbero) {
         barberoViewModel.obtenerBarberos()
         reservaViewModel.cargarReservasPorBarbero(idBarbero)
-        horarioDisponibleViewModel.cargarTodosLosHorarios()// <--- carga todos los horarios
+        horarioDisponibleViewModel.cargarTodosLosHorarios()
     }
 
     Box(
@@ -57,36 +57,40 @@ fun BarberoPanelScreen(
             .fillMaxSize()
             .background(GrisClaro)
     ) {
-        // --- Canvas de fondo decorativo ---
+        // Canvas decorativo de fondo
         Canvas(
             modifier = Modifier
                 .fillMaxSize()
                 .matchParentSize()
         ) {
-            // Círculo grande azul en la esquina superior izquierda
+            // Círculo azul grande arriba a la izquierda
             drawCircle(
-                color = AzulBarberi.copy(alpha = 0.18f),
-                radius = size.minDimension * 0.45f,
-                center = Offset(x = size.width * 0.1f, y = size.height * 0.05f)
+                color = AzulBarberi.copy(alpha = 0.14f),
+                radius = size.minDimension * 0.55f,
+                center = Offset(x = size.width * -0.18f, y = size.height * -0.1f)
             )
-            // Círculo pequeño azul en la esquina inferior derecha
+            // Círculo azul pequeño abajo a la derecha
             drawCircle(
-                color = AzulBarberi.copy(alpha = 0.12f),
-                radius = size.minDimension * 0.20f,
-                center = Offset(x = size.width * 0.95f, y = size.height * 0.95f)
-            )
-            // Línea curva decorativa
-            drawPath(
-                path = Path().apply {
-                    moveTo(0f, size.height * 0.25f)
-                    cubicTo(
-                        size.width * 0.25f, size.height * 0.18f,
-                        size.width * 0.75f, size.height * 0.32f,
-                        size.width, size.height * 0.15f
-                    )
-                },
                 color = AzulBarberi.copy(alpha = 0.10f),
-                style = Stroke(width = 18f, cap = StrokeCap.Round)
+                radius = size.minDimension * 0.28f,
+                center = Offset(x = size.width * 1.13f, y = size.height * 1.1f)
+            )
+            // Onda azul suave
+            val path = Path().apply {
+                moveTo(0f, size.height * 0.34f)
+                cubicTo(
+                    size.width * 0.20f, size.height * 0.30f,
+                    size.width * 0.80f, size.height * 0.38f,
+                    size.width, size.height * 0.23f
+                )
+                lineTo(size.width, 0f)
+                lineTo(0f, 0f)
+                close()
+            }
+            drawPath(
+                path = path,
+                color = AzulBarberi.copy(alpha = 0.09f),
+                style = Fill
             )
         }
 
@@ -113,7 +117,7 @@ fun BarberoPanelScreen(
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = "Panel de ${barbero?.nombre ?: "Barbero"}",
-                    style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                    style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold, fontSize = 28.sp),
                     color = AzulBarberi,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
@@ -122,13 +126,12 @@ fun BarberoPanelScreen(
             if (!barbero?.especialidad.isNullOrBlank()) {
                 Text(
                     text = barbero?.especialidad ?: "",
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = MaterialTheme.typography.titleMedium.copy(fontSize = 20.sp),
                     color = Color.Gray,
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
             }
 
-            // Lista de reservas
             if (reservas.isEmpty()) {
                 Box(
                     Modifier.fillMaxSize(),
@@ -136,13 +139,13 @@ fun BarberoPanelScreen(
                 ) {
                     Text(
                         "No tienes reservas asignadas.",
-                        style = MaterialTheme.typography.bodyLarge,
+                        style = MaterialTheme.typography.titleLarge.copy(fontSize = 22.sp),
                         color = Color.Gray
                     )
                 }
             } else {
                 LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(18.dp),
                     modifier = Modifier.fillMaxSize()
                 ) {
                     items(reservas) { reserva ->
@@ -154,7 +157,6 @@ fun BarberoPanelScreen(
     }
 }
 
-
 @Composable
 fun ReservaCard(reserva: Reserva, horarios: List<HorarioDisponible>) {
     val horario = horarios.find { it.idHorario == reserva.horarioDisponible.idHorario }
@@ -164,45 +166,100 @@ fun ReservaCard(reserva: Reserva, horarios: List<HorarioDisponible>) {
         "Horario no encontrado"
     }
 
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(4.dp)
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(IntrinsicSize.Min)
     ) {
-        Column(Modifier.padding(16.dp)) {
-            Text(
-                text = "Cliente: ${reserva.nombreCliente}",
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+        // Canvas decorativo en la tarjeta
+        Canvas(
+            modifier = Modifier.matchParentSize()
+        ) {
+            drawRect(
+                color = AzulBarberi.copy(alpha = 0.07f),
+                topLeft = Offset(0f, size.height * 0.30f),
+                size = androidx.compose.ui.geometry.Size(size.width, size.height * 0.40f)
             )
-            Spacer(Modifier.height(4.dp))
-            Text(
-                text = "Servicio: ${reserva.servicio.idServicio}",
-                style = MaterialTheme.typography.bodyMedium
+            drawCircle(
+                color = AzulBarberi.copy(alpha = 0.13f),
+                radius = size.minDimension * 0.16f,
+                center = Offset(x = size.minDimension * 0.14f, y = size.height * 0.20f)
             )
-            Text(
-                text = textoHorario, // <--- aquí el texto plano
-                style = MaterialTheme.typography.bodyMedium
-            )
-            Spacer(Modifier.height(4.dp))
-            Text(
-                text = "Celular: ${reserva.celularCliente}",
-                style = MaterialTheme.typography.bodySmall,
-                color = Color.Gray
-            )
-            Text(
-                text = "Correo: ${reserva.correoCliente}",
-                style = MaterialTheme.typography.bodySmall,
-                color = Color.Gray
-            )
+        }
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(4.dp),
+            shape = RoundedCornerShape(22.dp),
+            elevation = CardDefaults.cardElevation(12.dp),
+            border = BorderStroke(2.dp, AzulBarberi.copy(alpha = 0.14f)),
+            colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.98f))
+        ) {
+            Column(
+                Modifier.padding(horizontal = 24.dp, vertical = 20.dp)
+            ) {
+                // Usuario
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Filled.Person,
+                        contentDescription = "Cliente",
+                        tint = AzulBarberi,
+                        modifier = Modifier.size(26.dp)
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        text = reserva.nombreCliente,
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold, fontSize = 22.sp),
+                        color = AzulBarberi
+                    )
+                }
+                Spacer(Modifier.height(10.dp))
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Outlined.Campaign,
+                        contentDescription = "Servicio",
+                        tint = AzulBarberi,
+                        modifier = Modifier.size(22.dp)
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        text = "Servicio: ${reserva.servicio.idServicio}",
+                        style = MaterialTheme.typography.titleMedium.copy(fontSize = 20.sp, fontWeight = FontWeight.SemiBold),
+                        color = Color.DarkGray
+                    )
+                }
+                Spacer(Modifier.height(8.dp))
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Filled.Schedule,
+                        contentDescription = "Fecha y hora",
+                        tint = AzulBarberi,
+                        modifier = Modifier.size(22.dp)
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        text = textoHorario,
+                        style = MaterialTheme.typography.bodyLarge.copy(fontSize = 19.sp, fontWeight = FontWeight.Medium),
+                        color = Color.Black
+                    )
+                }
+                Spacer(Modifier.height(12.dp))
+                Divider(color = AzulBarberi.copy(alpha = 0.13f), thickness = 1.dp)
+                Spacer(Modifier.height(10.dp))
+                Text(
+                    text = "Celular: ${reserva.celularCliente}",
+                    style = MaterialTheme.typography.bodyLarge.copy(fontSize = 18.sp),
+                    color = AzulBarberi.copy(alpha = 0.8f)
+                )
+                Text(
+                    text = "Correo: ${reserva.correoCliente}",
+                    style = MaterialTheme.typography.bodyLarge.copy(fontSize = 18.sp),
+                    color = AzulBarberi.copy(alpha = 0.8f)
+                )
+            }
         }
     }
 }
-
-
-// Utilidad para mostrar la fecha y hora legible
-fun obtenerFechaHora(reserva: Reserva): String {
-    // Aquí deberías obtener la fecha y hora real desde el objeto HorarioDisponible si lo necesitas
-    return "ID Horario: ${reserva.horarioDisponible.idHorario}"
-}
-
 
