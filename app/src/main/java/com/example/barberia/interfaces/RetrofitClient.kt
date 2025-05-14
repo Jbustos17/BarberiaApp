@@ -27,15 +27,9 @@ object RetrofitClient {
             .build()
             .create(ApiService::class.java)
     }
-<<<<<<< HEAD
+
+
 
 }
 
 
-
-=======
-
-
-}
-
->>>>>>> feature/todo
