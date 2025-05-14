@@ -59,12 +59,12 @@ fun ReservaScreen(
             .fillMaxSize()
             .background(GrisClaro)
     ) {
-        // Canvas decorativo: onda y burbujas en la parte inferior derecha
+
         Canvas(modifier = Modifier.fillMaxSize()) {
             val height = size.height
             val width = size.width
 
-            // Onda inferior derecha
+
             drawPath(
                 path = Path().apply {
                     moveTo(width, height)
@@ -80,7 +80,7 @@ fun ReservaScreen(
                     colors = listOf(AzulBarberi, AzulClaroBarberia, DoradoBarberia, AmarilloBarberia)
                 )
             )
-            // Burbujas decorativas
+
             drawCircle(
                 color = AmarilloBarberia.copy(alpha = 0.18f),
                 center = Offset(width * 0.88f, height * 0.96f),
@@ -105,7 +105,7 @@ fun ReservaScreen(
                 modifier = Modifier.padding(bottom = 12.dp)
             )
 
-            // Card con sombra para la información de la reserva
+
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -212,7 +212,7 @@ fun ReservaScreen(
                                     )
                                     reservaViewModel.guardarReserva(reserva, idAdministrador)
 
-                                    // *** Recargar horas disponibles después de guardar la reserva ***
+
                                     horarioDisponibleViewModel.cargarHorasDisponibles(idBarbero, fecha)
 
                                     showSuccess = true

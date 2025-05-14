@@ -2,23 +2,27 @@ package com.example.barberia.repository
 
 import com.example.barberia.interfaces.RetrofitClient
 import com.example.barberia.model.HorarioDisponible
+import com.example.barberia.model.HorarioUi
 
 class HorarioDisponibleRepository {
 
-    // Obtiene los horarios disponibles de un barbero específico
+    // Obtiene todos los horarios (no solo los disponibles)
     suspend fun obtenerHorarios(idBarbero: Long): List<HorarioDisponible> {
         return try {
             RetrofitClient.apiService.obtenerHorarios(idBarbero)
         } catch (e: Exception) {
-
             emptyList()
         }
     }
 
-    suspend fun obtenerHorariosDisponibles(idBarbero: Long, fecha: String): List<String> {
-        return RetrofitClient.apiService.obtenerHorariosDisponibles(idBarbero, fecha)
+    // Obtiene los horarios disponibles (con idHorario y horaInicio)
+    suspend fun obtenerHorariosDisponibles(idBarbero: Long, fecha: String): List<HorarioUi> {
+        return try {
+            RetrofitClient.apiService.obtenerHorariosDisponibles(idBarbero, fecha)
+        } catch (e: Exception) {
+            emptyList()
+        }
     }
-
 
     suspend fun obtenerHorario(id: Long): HorarioDisponible? {
         return try {
@@ -36,7 +40,6 @@ class HorarioDisponibleRepository {
             null
         }
     }
-
 
     suspend fun eliminarHorario(id: Long): Boolean {
         return try {
