@@ -19,10 +19,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.example.barberia.model.HorarioDisponible
 import com.example.barberia.viewmodel.ReservaViewModel
 import com.example.barberia.model.Reserva
 import com.example.barberia.model.Servicio
 import com.example.barberia.viewmodel.BarberoViewModel
+import com.example.barberia.viewmodel.HorarioDisponibleViewModel
 import com.example.barberia.viewmodel.ServicioViewModel
 
 @Composable
@@ -36,11 +38,15 @@ fun BarberoPanelScreen(
     val reservas by reservaViewModel.reservas.collectAsState()
     val barberos by barberoViewModel.barberos.collectAsState()
     val barbero = barberos.find { it.idBarbero == idBarbero }
+    val horarioDisponibleViewModel: HorarioDisponibleViewModel = viewModel()
+    val horarios by horarioDisponibleViewModel.horarios.collectAsState()
+
 
     // Efecto para cargar datos al entrar
     LaunchedEffect(idBarbero) {
         barberoViewModel.obtenerBarberos()
         reservaViewModel.cargarReservasPorBarbero(idBarbero)
+        horarioDisponibleViewModel.cargarTodosLosHorarios()// <--- carga todos los horarios
     }
 
     Box(
@@ -104,7 +110,7 @@ fun BarberoPanelScreen(
                     modifier = Modifier.fillMaxSize()
                 ) {
                     items(reservas) { reserva ->
-                        ReservaCard(reserva)
+                        ReservaCard(reserva, horarios)
                     }
                 }
             }
@@ -113,7 +119,14 @@ fun BarberoPanelScreen(
 }
 
 @Composable
-fun ReservaCard(reserva: Reserva) {
+fun ReservaCard(reserva: Reserva, horarios: List<HorarioDisponible>) {
+    val horario = horarios.find { it.idHorario == reserva.horarioDisponible.idHorario }
+    val textoHorario = if (horario != null) {
+        "Fecha: ${horario.fecha} - Hora: ${horario.horaInicio} a ${horario.horaFin}"
+    } else {
+        "Horario no encontrado"
+    }
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -130,7 +143,7 @@ fun ReservaCard(reserva: Reserva) {
                 style = MaterialTheme.typography.bodyMedium
             )
             Text(
-                text = "Fecha y hora: ${obtenerFechaHora(reserva)}",
+                text = textoHorario, // <--- aquí el texto plano
                 style = MaterialTheme.typography.bodyMedium
             )
             Spacer(Modifier.height(4.dp))
@@ -147,6 +160,7 @@ fun ReservaCard(reserva: Reserva) {
         }
     }
 }
+
 
 // Utilidad para mostrar la fecha y hora legible
 fun obtenerFechaHora(reserva: Reserva): String {
