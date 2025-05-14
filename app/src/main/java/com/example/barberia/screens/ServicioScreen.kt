@@ -24,10 +24,30 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.barberia.viewmodel.ServicioViewModel
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import com.example.barberia.R
+
+fun getDriveDirectUrl(url: String?): String? {
+    if (url.isNullOrBlank()) return null
+    val regex = Regex("https://drive\\.google\\.com/file/d/([a-zA-Z0-9_-]+)")
+    val match = regex.find(url)
+    return if (match != null) {
+        val id = match.groupValues[1]
+        "https://drive.google.com/uc?export=download&id=$id"
+    } else {
+        url
+    }
+}
+
+
 
 
 @Composable
 fun ServicioScreen(
+
     navController: NavHostController,
     viewModel: ServicioViewModel = viewModel()
 ) {
@@ -115,14 +135,21 @@ fun ServicioScreen(
                                 .fillMaxSize()
                                 .padding(24.dp)
                         ) {
-                            Image(
-                                painter = painterResource(id = servicio.iconoResId()),
+                            AsyncImage(
+                                model = ImageRequest.Builder(LocalContext.current)
+                                    .data(getDriveDirectUrl(servicio.fotoUrl))
+                                    .crossfade(true)
+                                    .build(),
                                 contentDescription = servicio.nombre ?: "Servicio",
+                                placeholder = painterResource(com.example.barberia.R.drawable.ic_placeholder_servicio),
+                                error = painterResource(com.example.barberia.R.drawable.ic_placeholder_servicio),
+                                fallback = painterResource(R.drawable.ic_placeholder_servicio),
                                 modifier = Modifier
                                     .size(96.dp)
                                     .clip(CircleShape)
                                     .background(Color(0xFFE0E0E0))
                             )
+
 
                             Spacer(modifier = Modifier.width(24.dp))
                             Column(
