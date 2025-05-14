@@ -1,6 +1,7 @@
 package com.example.barberia.repository
 
 import com.example.barberia.interfaces.RetrofitClient
+import com.example.barberia.interfaces.RetrofitClient.apiService
 import com.example.barberia.model.HorarioDisponible
 import com.example.barberia.model.HorarioUi
 
@@ -49,4 +50,10 @@ class HorarioDisponibleRepository {
             false
         }
     }
+
+    // En HorarioDisponibleRepository
+    suspend fun obtenerTodosLosHorarios(): List<HorarioDisponible> {
+        return apiService.obtenerTodosLosHorarios() // Define este endpoint en tu ApiService y backend si no existe
+    }
+
 }
