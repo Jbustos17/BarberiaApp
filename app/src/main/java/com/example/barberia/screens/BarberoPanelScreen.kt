@@ -1,7 +1,6 @@
 package com.example.barberia.screens
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.content.MediaType.Companion.Text
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -13,17 +12,19 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.barberia.viewmodel.ReservaViewModel
 import com.example.barberia.model.Reserva
-import com.example.barberia.model.Servicio
 import com.example.barberia.viewmodel.BarberoViewModel
-import com.example.barberia.viewmodel.ServicioViewModel
+import androidx.compose.ui.graphics.Path
+
 
 @Composable
 fun BarberoPanelScreen(
@@ -32,12 +33,10 @@ fun BarberoPanelScreen(
     reservaViewModel: ReservaViewModel = viewModel(),
     barberoViewModel: BarberoViewModel = viewModel()
 ) {
-    // Cargar reservas y datos del barbero
     val reservas by reservaViewModel.reservas.collectAsState()
     val barberos by barberoViewModel.barberos.collectAsState()
     val barbero = barberos.find { it.idBarbero == idBarbero }
 
-    // Efecto para cargar datos al entrar
     LaunchedEffect(idBarbero) {
         barberoViewModel.obtenerBarberos()
         reservaViewModel.cargarReservasPorBarbero(idBarbero)
@@ -48,6 +47,39 @@ fun BarberoPanelScreen(
             .fillMaxSize()
             .background(GrisClaro)
     ) {
+        // --- Canvas de fondo decorativo ---
+        Canvas(
+            modifier = Modifier
+                .fillMaxSize()
+                .matchParentSize()
+        ) {
+            // Círculo grande azul en la esquina superior izquierda
+            drawCircle(
+                color = AzulBarberi.copy(alpha = 0.18f),
+                radius = size.minDimension * 0.45f,
+                center = Offset(x = size.width * 0.1f, y = size.height * 0.05f)
+            )
+            // Círculo pequeño azul en la esquina inferior derecha
+            drawCircle(
+                color = AzulBarberi.copy(alpha = 0.12f),
+                radius = size.minDimension * 0.20f,
+                center = Offset(x = size.width * 0.95f, y = size.height * 0.95f)
+            )
+            // Línea curva decorativa
+            drawPath(
+                path = Path().apply {
+                    moveTo(0f, size.height * 0.25f)
+                    cubicTo(
+                        size.width * 0.25f, size.height * 0.18f,
+                        size.width * 0.75f, size.height * 0.32f,
+                        size.width, size.height * 0.15f
+                    )
+                },
+                color = AzulBarberi.copy(alpha = 0.10f),
+                style = Stroke(width = 18f, cap = StrokeCap.Round)
+            )
+        }
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -59,13 +91,13 @@ fun BarberoPanelScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 IconButton(
-                    onClick = { navController.navigate("inicio") }, // Cambia el nombre si tu ruta es diferente
+                    onClick = { navController.navigate("inicio") },
                     modifier = Modifier.size(40.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Filled.ArrowBack,
                         contentDescription = "Volver",
-                        tint = AzulBarberi // Usa tu color principal o Color.Black si prefieres
+                        tint = AzulBarberi
                     )
                 }
                 Spacer(modifier = Modifier.width(8.dp))
@@ -111,6 +143,7 @@ fun BarberoPanelScreen(
         }
     }
 }
+
 
 @Composable
 fun ReservaCard(reserva: Reserva) {
