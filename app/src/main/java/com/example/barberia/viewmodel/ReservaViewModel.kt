@@ -31,17 +31,17 @@ class ReservaViewModel : ViewModel() {
             var intentos = 0
             var exito = false
 
-            while (intentos < 3 && !exito) { // Reintentar hasta 3 veces
+            while (intentos < 3 && !exito) {
                 try {
                     val response = repository.guardarReserva(reserva, idAdministrador)
                     if (response.isSuccessful) {
                         exito = true
-                        // Puedes hacer algo con response.body() si lo necesitas
+
                     } else {
-                        // Lee el errorBody y expón el error
+
                         val errorMsg = response.errorBody()?.string() ?: "Error desconocido"
                         _error.value = "Error al guardar reserva: $errorMsg"
-                        break // No reintentes si es un error 400
+                        break
                     }
                 } catch (e: Exception) {
                     intentos++
@@ -65,7 +65,7 @@ class ReservaViewModel : ViewModel() {
                 val reservas = repository.obtenerReservasPorBarbero(idBarbero)
                 _reservas.value = reservas
             } catch (e: Exception) {
-                // Manejo de error
+
             }
         }
     }

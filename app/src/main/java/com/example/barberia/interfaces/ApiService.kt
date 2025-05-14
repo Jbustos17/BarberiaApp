@@ -4,6 +4,7 @@ import com.example.barberia.model.Administrador
 import com.example.barberia.model.Barbero
 import com.example.barberia.model.Cliente
 import com.example.barberia.model.HorarioDisponible
+import com.example.barberia.model.HorarioUi
 import com.example.barberia.model.Reserva
 import com.example.barberia.model.Servicio
 import retrofit2.Response
@@ -67,14 +68,14 @@ interface ApiService {
 
   @GET("/horarios")
   suspend fun obtenerHorarios(
-   @Query("idbarbero") idBarbero: Long // <--- minúscula
+   @Query("idbarbero") idBarbero: Long
   ): List<HorarioDisponible>
 
-  @GET("/horarios/disponibles")
-  suspend fun obtenerHorariosDisponibles(
-   @Query("idbarbero") idBarbero: Long, // <--- minúscula
-   @Query("fecha") fecha: String
-  ): List<String>
+ @GET("/horarios/disponibles")
+ suspend fun obtenerHorariosDisponibles(
+  @Query("idbarbero") idBarbero: Long,
+  @Query("fecha") fecha: String
+ ): List<HorarioUi>
 
  // Obtener un horario específico por su ID
  @GET("/horarios/{id}")

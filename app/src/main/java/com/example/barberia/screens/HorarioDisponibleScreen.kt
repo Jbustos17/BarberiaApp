@@ -29,8 +29,6 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.toLocalDateTime
 import java.net.URLEncoder
 
-
-
 @Composable
 fun HorarioDisponibleScreen(
     idBarbero: Long,
@@ -44,11 +42,12 @@ fun HorarioDisponibleScreen(
         ?: Clock.System.now().toLocalDateTime(kotlinx.datetime.TimeZone.currentSystemDefault()).date
     val fechaSeleccionada = selectedDay.toString()
     val horasDisponibles by viewModel.horasDisponibles.collectAsState()
-    var horaSeleccionada by remember { mutableStateOf<String?>(null) }
+    var horarioSeleccionado by remember { mutableStateOf<com.example.barberia.model.HorarioUi?>(null) }
 
+    // Recarga horas cada vez que cambia el barbero o el día
     LaunchedEffect(idBarbero, fechaSeleccionada) {
         viewModel.cargarHorasDisponibles(idBarbero, fechaSeleccionada)
-        horaSeleccionada = null
+        horarioSeleccionado = null
     }
 
     Column(
@@ -127,19 +126,19 @@ fun HorarioDisponibleScreen(
                     .fillMaxWidth()
                     .weight(1f, fill = false)
             ) {
-                items(horasDisponibles) { hora: String ->
+                items(horasDisponibles) { horarioUi ->
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = 6.dp)
                             .border(
-                                width = if (horaSeleccionada == hora) 2.dp else 1.dp,
-                                color = if (horaSeleccionada == hora) AzulBarberi else MaterialTheme.colorScheme.outline,
+                                width = if (horarioSeleccionado == horarioUi) 2.dp else 1.dp,
+                                color = if (horarioSeleccionado == horarioUi) AzulBarberi else MaterialTheme.colorScheme.outline,
                                 shape = RoundedCornerShape(10.dp)
                             )
-                            .clickable { horaSeleccionada = hora },
+                            .clickable { horarioSeleccionado = horarioUi },
                         colors = CardDefaults.cardColors(
-                            containerColor = if (horaSeleccionada == hora)
+                            containerColor = if (horarioSeleccionado == horarioUi)
                                 AzulBarberi.copy(alpha = 0.12f)
                             else
                                 MaterialTheme.colorScheme.surface
@@ -153,14 +152,14 @@ fun HorarioDisponibleScreen(
                             Icon(
                                 imageVector = Icons.Default.Schedule,
                                 contentDescription = null,
-                                tint = if (horaSeleccionada == hora) AzulBarberi else MaterialTheme.colorScheme.onSurfaceVariant,
+                                tint = if (horarioSeleccionado == horarioUi) AzulBarberi else MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.size(22.dp)
                             )
                             Spacer(modifier = Modifier.width(12.dp))
                             Text(
-                                text = hora,
+                                text = horarioUi.horaInicio,
                                 style = MaterialTheme.typography.bodyLarge,
-                                color = if (horaSeleccionada == hora) AzulBarberi else MaterialTheme.colorScheme.onSurface
+                                color = if (horarioSeleccionado == horarioUi) AzulBarberi else MaterialTheme.colorScheme.onSurface
                             )
                         }
                     }
@@ -170,7 +169,7 @@ fun HorarioDisponibleScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        AnimatedVisibility(visible = horaSeleccionada != null) {
+        AnimatedVisibility(visible = horarioSeleccionado != null) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
@@ -185,7 +184,7 @@ fun HorarioDisponibleScreen(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Seleccionado: $fechaSeleccionada a las $horaSeleccionada",
+                    text = "Seleccionado: $fechaSeleccionada a las ${horarioSeleccionado?.horaInicio.orEmpty()}",
                     style = MaterialTheme.typography.bodyLarge
                 )
             }
@@ -193,15 +192,16 @@ fun HorarioDisponibleScreen(
 
         Button(
             onClick = {
-                val horaCodificada = URLEncoder.encode(horaSeleccionada, "UTF-8")
+                val horaCodificada = URLEncoder.encode(horarioSeleccionado?.horaInicio ?: "", "UTF-8")
                 val servicioId = 1L // Reemplaza con el valor real
-                val horarioDisponibleId = 1L // Reemplaza con el valor real
+                val horarioDisponibleId = horarioSeleccionado?.idHorario ?: 0L
                 val idAdministrador = 1L // Reemplaza con el valor real
+
                 navController.navigate(
                     "reserva/$idBarbero/$fechaSeleccionada/$horaCodificada/$servicioId/$horarioDisponibleId/$idAdministrador"
                 )
             },
-            enabled = horaSeleccionada != null,
+            enabled = horarioSeleccionado != null,
             colors = ButtonDefaults.buttonColors(containerColor = AzulBarberi),
             modifier = Modifier
                 .fillMaxWidth()

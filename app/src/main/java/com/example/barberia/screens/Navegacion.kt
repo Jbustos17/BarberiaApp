@@ -18,10 +18,10 @@ fun Navegacion(navController: NavHostController) {
         composable("servicios") { ServicioScreen(navController) }
         composable("barberos") { BarberoScreen(navController) }
 
-        // Nuevo: login de barbero
+
         composable("barberoLogin") { BarberoLoginScreen(navController) }
 
-        // Nuevo: panel de barbero con idBarbero como parámetro
+
         composable("barberoPanel/{idBarbero}") { backStackEntry ->
             val idBarbero = backStackEntry.arguments?.getString("idBarbero")?.toLongOrNull()
             if (idBarbero != null) {

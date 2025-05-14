@@ -28,7 +28,9 @@ import androidx.navigation.NavHostController
 import com.example.barberia.model.*
 import com.example.barberia.viewmodel.ClienteViewModel
 import com.example.barberia.viewmodel.ReservaViewModel
+import com.example.barberia.viewmodel.HorarioDisponibleViewModel
 import kotlinx.coroutines.launch
+
 
 @Composable
 fun ReservaScreen(
@@ -41,7 +43,8 @@ fun ReservaScreen(
     total: Double = 30000.0,
     navController: NavHostController,
     reservaViewModel: ReservaViewModel = viewModel(),
-    clienteViewModel: ClienteViewModel = viewModel()
+    clienteViewModel: ClienteViewModel = viewModel(),
+    horarioDisponibleViewModel: HorarioDisponibleViewModel = viewModel() // <-- Asegúrate de tener este ViewModel
 ) {
     var nombre by remember { mutableStateOf("") }
     var celular by remember { mutableStateOf("") }
@@ -57,6 +60,7 @@ fun ReservaScreen(
             .fillMaxSize()
             .background(GrisClaro)
     ) {
+
         Canvas(modifier = Modifier.fillMaxSize()) {
             val height = size.height
             val width = size.width
@@ -120,6 +124,7 @@ fun ReservaScreen(
                 modifier = Modifier.padding(bottom = 12.dp)
             )
 
+
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -182,7 +187,7 @@ fun ReservaScreen(
                 leadingIcon = { Icon(Icons.Default.Phone, contentDescription = null) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-            )
+                )
             Spacer(modifier = Modifier.height(10.dp))
 
             OutlinedTextField(
@@ -225,6 +230,10 @@ fun ReservaScreen(
                                         correoCliente = correo
                                     )
                                     reservaViewModel.guardarReserva(reserva, idAdministrador)
+
+
+                                    horarioDisponibleViewModel.cargarHorasDisponibles(idBarbero, fecha)
+
                                     showSuccess = true
                                     isSaving = false
                                     nombre = ""
