@@ -55,10 +55,16 @@ class ReservaViewModel : ViewModel() {
 
     fun eliminarReserva(id: Long, idAdministrador: Long) {
         viewModelScope.launch {
-            repository.eliminarReserva(id, idAdministrador)
-            cargarReservas()
+            try {
+                repository.eliminarReserva(id, idAdministrador)
+                cargarReservas() // refresca la lista
+            } catch (e: Exception) {
+                // Aquí puedes mostrar un error en la UI
+                _error.value = "No se pudo eliminar la reserva: ${e.message}"
+            }
         }
     }
+
     fun cargarReservasPorBarbero(idBarbero: Long) {
         viewModelScope.launch {
             try {

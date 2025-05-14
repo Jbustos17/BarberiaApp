@@ -29,7 +29,14 @@ object RetrofitClient {
     }
 
 
+<<<<<<< HEAD
 }
 
 
 
+=======
+
+}
+
+
+>>>>>>> eadb3a93f48991feabb7fc055e9d937df4339d76
