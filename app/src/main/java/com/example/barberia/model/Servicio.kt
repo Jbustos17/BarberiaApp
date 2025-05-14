@@ -6,7 +6,8 @@ import com.example.barberia.R
 data class Servicio(
     @SerializedName("idServicio") val id: Long? = null,
     @SerializedName("nombreServicio") val nombre: String?,
-    @SerializedName("descripcion") val descripcion: String?
+    @SerializedName("descripcion") val descripcion: String?,
+    val fotoUrl: String? = null
 )
  {
     fun iconoResId(): Int = when (nombre?.lowercase()?.trim()) {

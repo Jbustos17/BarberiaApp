@@ -28,6 +28,24 @@ import androidx.navigation.NavHostController
 import com.example.barberia.model.Barbero
 import com.example.barberia.viewmodel.BarberoViewModel
 import com.example.barberia.R
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+
+fun toDirectDriveUrl(url: String?): String? {
+    if (url.isNullOrBlank()) return null
+    val regex = Regex("https://drive\\.google\\.com/file/d/([a-zA-Z0-9_-]+)")
+    val match = regex.find(url)
+    return if (match != null) {
+        val id = match.groupValues[1]
+        "https://drive.google.com/uc?export=download&id=$id"
+    } else {
+        url
+    }
+}
+
+
 
 
 @Composable
@@ -148,15 +166,22 @@ fun BarberoCardPersonalizado(
                 .fillMaxSize()
                 .background(Color.White)
         ) {
-            Image(
-                painter = painterResource(id = barbero.fotoResId()),
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(getDriveDirectUrl(barbero.fotoUrl))
+                    .crossfade(true)
+                    .build(),
                 contentDescription = barbero.nombre,
+                placeholder = painterResource(R.drawable.ic_barbero_placeholder),
+                error = painterResource(R.drawable.ic_barbero_placeholder),
+                fallback = painterResource(R.drawable.ic_barbero_placeholder),
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(110.dp)
                     .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
             )
+
             Spacer(Modifier.height(8.dp))
             Text(
                 text = barbero.nombre,
