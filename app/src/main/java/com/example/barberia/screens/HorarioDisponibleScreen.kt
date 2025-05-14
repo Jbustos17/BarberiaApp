@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.*
@@ -56,6 +57,24 @@ fun HorarioDisponibleScreen(
             .background(MaterialTheme.colorScheme.background)
             .padding(24.dp)
     ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 8.dp)
+        ) {
+            IconButton(
+                onClick = { navController.navigate("barberos") },
+                modifier = Modifier.size(40.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.ArrowBack,
+                    contentDescription = "Volver",
+                    tint = AzulBarberi // O el color que prefieras
+                )
+            }
+        }
+
         Text(
             text = "Reservar horario",
             style = MaterialTheme.typography.headlineMedium,

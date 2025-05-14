@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -51,13 +53,30 @@ fun BarberoPanelScreen(
                 .fillMaxSize()
                 .padding(20.dp)
         ) {
-            // Header
-            Text(
-                text = "Panel de ${barbero?.nombre ?: "Barbero"}",
-                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-                color = AzulBarberi,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
+            // Fila con botón de volver y título
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                IconButton(
+                    onClick = { navController.navigate("inicio") }, // Cambia el nombre si tu ruta es diferente
+                    modifier = Modifier.size(40.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.ArrowBack,
+                        contentDescription = "Volver",
+                        tint = AzulBarberi // Usa tu color principal o Color.Black si prefieres
+                    )
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Panel de ${barbero?.nombre ?: "Barbero"}",
+                    style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                    color = AzulBarberi,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+            }
+
             if (!barbero?.especialidad.isNullOrBlank()) {
                 Text(
                     text = barbero?.especialidad ?: "",
@@ -134,4 +153,5 @@ fun obtenerFechaHora(reserva: Reserva): String {
     // Aquí deberías obtener la fecha y hora real desde el objeto HorarioDisponible si lo necesitas
     return "ID Horario: ${reserva.horarioDisponible.idHorario}"
 }
+
 

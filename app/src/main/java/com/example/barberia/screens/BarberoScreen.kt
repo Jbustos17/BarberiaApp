@@ -9,6 +9,8 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -69,6 +71,24 @@ fun BarberoScreen(
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp)
+            ) {
+                IconButton(
+                    onClick = { navController.navigate("servicios") },
+                    modifier = Modifier.size(40.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.ArrowBack,
+                        contentDescription = "Volver",
+                        tint = AzulBarberi // O el color que prefieras
+                    )
+                }
+            }
+
             Text(
                 text = "Selecciona a un profesional del equipo",
                 style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),

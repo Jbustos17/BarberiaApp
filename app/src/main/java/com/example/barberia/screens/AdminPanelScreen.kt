@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
@@ -36,7 +37,7 @@ fun AdminPanelScreen(
     servicioViewModel: ServicioViewModel = viewModel(),
     idAdministrador: Long = 1L
 ) {
-    val tabTitles = listOf("Barberos", "Servicios")
+    val tabTitles = listOf("Barberos", "Servicios","Reservas")
     var selectedTab by remember { mutableStateOf(0) }
 
     var showBarberoDialog by remember { mutableStateOf(false) }
@@ -77,6 +78,24 @@ fun AdminPanelScreen(
                 .background(Color(0xFFF5F5F5))
                 .padding(innerPadding)
         ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp)
+            ) {
+                IconButton(
+                    onClick = { navController.navigate("inicio") },
+                    modifier = Modifier.size(40.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.ArrowBack,
+                        contentDescription = "Volver",
+                        tint = AzulBarberi // O el color que prefieras
+                    )
+                }
+            }
+
             Text(
                 "Panel de Administración",
                 style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),

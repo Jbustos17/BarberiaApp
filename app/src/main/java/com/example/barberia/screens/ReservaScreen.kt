@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Event
@@ -94,6 +95,24 @@ fun ReservaScreen(
                 .fillMaxSize()
                 .padding(horizontal = 24.dp, vertical = 16.dp)
         ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp)
+            ) {
+                IconButton(
+                    onClick = { navController.navigate("horarios/$idBarbero") },
+                    modifier = Modifier.size(40.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.ArrowBack,
+                        contentDescription = "Volver",
+                        tint = AzulBarberi
+                    )
+                }
+            }
+
             Text(
                 "Reserva tu turno",
                 style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
