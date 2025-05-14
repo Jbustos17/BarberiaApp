@@ -45,6 +45,23 @@ import com.example.barberia.model.Reserva
 import com.example.barberia.model.ServicioIdOnly
 import com.example.barberia.viewmodel.HorarioDisponibleViewModel
 import kotlinx.coroutines.launch
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import androidx.compose.ui.platform.LocalContext
+
+fun transformarDriveUrl(url: String?): String? {
+    if (url == null) return null
+    val regex = Regex("https://drive\\.google\\.com/file/d/([a-zA-Z0-9_-]+)")
+    val match = regex.find(url)
+    return if (match != null) {
+        val id = match.groupValues[1]
+        "https://drive.google.com/uc?export=download&id=$id"
+    } else {
+        url
+    }
+}
+
+
 
 @Composable
 fun AdminPanelScreen(
@@ -80,6 +97,9 @@ fun AdminPanelScreen(
     val coroutineScope = rememberCoroutineScope()
     val horarioDisponibleViewModel: HorarioDisponibleViewModel = viewModel()
     val horarios by horarioDisponibleViewModel.horarios.collectAsState()
+
+
+
 
 
 
@@ -184,6 +204,7 @@ fun AdminPanelScreen(
         // Diálogo de agregar/editar barbero
         if (showBarberoDialog) {
             BarberoDialog(
+
                 initialBarbero = barberoToEdit,
                 onDismiss = { showBarberoDialog = false },
                 onSave = { barbero ->
@@ -380,9 +401,10 @@ fun ReservaCardAdmin(
                         Icon(
                             imageVector = Icons.Filled.Person,
                             contentDescription = "Barbero",
-                            tint = Color(0xFF388E3C),
-                            modifier = Modifier.size(22.dp)
+                            tint = AzulBarberi,
+                            modifier = Modifier.size(36.dp)
                         )
+
                         Spacer(Modifier.width(8.dp))
                         Text(
                             text = "Barbero: $nombreBarbero",
@@ -570,12 +592,21 @@ fun BarberoCardAdmin(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(20.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Filled.Person,
-                    contentDescription = "Barbero",
-                    tint = AzulBarberi,
-                    modifier = Modifier.size(36.dp)
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(transformarDriveUrl(barbero.fotoUrl))
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = "Foto barbero",
+                    placeholder = painterResource(R.drawable.ic_barbero_placeholder),
+                    error = painterResource(R.drawable.ic_barbero_placeholder),
+                    fallback = painterResource(R.drawable.ic_barbero_placeholder), // <-- ¡ESTE ES CLAVE!
+                    modifier = Modifier
+                        .size(56.dp)
+                        .clip(CircleShape)
                 )
+
+
                 Spacer(Modifier.width(16.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
@@ -650,12 +681,21 @@ fun ServicioCardAdmin(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(20.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Filled.Build,
-                    contentDescription = "Servicio",
-                    tint = AzulBarberi,
-                    modifier = Modifier.size(34.dp)
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(transformarDriveUrl(servicio.fotoUrl))
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = "Imagen servicio",
+                    placeholder = painterResource(R.drawable.ic_placeholder_servicio),
+                    error = painterResource(R.drawable.ic_placeholder_servicio),
+                    fallback = painterResource(R.drawable.ic_placeholder_servicio),
+                    modifier = Modifier
+                        .size(56.dp)
+                        .clip(CircleShape)
                 )
+
+
                 Spacer(Modifier.width(16.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
@@ -685,7 +725,7 @@ fun ServicioCardAdmin(
 
 @Composable
 fun BarberoDialog(
-    initialBarbero: Barbero?,
+    initialBarbero: Barbero? = null,
     onDismiss: () -> Unit,
     onSave: (Barbero) -> Unit
 ) {
@@ -694,43 +734,68 @@ fun BarberoDialog(
     var especialidad by remember { mutableStateOf(initialBarbero?.especialidad ?: "") }
     var usuario by remember { mutableStateOf(initialBarbero?.usuario ?: "") }
     var contrasenia by remember { mutableStateOf(initialBarbero?.contrasenia ?: "") }
-
-
+    var fotoUrl by remember { mutableStateOf(initialBarbero?.fotoUrl ?: "") }
 
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(if (initialBarbero == null) "Agregar Barbero" else "Editar Barbero") },
         text = {
             Column {
-                OutlinedTextField(value = nombre, onValueChange = { nombre = it }, label = { Text("Nombre") })
-                OutlinedTextField(value = telefono, onValueChange = { telefono = it }, label = { Text("Teléfono") })
-                OutlinedTextField(value = especialidad, onValueChange = { especialidad = it }, label = { Text("Especialidad") })
+                OutlinedTextField(
+                    value = nombre,
+                    onValueChange = { nombre = it },
+                    label = { Text("Nombre") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = telefono,
+                    onValueChange = { telefono = it },
+                    label = { Text("Teléfono") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = especialidad,
+                    onValueChange = { especialidad = it },
+                    label = { Text("Especialidad") },
+                    modifier = Modifier.fillMaxWidth()
+                )
                 OutlinedTextField(
                     value = usuario,
                     onValueChange = { usuario = it },
                     label = { Text("Usuario") },
-                    singleLine = true,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 12.dp)
+                    modifier = Modifier.fillMaxWidth()
                 )
-
                 OutlinedTextField(
                     value = contrasenia,
                     onValueChange = { contrasenia = it },
                     label = { Text("Contraseña") },
-                    singleLine = true,
-                    visualTransformation = PasswordVisualTransformation(),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = fotoUrl,
+                    onValueChange = { fotoUrl = it },
+                    label = { Text("URL de la foto (Drive o web)") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(Modifier.height(8.dp))
+                // Previsualización de la imagen
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(transformarDriveUrl(fotoUrl))
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = "Foto barbero",
+                    placeholder = painterResource(R.drawable.ic_barbero_placeholder),
+                    error = painterResource(R.drawable.ic_barbero_placeholder),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 12.dp)
+                        .height(120.dp)
                 )
-
             }
         },
         confirmButton = {
-            Button(onClick = {
-                if (nombre.isNotBlank() && telefono.isNotBlank() && especialidad.isNotBlank() && usuario.isNotBlank() && contrasenia.isNotBlank()) {
+            TextButton(
+                onClick = {
                     onSave(
                         Barbero(
                             idBarbero = initialBarbero?.idBarbero,
@@ -738,58 +803,89 @@ fun BarberoDialog(
                             telefono = telefono,
                             especialidad = especialidad,
                             usuario = usuario,
-                            contrasenia = contrasenia
+                            contrasenia = contrasenia,
+                            fotoUrl = fotoUrl
                         )
                     )
                 }
-            }) {
-                Text("Guardar")
-            }
+            ) { Text("Guardar") }
         },
         dismissButton = {
-            OutlinedButton(onClick = onDismiss) { Text("Cancelar") }
+            TextButton(onClick = onDismiss) { Text("Cancelar") }
         }
     )
 }
 
+
 @Composable
 fun ServicioDialog(
-    initialServicio: Servicio?,
+    initialServicio: Servicio? = null,
     onDismiss: () -> Unit,
     onSave: (Servicio) -> Unit
 ) {
     var nombre by remember { mutableStateOf(initialServicio?.nombre ?: "") }
     var descripcion by remember { mutableStateOf(initialServicio?.descripcion ?: "") }
+    var fotoUrl by remember { mutableStateOf(initialServicio?.fotoUrl ?: "") }
 
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(if (initialServicio == null) "Agregar Servicio" else "Editar Servicio") },
         text = {
             Column {
-                OutlinedTextField(value = nombre ?: "", onValueChange = { nombre = it }, label = { Text("Nombre") })
-                OutlinedTextField(value = descripcion ?: "", onValueChange = { descripcion = it }, label = { Text("Descripción") })
+                OutlinedTextField(
+                    value = nombre,
+                    onValueChange = { nombre = it },
+                    label = { Text("Nombre del servicio") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = descripcion,
+                    onValueChange = { descripcion = it },
+                    label = { Text("Descripción") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = fotoUrl,
+                    onValueChange = { fotoUrl = it },
+                    label = { Text("URL de la imagen (Drive o web)") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(Modifier.height(8.dp))
+                // Previsualización de la imagen
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(transformarDriveUrl(fotoUrl))
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = "Imagen del servicio",
+                    placeholder = painterResource(R.drawable.ic_placeholder_servicio),
+                    error = painterResource(R.drawable.ic_placeholder_servicio),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(120.dp)
+                )
             }
         },
         confirmButton = {
-            Button(onClick = {
-                if (!nombre.isNullOrBlank() && !descripcion.isNullOrBlank()) {
+            TextButton(
+                onClick = {
                     onSave(
                         Servicio(
                             id = initialServicio?.id,
                             nombre = nombre,
-                            descripcion = descripcion
+                            descripcion = descripcion,
+                            fotoUrl = fotoUrl
                         )
                     )
                 }
-            }) {
-                Text("Guardar")
-            }
+            ) { Text("Guardar") }
         },
         dismissButton = {
-            OutlinedButton(onClick = onDismiss) { Text("Cancelar") }
+            TextButton(onClick = onDismiss) { Text("Cancelar") }
         }
     )
 }
+
 @Composable
 fun ReservaDialog(
     initialReserva: Reserva?,
