@@ -9,6 +9,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
@@ -113,6 +114,7 @@ fun LoginScreen(
             Box(
                 modifier = Modifier.fillMaxSize()
             ) {
+
                 Column(
                     modifier = Modifier
                         .align(Alignment.Center)
@@ -124,6 +126,24 @@ fun LoginScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 8.dp)
+                    ) {
+                        IconButton(
+                            onClick = { navController.navigate("inicio") },
+                            modifier = Modifier.size(70.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.ArrowBack,
+                                contentDescription = "Volver",
+                                tint = AzulBarberi // O el color que prefieras
+                            )
+                        }
+                    }
+
                     Text(
                         "Acceso Administrador",
                         style = MaterialTheme.typography.headlineSmall.copy(
