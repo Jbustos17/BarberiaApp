@@ -35,6 +35,7 @@ import com.example.barberia.model.HorarioIdOnly
 import com.example.barberia.viewmodel.ReservaViewModel
 import com.example.barberia.model.Reserva
 import com.example.barberia.model.ServicioIdOnly
+import kotlinx.coroutines.launch
 
 @Composable
 fun AdminPanelScreen(
@@ -66,6 +67,10 @@ fun AdminPanelScreen(
     var reservaToDelete by remember { mutableStateOf<Reserva?>(null) }
     var showReservaDialog by remember { mutableStateOf(false) }
 
+    val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
+
+
 
 
     LaunchedEffect(Unit) {
@@ -76,6 +81,7 @@ fun AdminPanelScreen(
     }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         floatingActionButton = {
             if (selectedTab != 2) { // Solo muestra el FAB si NO estás en la pestaña de Reservas
                 FloatingActionButton(
@@ -196,41 +202,51 @@ fun AdminPanelScreen(
             )
         }
 
-        // Diálogo de confirmación para eliminar barbero
-        if (barberoToDelete != null) {
-            AlertDialog(
-                onDismissRequest = { barberoToDelete = null },
-                title = { Text("Eliminar barbero") },
-                text = { Text("¿Estás seguro de que quieres eliminar a ${barberoToDelete?.nombre}?") },
-                confirmButton = {
-                    TextButton(onClick = {
-                        barberoToDelete?.let { barberoViewModel.eliminarBarbero(it.idBarbero!!, idAdministrador) }
-                        barberoToDelete = null
-                    }) { Text("Eliminar", color = Color.Red) }
-                },
-                dismissButton = {
-                    TextButton(onClick = { barberoToDelete = null }) { Text("Cancelar") }
-                }
-            )
-        }
+    if (barberoToDelete != null) {
+        AlertDialog(
+            onDismissRequest = { barberoToDelete = null },
+            title = { Text("Eliminar barbero") },
+            text = { Text("¿Estás seguro de que quieres eliminar a ${barberoToDelete?.nombre}?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    barberoToDelete?.let {
+                        barberoViewModel.eliminarBarbero(it.idBarbero!!, idAdministrador)
+                        coroutineScope.launch {
+                            snackbarHostState.showSnackbar("Barbero eliminado correctamente")
+                        }
+                    }
+                    barberoToDelete = null
+                }) { Text("Eliminar", color = Color.Red) }
+            },
+            dismissButton = {
+                TextButton(onClick = { barberoToDelete = null }) { Text("Cancelar") }
+            }
+        )
+    }
 
-        // Diálogo de confirmación para eliminar servicio
-        if (servicioToDelete != null) {
-            AlertDialog(
-                onDismissRequest = { servicioToDelete = null },
-                title = { Text("Eliminar servicio") },
-                text = { Text("¿Estás seguro de que quieres eliminar el servicio \"${servicioToDelete?.nombre}\"?") },
-                confirmButton = {
-                    TextButton(onClick = {
-                        servicioToDelete?.let { servicioViewModel.eliminarServicio(it.id!!, idAdministrador) }
-                        servicioToDelete = null
-                    }) { Text("Eliminar", color = Color.Red) }
-                },
-                dismissButton = {
-                    TextButton(onClick = { servicioToDelete = null }) { Text("Cancelar") }
-                }
-            )
-        }
+// Diálogo de confirmación para eliminar servicio
+    if (servicioToDelete != null) {
+        AlertDialog(
+            onDismissRequest = { servicioToDelete = null },
+            title = { Text("Eliminar servicio") },
+            text = { Text("¿Estás seguro de que quieres eliminar el servicio \"${servicioToDelete?.nombre}\"?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    servicioToDelete?.let {
+                        servicioViewModel.eliminarServicio(it.id!!, idAdministrador)
+                        coroutineScope.launch {
+                            snackbarHostState.showSnackbar("Servicio eliminado correctamente")
+                        }
+                    }
+                    servicioToDelete = null
+                }) { Text("Eliminar", color = Color.Red) }
+            },
+            dismissButton = {
+                TextButton(onClick = { servicioToDelete = null }) { Text("Cancelar") }
+            }
+        )
+    }
+
     if (reservaToDelete != null) {
         AlertDialog(
             onDismissRequest = { reservaToDelete = null },
@@ -238,7 +254,12 @@ fun AdminPanelScreen(
             text = { Text("¿Estás seguro de que quieres eliminar la reserva de ${reservaToDelete?.nombreCliente}?") },
             confirmButton = {
                 TextButton(onClick = {
-                    reservaToDelete?.let { reservaViewModel.eliminarReserva(it.idReserva!!, idAdministrador) }
+                    reservaToDelete?.let {
+                        reservaViewModel.eliminarReserva(it.idReserva!!, idAdministrador)
+                        coroutineScope.launch {
+                            snackbarHostState.showSnackbar("Reserva eliminada correctamente")
+                        }
+                    }
                     reservaToDelete = null
                 }) { Text("Eliminar", color = Color.Red) }
             },
@@ -247,6 +268,7 @@ fun AdminPanelScreen(
             }
         )
     }
+
     if (showReservaDialog) {
         ReservaDialog(
             initialReserva = reservaToEdit,
