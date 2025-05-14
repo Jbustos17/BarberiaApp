@@ -29,18 +29,21 @@ import com.example.barberia.model.Servicio
 import com.example.barberia.viewmodel.BarberoViewModel
 import com.example.barberia.viewmodel.ServicioViewModel
 import com.example.barberia.R
+import com.example.barberia.model.BarberoIdOnly
+import com.example.barberia.model.ClienteIdOnly
+import com.example.barberia.model.HorarioIdOnly
 import com.example.barberia.viewmodel.ReservaViewModel
 import com.example.barberia.model.Reserva
+import com.example.barberia.model.ServicioIdOnly
 
 @Composable
 fun AdminPanelScreen(
     navController: NavHostController,
     barberoViewModel: BarberoViewModel = viewModel(),
     servicioViewModel: ServicioViewModel = viewModel(),
-    reservaViewModel: ReservaViewModel = viewModel(),
     idAdministrador: Long = 1L
 ) {
-    val tabTitles = listOf("Barberos", "Servicios", "Reservas")
+    val tabTitles = listOf("Barberos", "Servicios","Reservas")
     var selectedTab by remember { mutableStateOf(0) }
 
     var showBarberoDialog by remember { mutableStateOf(false) }
@@ -49,31 +52,46 @@ fun AdminPanelScreen(
     var showServicioDialog by remember { mutableStateOf(false) }
     var servicioToEdit by remember { mutableStateOf<Servicio?>(null) }
 
+    // Para el cuadro de confirmación de eliminación
+    var barberoToDelete by remember { mutableStateOf<Barbero?>(null) }
+    var servicioToDelete by remember { mutableStateOf<Servicio?>(null) }
+
     val barberos by barberoViewModel.barberos.collectAsState()
     val servicios by servicioViewModel.servicios.collectAsState()
+
+    val reservaViewModel: ReservaViewModel = viewModel()
     val reservas by reservaViewModel.reservas.collectAsState()
+
+    var reservaToEdit by remember { mutableStateOf<Reserva?>(null) }
+    var reservaToDelete by remember { mutableStateOf<Reserva?>(null) }
+    var showReservaDialog by remember { mutableStateOf(false) }
+
+
 
     LaunchedEffect(Unit) {
         barberoViewModel.obtenerBarberos()
         servicioViewModel.cargarServicios(idAdministrador)
         reservaViewModel.cargarReservas()
+
     }
 
     Scaffold(
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = {
-                    if (selectedTab == 0) {
-                        barberoToEdit = null
-                        showBarberoDialog = true
-                    } else if (selectedTab == 1) {
-                        servicioToEdit = null
-                        showServicioDialog = true
-                    }
-                },
-                containerColor = Color(0xFF004A93)
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Agregar")
+            if (selectedTab != 2) { // Solo muestra el FAB si NO estás en la pestaña de Reservas
+                FloatingActionButton(
+                    onClick = {
+                        if (selectedTab == 0) {
+                            barberoToEdit = null
+                            showBarberoDialog = true
+                        } else {
+                            servicioToEdit = null
+                            showServicioDialog = true
+                        }
+                    },
+                    containerColor = Color(0xFF004A93)
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Agregar")
+                }
             }
         }
     ) { innerPadding ->
@@ -83,24 +101,16 @@ fun AdminPanelScreen(
                 .background(Color(0xFFF5F5F5))
                 .padding(innerPadding)
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 8.dp)
+            IconButton(
+                onClick = { navController.navigate("inicio") }, // Cambia el nombre si tu ruta es diferente
+                modifier = Modifier.size(40.dp)
             ) {
-                IconButton(
-                    onClick = { navController.navigate("inicio") },
-                    modifier = Modifier.size(40.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.ArrowBack,
-                        contentDescription = "Volver",
-                        tint = AzulBarberi
-                    )
-                }
+                Icon(
+                    imageVector = Icons.Filled.ArrowBack,
+                    contentDescription = "Volver",
+                    tint = AzulBarberi // Usa tu color principal o Color.Black si prefieres
+                )
             }
-
             Text(
                 "Panel de Administración",
                 style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
@@ -127,58 +137,144 @@ fun AdminPanelScreen(
             when (selectedTab) {
                 0 -> BarberosTab(
                     barberos = barberos,
-                    onEdit = {
-                        barberoToEdit = it
-                        showBarberoDialog = true
-                    },
-                    onDelete = { barberoViewModel.eliminarBarbero(it.idBarbero!!, idAdministrador) }
+                    onEdit = { barberoToEdit = it; showBarberoDialog = true },
+                    onDelete = { barberoToDelete = it }
                 )
                 1 -> ServiciosTab(
                     servicios = servicios,
-                    onEdit = {
-                        servicioToEdit = it
-                        showServicioDialog = true
-                    },
-                    onDelete = { servicioViewModel.eliminarServicio(it.id!!, idAdministrador) }
+                    onEdit = { servicioToEdit = it; showServicioDialog = true },
+                    onDelete = { servicioToDelete = it }
                 )
                 2 -> ReservasTab(
                     reservas = reservas,
                     barberos = barberos,
-                    servicios = servicios
+                    servicios = servicios,
+                    onEdit = { reservaToEdit = it; showReservaDialog = true },
+                    onDelete = { reservaToDelete = it }
                 )
             }
+
+
         }
-    }
-}
+        }
 
-
-
-@Composable
-fun ReservasTab(
-    reservas: List<Reserva>,
-    barberos: List<Barbero>,
-    servicios: List<Servicio>
-) {
-    LazyColumn(
-        contentPadding = PaddingValues(12.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        items(reservas) { reserva ->
-            ReservaCardAdmin(
-                reserva = reserva,
-                barberos = barberos,
-                servicios = servicios
+        // Diálogo de agregar/editar barbero
+        if (showBarberoDialog) {
+            BarberoDialog(
+                initialBarbero = barberoToEdit,
+                onDismiss = { showBarberoDialog = false },
+                onSave = { barbero ->
+                    if (barberoToEdit == null) {
+                        barberoViewModel.guardarBarbero(barbero, idAdministrador)
+                    } else {
+                        barberoViewModel.guardarBarbero(
+                            barbero.copy(idBarbero = barberoToEdit!!.idBarbero),
+                            idAdministrador
+                        )
+                    }
+                    showBarberoDialog = false
+                }
             )
         }
+
+        // Diálogo de agregar/editar servicio
+        if (showServicioDialog) {
+            ServicioDialog(
+                initialServicio = servicioToEdit,
+                onDismiss = { showServicioDialog = false },
+                onSave = { servicio ->
+                    if (servicioToEdit == null) {
+                        servicioViewModel.guardarServicio(servicio, idAdministrador)
+                    } else {
+                        servicioViewModel.guardarServicio(
+                            servicio.copy(id = servicioToEdit!!.id),
+                            idAdministrador
+                        )
+                    }
+                    showServicioDialog = false
+                }
+            )
+        }
+
+        // Diálogo de confirmación para eliminar barbero
+        if (barberoToDelete != null) {
+            AlertDialog(
+                onDismissRequest = { barberoToDelete = null },
+                title = { Text("Eliminar barbero") },
+                text = { Text("¿Estás seguro de que quieres eliminar a ${barberoToDelete?.nombre}?") },
+                confirmButton = {
+                    TextButton(onClick = {
+                        barberoToDelete?.let { barberoViewModel.eliminarBarbero(it.idBarbero!!, idAdministrador) }
+                        barberoToDelete = null
+                    }) { Text("Eliminar", color = Color.Red) }
+                },
+                dismissButton = {
+                    TextButton(onClick = { barberoToDelete = null }) { Text("Cancelar") }
+                }
+            )
+        }
+
+        // Diálogo de confirmación para eliminar servicio
+        if (servicioToDelete != null) {
+            AlertDialog(
+                onDismissRequest = { servicioToDelete = null },
+                title = { Text("Eliminar servicio") },
+                text = { Text("¿Estás seguro de que quieres eliminar el servicio \"${servicioToDelete?.nombre}\"?") },
+                confirmButton = {
+                    TextButton(onClick = {
+                        servicioToDelete?.let { servicioViewModel.eliminarServicio(it.id!!, idAdministrador) }
+                        servicioToDelete = null
+                    }) { Text("Eliminar", color = Color.Red) }
+                },
+                dismissButton = {
+                    TextButton(onClick = { servicioToDelete = null }) { Text("Cancelar") }
+                }
+            )
+        }
+    if (reservaToDelete != null) {
+        AlertDialog(
+            onDismissRequest = { reservaToDelete = null },
+            title = { Text("Eliminar reserva") },
+            text = { Text("¿Estás seguro de que quieres eliminar la reserva de ${reservaToDelete?.nombreCliente}?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    reservaToDelete?.let { reservaViewModel.eliminarReserva(it.idReserva!!, idAdministrador) }
+                    reservaToDelete = null
+                }) { Text("Eliminar", color = Color.Red) }
+            },
+            dismissButton = {
+                TextButton(onClick = { reservaToDelete = null }) { Text("Cancelar") }
+            }
+        )
+    }
+    if (showReservaDialog) {
+        ReservaDialog(
+            initialReserva = reservaToEdit,
+            barberos = barberos,
+            servicios = servicios,
+            onDismiss = { showReservaDialog = false },
+            onSave = { reserva ->
+                if (reservaToEdit == null) {
+                    reservaViewModel.guardarReserva(reserva, idAdministrador)
+                } else {
+                    reservaViewModel.guardarReserva(reserva.copy(idReserva = reservaToEdit!!.idReserva), idAdministrador)
+                }
+                showReservaDialog = false
+            }
+        )
     }
 }
+
+
 
 
 @Composable
 fun ReservaCardAdmin(
     reserva: Reserva,
     barberos: List<Barbero>,
-    servicios: List<Servicio>
+    servicios: List<Servicio>,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit
 ) {
     val nombreBarbero = barberos.find { it.idBarbero == reserva.barbero.idBarbero }?.nombre ?: "N/A"
     val nombreServicio = servicios.find { it.id == reserva.servicio.idServicio }?.nombre ?: "N/A"
@@ -188,38 +284,70 @@ fun ReservaCardAdmin(
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
-        Column(Modifier.padding(16.dp)) {
-            Text(
-                text = "Cliente: ${reserva.nombreCliente}",
-                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
-            )
-            Text(
-                text = "Barbero: $nombreBarbero",
-                style = MaterialTheme.typography.bodyMedium
-            )
-            Text(
-                text = "Servicio: $nombreServicio",
-                style = MaterialTheme.typography.bodyMedium
-            )
-            Text(
-                text = "Horario ID: ${reserva.horarioDisponible.idHorario}",
-                style = MaterialTheme.typography.bodyMedium
-            )
-            Text(
-                text = "Celular: ${reserva.celularCliente}",
-                color = Color.Gray,
-                style = MaterialTheme.typography.bodySmall
-            )
-            Text(
-                text = "Correo: ${reserva.correoCliente}",
-                color = Color.Gray,
-                style = MaterialTheme.typography.bodySmall
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "Cliente: ${reserva.nombreCliente}",
+                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
+                )
+                Text(
+                    text = "Barbero: $nombreBarbero",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Text(
+                    text = "Servicio: $nombreServicio",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Text(
+                    text = "Horario ID: ${reserva.horarioDisponible.idHorario}",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Text(
+                    text = "Celular: ${reserva.celularCliente}",
+                    color = Color.Gray,
+                    style = MaterialTheme.typography.bodySmall
+                )
+                Text(
+                    text = "Correo: ${reserva.correoCliente}",
+                    color = Color.Gray,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+            IconButton(onClick = onEdit) {
+                Icon(Icons.Default.Edit, contentDescription = "Editar")
+            }
+            IconButton(onClick = onDelete) {
+                Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = Color.Red)
+            }
+        }
+    }
+}
+@Composable
+fun ReservasTab(
+    reservas: List<Reserva>,
+    barberos: List<Barbero>,
+    servicios: List<Servicio>,
+    onEdit: (Reserva) -> Unit,
+    onDelete: (Reserva) -> Unit
+) {
+    LazyColumn(
+        contentPadding = PaddingValues(12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        items(reservas) { reserva ->
+            ReservaCardAdmin(
+                reserva = reserva,
+                barberos = barberos,
+                servicios = servicios,
+                onEdit = { onEdit(reserva) },
+                onDelete = { onDelete(reserva) }
             )
         }
     }
 }
-
-
 
 @Composable
 fun BarberosTab(
@@ -228,35 +356,15 @@ fun BarberosTab(
     onDelete: (Barbero) -> Unit
 ) {
     LazyColumn(
-        contentPadding = PaddingValues(12.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        contentPadding = PaddingValues(24.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         items(barberos) { barbero ->
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 4.dp),
-                shape = RoundedCornerShape(12.dp),
-                elevation = CardDefaults.cardElevation(2.dp)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(barbero.nombre ?: "Sin nombre", style = MaterialTheme.typography.bodyLarge)
-                    Row {
-                        IconButton(onClick = { onEdit(barbero) }) {
-                            Icon(Icons.Default.Edit, contentDescription = "Editar")
-                        }
-                        IconButton(onClick = { onDelete(barbero) }) {
-                            Icon(Icons.Default.Delete, contentDescription = "Eliminar")
-                        }
-                    }
-                }
-            }
+            BarberoCardAdmin(
+                barbero = barbero,
+                onEdit = { onEdit(barbero) },
+                onDelete = { onDelete(barbero) }
+            )
         }
     }
 }
@@ -268,35 +376,15 @@ fun ServiciosTab(
     onDelete: (Servicio) -> Unit
 ) {
     LazyColumn(
-        contentPadding = PaddingValues(12.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        contentPadding = PaddingValues(24.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         items(servicios) { servicio ->
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 4.dp),
-                shape = RoundedCornerShape(12.dp),
-                elevation = CardDefaults.cardElevation(2.dp)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(servicio.nombre ?: "Sin nombre", style = MaterialTheme.typography.bodyLarge)
-                    Row {
-                        IconButton(onClick = { onEdit(servicio) }) {
-                            Icon(Icons.Default.Edit, contentDescription = "Editar")
-                        }
-                        IconButton(onClick = { onDelete(servicio) }) {
-                            Icon(Icons.Default.Delete, contentDescription = "Eliminar")
-                        }
-                    }
-                }
-            }
+            ServicioCardAdmin(
+                servicio = servicio,
+                onEdit = { onEdit(servicio) },
+                onDelete = { onDelete(servicio) }
+            )
         }
     }
 }
@@ -317,8 +405,9 @@ fun BarberoCardAdmin(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(16.dp)
         ) {
+            // Foto dinámica según el nombre
             Image(
-                painter = painterResource(id = R.drawable.ic_barbero),
+                painter = painterResource(id = barbero.fotoResId()),
                 contentDescription = "Foto barbero",
                 modifier = Modifier
                     .size(56.dp)
@@ -355,6 +444,7 @@ fun ServicioCardAdmin(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(16.dp)
         ) {
+            // Puedes cambiar el icono si tienes uno específico por servicio
             Image(
                 painter = painterResource(id = R.drawable.ic_barbero),
                 contentDescription = "Icono servicio",
@@ -484,3 +574,127 @@ fun ServicioDialog(
         }
     )
 }
+@Composable
+fun ReservaDialog(
+    initialReserva: Reserva?,
+    barberos: List<Barbero>,
+    servicios: List<Servicio>,
+    onDismiss: () -> Unit,
+    onSave: (Reserva) -> Unit
+) {
+    var nombreCliente by remember { mutableStateOf(initialReserva?.nombreCliente ?: "") }
+    var celularCliente by remember { mutableStateOf(initialReserva?.celularCliente ?: "") }
+    var correoCliente by remember { mutableStateOf(initialReserva?.correoCliente ?: "") }
+    var barberoSeleccionado by remember { mutableStateOf(initialReserva?.barbero?.idBarbero ?: barberos.firstOrNull()?.idBarbero) }
+    var servicioSeleccionado by remember { mutableStateOf(initialReserva?.servicio?.idServicio ?: servicios.firstOrNull()?.id) }
+    // Puedes agregar más campos según tu modelo
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(if (initialReserva == null) "Crear Reserva" else "Editar Reserva") },
+        text = {
+            Column {
+                OutlinedTextField(
+                    value = nombreCliente,
+                    onValueChange = { nombreCliente = it },
+                    label = { Text("Nombre Cliente") }
+                )
+                OutlinedTextField(
+                    value = celularCliente,
+                    onValueChange = { celularCliente = it },
+                    label = { Text("Celular Cliente") }
+                )
+                OutlinedTextField(
+                    value = correoCliente,
+                    onValueChange = { correoCliente = it },
+                    label = { Text("Correo Cliente") }
+                )
+                // Selector de barbero
+                DropdownMenuBarbero(
+                    barberos = barberos,
+                    seleccionado = barberoSeleccionado,
+                    onSeleccionado = { barberoSeleccionado = it }
+                )
+                // Selector de servicio
+                DropdownMenuServicio(
+                    servicios = servicios,
+                    seleccionado = servicioSeleccionado,
+                    onSeleccionado = { servicioSeleccionado = it }
+                )
+                // Agrega aquí más campos si es necesario
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                // Crea el objeto Reserva y llama a onSave
+                val reserva = Reserva(
+                    idReserva = initialReserva?.idReserva,
+                    nombreCliente = nombreCliente,
+                    celularCliente = celularCliente,
+                    correoCliente = correoCliente,
+                    barbero = BarberoIdOnly(barberoSeleccionado!!),
+                    servicio = ServicioIdOnly(servicioSeleccionado!!),
+                    horarioDisponible = initialReserva?.horarioDisponible ?: HorarioIdOnly(0), // Ajusta esto según tu lógica
+                    cliente = initialReserva?.cliente ?: ClienteIdOnly(0) // Ajusta esto según tu lógica
+                )
+                onSave(reserva)
+            }) { Text("Guardar") }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cancelar") }
+        }
+    )
+}
+
+@Composable
+fun DropdownMenuBarbero(
+    barberos: List<Barbero>,
+    seleccionado: Long?,
+    onSeleccionado: (Long) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val nombreSeleccionado = barberos.find { it.idBarbero == seleccionado }?.nombre ?: "Selecciona Barbero"
+    Box {
+        OutlinedButton(onClick = { expanded = true }) {
+            Text(nombreSeleccionado)
+        }
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            barberos.forEach { barbero ->
+                DropdownMenuItem(
+                    text = { Text(barbero.nombre) },
+                    onClick = {
+                        onSeleccionado(barbero.idBarbero!!)
+                        expanded = false
+                    }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun DropdownMenuServicio(
+    servicios: List<Servicio>,
+    seleccionado: Long?,
+    onSeleccionado: (Long) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val nombreSeleccionado = servicios.find { it.id == seleccionado }?.nombre ?: "Selecciona Servicio"
+    Box {
+        OutlinedButton(onClick = { expanded = true }) {
+            Text(nombreSeleccionado ?: "")
+        }
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            servicios.forEach { servicio ->
+                DropdownMenuItem(
+                    text = { Text(servicio.nombre ?: "") },
+                    onClick = {
+                        onSeleccionado(servicio.id!!)
+                        expanded = false
+                    }
+                )
+            }
+        }
+    }
+}
+
