@@ -171,7 +171,7 @@ fun AdminPanelScreen(
                     Tab(
                         selected = selectedTab == index,
                         onClick = { selectedTab = index },
-                        text = { Text(title, fontWeight = FontWeight.Medium) }
+                        text = { Text(title, fontWeight = FontWeight.Medium, fontSize = 29.sp)  }
                     )
                 }
             }
@@ -611,7 +611,7 @@ fun BarberoCardAdmin(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = barbero.nombre,
-                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold, fontSize = 22.sp),
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold, fontSize = 26.sp),
                         color = AzulBarberi
                     )
                     Spacer(Modifier.height(8.dp))
@@ -700,7 +700,7 @@ fun ServicioCardAdmin(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = servicio.nombre!!,
-                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold, fontSize = 22.sp),
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold, fontSize = 26.sp),
                         color = AzulBarberi
                     )
                     Spacer(Modifier.height(8.dp))
