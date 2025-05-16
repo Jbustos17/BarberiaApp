@@ -123,14 +123,7 @@ fun BarberoPanelScreen(
                 )
             }
 
-            if (!barbero?.especialidad.isNullOrBlank()) {
-                Text(
-                    text = barbero?.especialidad ?: "",
-                    style = MaterialTheme.typography.titleMedium.copy(fontSize = 20.sp),
-                    color = Color.Gray,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
-            }
+            Spacer(modifier = Modifier.height(16.dp))
 
             if (reservas.isEmpty()) {
                 Box(

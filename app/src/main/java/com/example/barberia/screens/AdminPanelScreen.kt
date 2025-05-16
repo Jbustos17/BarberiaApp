@@ -2,7 +2,6 @@ package com.example.barberia.screens
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -26,7 +25,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -70,6 +68,8 @@ fun AdminPanelScreen(
     servicioViewModel: ServicioViewModel = viewModel(),
     idAdministrador: Long = 1L
 ) {
+
+
     val tabTitles = listOf("Barberos", "Servicios","Reservas")
     var selectedTab by remember { mutableStateOf(0) }
 
@@ -100,12 +100,7 @@ fun AdminPanelScreen(
 
 
 
-
-
-
     println("IDs horarios: ${horarios.map { it.idHorario }}")
-
-
 
 
     LaunchedEffect(Unit) {
@@ -171,7 +166,7 @@ fun AdminPanelScreen(
                     Tab(
                         selected = selectedTab == index,
                         onClick = { selectedTab = index },
-                        text = { Text(title, fontWeight = FontWeight.Medium, fontSize = 29.sp)  }
+                        text = { Text(title, fontWeight = FontWeight.Medium, fontSize = 24.sp)  }
                     )
                 }
             }
@@ -615,11 +610,7 @@ fun BarberoCardAdmin(
                         color = AzulBarberi
                     )
                     Spacer(Modifier.height(8.dp))
-                    Text(
-                        text = "Especialidad: ${barbero.especialidad}",
-                        style = MaterialTheme.typography.bodyLarge.copy(fontSize = 18.sp),
-                        color = Color.DarkGray
-                    )
+
                     Text(
                         text = "Usuario: ${barbero.usuario}",
                         style = MaterialTheme.typography.bodyLarge.copy(fontSize = 17.sp),
@@ -731,7 +722,6 @@ fun BarberoDialog(
 ) {
     var nombre by remember { mutableStateOf(initialBarbero?.nombre ?: "") }
     var telefono by remember { mutableStateOf(initialBarbero?.telefono ?: "") }
-    var especialidad by remember { mutableStateOf(initialBarbero?.especialidad ?: "") }
     var usuario by remember { mutableStateOf(initialBarbero?.usuario ?: "") }
     var contrasenia by remember { mutableStateOf(initialBarbero?.contrasenia ?: "") }
     var fotoUrl by remember { mutableStateOf(initialBarbero?.fotoUrl ?: "") }
@@ -751,12 +741,6 @@ fun BarberoDialog(
                     value = telefono,
                     onValueChange = { telefono = it },
                     label = { Text("Teléfono") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = especialidad,
-                    onValueChange = { especialidad = it },
-                    label = { Text("Especialidad") },
                     modifier = Modifier.fillMaxWidth()
                 )
                 OutlinedTextField(
@@ -801,10 +785,9 @@ fun BarberoDialog(
                             idBarbero = initialBarbero?.idBarbero,
                             nombre = nombre,
                             telefono = telefono,
-                            especialidad = especialidad,
                             usuario = usuario,
-                            contrasenia = contrasenia,
-                            fotoUrl = fotoUrl
+                            fotoUrl = fotoUrl,
+                            contrasenia = contrasenia
                         )
                     )
                 }
@@ -899,7 +882,8 @@ fun ReservaDialog(
     var correoCliente by remember { mutableStateOf(initialReserva?.correoCliente ?: "") }
     var barberoSeleccionado by remember { mutableStateOf(initialReserva?.barbero?.idBarbero ?: barberos.firstOrNull()?.idBarbero) }
     var servicioSeleccionado by remember { mutableStateOf(initialReserva?.servicio?.idServicio ?: servicios.firstOrNull()?.id) }
-    // Puedes agregar más campos según tu modelo
+
+
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -966,6 +950,7 @@ fun DropdownMenuBarbero(
 ) {
     var expanded by remember { mutableStateOf(false) }
     val nombreSeleccionado = barberos.find { it.idBarbero == seleccionado }?.nombre ?: "Selecciona Barbero"
+
     Box {
         OutlinedButton(onClick = { expanded = true }) {
             Text(

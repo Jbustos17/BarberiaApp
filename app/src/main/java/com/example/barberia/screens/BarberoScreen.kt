@@ -1,7 +1,6 @@
 package com.example.barberia.screens
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -31,7 +30,6 @@ import com.example.barberia.R
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 
 fun toDirectDriveUrl(url: String?): String? {
     if (url.isNullOrBlank()) return null
@@ -186,19 +184,14 @@ fun BarberoCardPersonalizado(
             Text(
                 text = barbero.nombre,
                 fontWeight = FontWeight.Bold,
-                fontSize = 18.sp,
+                fontSize = 19.sp,
                 modifier = Modifier.padding(horizontal = 12.dp)
             )
-            Text(
-                text = barbero.especialidad ?: "",
-                color = Color.Gray,
-                fontSize = 15.sp,
-                modifier = Modifier.padding(horizontal = 12.dp)
-            )
+
             Text(
                 text = barbero.telefono ?: "",
                 color = Color.Gray,
-                fontSize = 13.sp,
+                fontSize = 15.sp,
                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 2.dp)
             )
         }

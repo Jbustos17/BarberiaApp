@@ -6,7 +6,6 @@ import com.google.gson.annotations.SerializedName
 data class Barbero(
     val idBarbero: Long? = null,
     val nombre: String,
-    val especialidad: String?,
     val telefono: String?,
     val usuario: String?,
     val fotoUrl: String? = null,
