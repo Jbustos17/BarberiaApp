@@ -145,7 +145,7 @@ fun ServicioScreen(
                                 error = painterResource(com.example.barberia.R.drawable.ic_placeholder_servicio),
                                 fallback = painterResource(R.drawable.ic_placeholder_servicio),
                                 modifier = Modifier
-                                    .size(140.dp)
+                                    .size(100.dp)
                                     .clip(CircleShape)
                                     .background(Color(0xFFE0E0E0))
                                     .align(Alignment.CenterVertically)
