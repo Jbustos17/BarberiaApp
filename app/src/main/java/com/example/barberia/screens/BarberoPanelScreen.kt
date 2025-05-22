@@ -28,12 +28,8 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.unit.sp
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Schedule
-import androidx.compose.material.icons.filled.Build
-import androidx.compose.material.icons.outlined.Campaign
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -41,6 +37,13 @@ import java.time.format.DateTimeFormatter
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.rememberDatePickerState
+import com.example.barberia.model.Servicio
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Brush
+import com.example.barberia.viewmodel.ServicioViewModel
+import com.example.barberia.screens.ReservacardTotalextrasbarbero
+
+
 
 
 
@@ -48,91 +51,83 @@ import androidx.compose.material3.rememberDatePickerState
 @Composable
 fun BarberoPanelScreen(
     idBarbero: Long,
+    idAdministrador: Long,
     navController: NavHostController,
     reservaViewModel: ReservaViewModel = viewModel(),
     barberoViewModel: BarberoViewModel = viewModel(),
-    horarioDisponibleViewModel: HorarioDisponibleViewModel = viewModel()
-) {
-
+    horarioDisponibleViewModel: HorarioDisponibleViewModel = viewModel(),
+    servicioViewModel: ServicioViewModel = viewModel()
+){
     val reservas by reservaViewModel.reservas.collectAsState()
     val barberos by barberoViewModel.barberos.collectAsState()
-    val barbero = barberos.find { it.idBarbero == idBarbero }
+    val servicios by servicioViewModel.servicios.collectAsState() // <-- Lista de servicios
     val horarios by horarioDisponibleViewModel.horarios.collectAsState()
 
-    // Estado para la fecha seleccionada
+    val barbero = barberos.find { it.idBarbero == idBarbero }
     var fechaSeleccionada by remember { mutableStateOf(LocalDate.now()) }
     var showDatePicker by remember { mutableStateOf(false) }
 
-    // Recarga reservas filtradas por barbero y fecha
+    // Recarga todos los datos necesarios
     LaunchedEffect(idBarbero, fechaSeleccionada) {
         barberoViewModel.obtenerBarberos()
+        servicioViewModel.cargarServicios(1L) // <-- Carga servicios (ajusta el idAdministrador si es necesario)
         reservaViewModel.cargarReservasPorBarberoYFecha(
             idBarbero,
             fechaSeleccionada.toString(),
-            null // o "TERMINADA" si solo quieres terminadas
+            null
         )
         horarioDisponibleViewModel.cargarTodosLosHorarios()
     }
 
-    // Sumar el total de los cortes terminados ese día
+    // Calcula el total de reservas CONFIRMADAS
     val totalDia = reservas
-        .filter { it.estado == "TERMINADA" }
-        .sumOf { it.servicio.precio ?: 0.0 }
+        .filter { it.estado == "CONFIRMADA" }
+        .sumOf { reserva ->
+            servicios.find { it.id == reserva.servicio.idServicio }?.precio ?: 0.0
+        }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(GrisClaro)
     ) {
-        // Canvas decorativo de fondo
-        Canvas(
-            modifier = Modifier
-                .fillMaxSize()
-                .matchParentSize()
-        ) {
-            // Círculo azul grande arriba a la izquierda
-            drawCircle(
-                color = AzulBarberi.copy(alpha = 0.14f),
-                radius = size.minDimension * 0.55f,
-                center = Offset(x = size.width * -0.18f, y = size.height * -0.1f)
-            )
-            // Círculo azul pequeño abajo a la derecha
-            drawCircle(
-                color = AzulBarberi.copy(alpha = 0.10f),
-                radius = size.minDimension * 0.28f,
-                center = Offset(x = size.width * 1.13f, y = size.height * 1.1f)
-            )
-            // Onda azul suave
-            val path = Path().apply {
-                moveTo(0f, size.height * 0.34f)
-                cubicTo(
-                    size.width * 0.20f, size.height * 0.30f,
-                    size.width * 0.80f, size.height * 0.38f,
-                    size.width, size.height * 0.23f
-                )
-                lineTo(size.width, 0f)
-                lineTo(0f, 0f)
-                close()
-            }
+        // Fondo decorativo (opcional)
+        Canvas(modifier = Modifier.fillMaxSize()) {
             drawPath(
-                path = path,
-                color = AzulBarberi.copy(alpha = 0.09f),
-                style = Fill
+                path = Path().apply {
+                    moveTo(0f, size.height * 0.85f)
+                    cubicTo(
+                        size.width * 0.25f, size.height * 0.95f,
+                        size.width * 0.75f, size.height * 0.75f,
+                        size.width, size.height * 0.9f
+                    )
+                    lineTo(size.width, size.height)
+                    lineTo(0f, size.height)
+                    close()
+                },
+                brush = Brush.horizontalGradient(
+                    colors = listOf(
+                        AzulClaroBarberia,
+                        AzulBarberi,
+                        DoradoBarberia,
+                        AmarilloBarberia
+                    )
+                )
             )
         }
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(20.dp)
+                .padding(16.dp)
         ) {
-            // Fila con botón de volver y título
+            // Header con botón de volver
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 IconButton(
-                    onClick = { navController.navigate("inicio") },
+                    onClick = { navController.popBackStack() },
                     modifier = Modifier.size(40.dp)
                 ) {
                     Icon(
@@ -141,127 +136,137 @@ fun BarberoPanelScreen(
                         tint = AzulBarberi
                     )
                 }
-                Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = "Panel de ${barbero?.nombre ?: "Barbero"}",
-                    style = MaterialTheme.typography.headlineSmall.copy(
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 28.sp
-                    ),
+                    style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
                     color = AzulBarberi,
-                    modifier = Modifier.padding(bottom = 8.dp)
+                    modifier = Modifier.padding(start = 8.dp)
                 )
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            // Fecha y botón para cambiarla
+            // Selector de fecha
             Row(
-                Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    "Fecha: ${fechaSeleccionada.format(DateTimeFormatter.ISO_DATE)}",
+                    text = "Fecha: ${fechaSeleccionada.format(DateTimeFormatter.ISO_DATE)}",
                     style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.weight(1f)
                 )
-                Button(onClick = { showDatePicker = true }) {
+                Button(
+                    onClick = { showDatePicker = true },
+                    colors = ButtonDefaults.buttonColors(containerColor = AzulBarberi)
+                ) {
                     Text("Cambiar fecha")
                 }
             }
-            Spacer(Modifier.height(8.dp))
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Total del día
             Text(
-                "Total del día: $${"%.2f".format(totalDia)}",
-                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                color = AzulBarberi
+                text = "Total confirmado: $${"%.2f".format(totalDia)}",
+                style = MaterialTheme.typography.headlineSmall.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF388E3C) // Verde
+                ),
+                modifier = Modifier.fillMaxWidth()
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Lista de reservas
             if (reservas.isEmpty()) {
                 Box(
-                    Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier.fillMaxSize()
                 ) {
                     Text(
-                        "No tienes reservas asignadas.",
-                        style = MaterialTheme.typography.titleLarge.copy(fontSize = 22.sp),
-                        color = Color.Gray
+                        "No hay reservas para esta fecha",
+                        style = MaterialTheme.typography.titleMedium.copy(color = Color.Gray)
                     )
                 }
             } else {
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(18.dp),
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.weight(1f)
                 ) {
-                    items(reservas) { reserva ->
-                        ReservaCard(
+                    items(
+                        items = reservas,
+                        key = { it.idReserva ?: it.hashCode() }
+                    ) { reserva ->
+                        ReservacardTotalextrasbarbero(
                             reserva = reserva,
+                            servicios = servicios,
                             horarios = horarios,
-                            onTerminar = {
+                            onConfirmar = {
                                 reservaViewModel.actualizarEstadoReserva(
-                                    reserva.idReserva!!, "TERMINADA", idBarbero
+                                    reserva.idReserva!!, "CONFIRMADA", idAdministrador
                                 )
                             },
                             onCancelar = {
                                 reservaViewModel.actualizarEstadoReserva(
-                                    reserva.idReserva!!, "CANCELADA", idBarbero
+                                    reserva.idReserva!!, "CANCELADA", idAdministrador
                                 )
                             }
                         )
                     }
                 }
-            }
-        }
 
-    }
-    val datePickerState = rememberDatePickerState(
-        initialSelectedDateMillis = fechaSeleccionada
-            .atStartOfDay(ZoneId.systemDefault())
-            .toInstant()
-            .toEpochMilli()
-    )
 
-    // DatePickerDialog (usa el de tu framework Compose preferido)
-    if (showDatePicker) {
-        DatePickerDialog(
-            onDismissRequest = { showDatePicker = false },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        val millis = datePickerState.selectedDateMillis
-                        if (millis != null) {
-                            fechaSeleccionada = Instant.ofEpochMilli(millis)
-                                .atZone(ZoneId.systemDefault())
-                                .toLocalDate()
+                val datePickerState = rememberDatePickerState(
+                    initialSelectedDateMillis = fechaSeleccionada
+                        .atStartOfDay(ZoneId.systemDefault())
+                        .toInstant()
+                        .toEpochMilli()
+                )
+
+                if (showDatePicker) {
+                    DatePickerDialog(
+                        onDismissRequest = { showDatePicker = false },
+                        confirmButton = {
+                            Button(
+                                onClick = {
+                                    showDatePicker = false
+                                    datePickerState.selectedDateMillis?.let { millis ->
+                                        fechaSeleccionada = Instant.ofEpochMilli(millis)
+                                            .atZone(ZoneId.systemDefault())
+                                            .toLocalDate()
+                                    }
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = AzulBarberi)
+                            ) { Text("OK") }
                         }
-                        showDatePicker = false
+                    ) {
+                        DatePicker(state = datePickerState)
                     }
-                ) { Text("OK") }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDatePicker = false }) { Text("Cancelar") }
+                }
             }
-        ) {
-            DatePicker(state = datePickerState)
         }
     }
 }
 
 @Composable
-fun ReservaCard(
+fun ReservacardTotalextrasbarbero(
     reserva: Reserva,
+    servicios: List<Servicio>,
     horarios: List<HorarioDisponible>,
-    onTerminar: (() -> Unit)? = null,
-    onCancelar: (() -> Unit)? = null,
-
-    ) {
-    val horario = horarios.find { it.idHorario == reserva.horarioDisponible.idHorario }
+    onConfirmar: () -> Unit,
+    onCancelar: () -> Unit
+) {
+    val horario =
+        horarios.find { it.idHorario == reserva.horarioDisponible.idHorario }
     val textoHorario = if (horario != null) {
         "Fecha: ${horario.fecha} - Hora: ${horario.horaInicio} a ${horario.horaFin}"
     } else {
         "Horario no encontrado"
     }
+    val servicio = servicios.find { it.id == reserva.servicio.idServicio }
+    val precio = servicio?.precio ?: 0.0
+    val nombreServicio = servicio?.nombre ?: "Servicio"
 
     Box(
         modifier = Modifier
@@ -275,12 +280,18 @@ fun ReservaCard(
             drawRect(
                 color = AzulBarberi.copy(alpha = 0.07f),
                 topLeft = Offset(0f, size.height * 0.30f),
-                size = androidx.compose.ui.geometry.Size(size.width, size.height * 0.40f)
+                size = androidx.compose.ui.geometry.Size(
+                    size.width,
+                    size.height * 0.40f
+                )
             )
             drawCircle(
                 color = AzulBarberi.copy(alpha = 0.13f),
                 radius = size.minDimension * 0.16f,
-                center = Offset(x = size.minDimension * 0.14f, y = size.height * 0.20f)
+                center = Offset(
+                    x = size.minDimension * 0.14f,
+                    y = size.height * 0.20f
+                )
             )
         }
         Card(
@@ -295,7 +306,7 @@ fun ReservaCard(
             Column(
                 Modifier.padding(horizontal = 24.dp, vertical = 20.dp)
             ) {
-                // Usuario
+                // Cliente
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = Icons.Filled.Person,
@@ -306,65 +317,31 @@ fun ReservaCard(
                     Spacer(Modifier.width(8.dp))
                     Text(
                         text = reserva.nombreCliente,
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 22.sp
-                        ),
-                        color = AzulBarberi
-                    )
-                }
-                Spacer(Modifier.height(10.dp))
-
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Outlined.Campaign,
-                        contentDescription = "Servicio",
-                        tint = AzulBarberi,
-                        modifier = Modifier.size(22.dp)
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Text(
-                        text = "Servicio: ${reserva.servicio.id}",
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.SemiBold
-                        ),
-                        color = Color.DarkGray
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                     )
                 }
                 Spacer(Modifier.height(8.dp))
 
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Filled.Schedule,
-                        contentDescription = "Fecha y hora",
-                        tint = AzulBarberi,
-                        modifier = Modifier.size(22.dp)
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Text(
-                        text = textoHorario,
-                        style = MaterialTheme.typography.bodyLarge.copy(
-                            fontSize = 19.sp,
-                            fontWeight = FontWeight.Medium
-                        ),
-                        color = Color.Black
-                    )
-                }
-                Spacer(Modifier.height(12.dp))
-                Divider(color = AzulBarberi.copy(alpha = 0.13f), thickness = 1.dp)
-                Spacer(Modifier.height(10.dp))
+                // Servicio y precio
                 Text(
-                    text = "Celular: ${reserva.celularCliente}",
-                    style = MaterialTheme.typography.bodyLarge.copy(fontSize = 18.sp),
-                    color = AzulBarberi.copy(alpha = 0.8f)
+                    text = "Servicio: $nombreServicio",
+                    style = MaterialTheme.typography.bodyLarge
                 )
                 Text(
-                    text = "Correo: ${reserva.correoCliente}",
-                    style = MaterialTheme.typography.bodyLarge.copy(fontSize = 18.sp),
-                    color = AzulBarberi.copy(alpha = 0.8f)
+                    text = "Precio: $${"%.2f".format(precio)}",
+                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
                 )
-                Spacer(Modifier.height(10.dp))
+
+                Spacer(Modifier.height(8.dp))
+
+                // Horario
+                Text(
+                    text = textoHorario,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.Gray
+                )
+
+                Spacer(Modifier.height(8.dp))
 
                 // Estado de la reserva
                 Text(
@@ -374,7 +351,7 @@ fun ReservaCard(
                         fontWeight = FontWeight.Bold
                     ),
                     color = when (reserva.estado) {
-                        "TERMINADA" -> Color(0xFF388E3C)
+                        "CONFIRMADA" -> Color(0xFF388E3C)
                         "CANCELADA" -> Color.Red
                         else -> Color.Gray
                     }
@@ -387,26 +364,39 @@ fun ReservaCard(
                         Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.End
                     ) {
-                        onTerminar?.let {
-                            Button(
-                                onClick = it,
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color(
-                                        0xFF388E3C
-                                    )
+                        Button(
+                            onClick = onConfirmar,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(
+                                    0xFF388E3C
                                 )
-                            ) { Text("Terminar") }
+                            ),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.height(40.dp)
+                        ) {
+                            Text(
+                                "Confirmar",
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold
+                            )
                         }
                         Spacer(Modifier.width(12.dp))
-                        onCancelar?.let {
-                            Button(
-                                onClick = it,
-                                colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
-                            ) { Text("Cancelar") }
+                        Button(
+                            onClick = onCancelar,
+                            colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.height(40.dp)
+                        ) {
+                            Text(
+                                "Cancelar",
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold
+                            )
                         }
                     }
                 }
             }
         }
     }
+
 }

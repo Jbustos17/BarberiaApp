@@ -8,7 +8,7 @@ data class Servicio(
     @SerializedName("nombreServicio") val nombre: String?,
     @SerializedName("descripcion") val descripcion: String?,
     val fotoUrl: String? = null,
-    @SerializedName("precio") val precio: Double=0.0 // <--- ¡Asegúrate de tener esto!
+    @SerializedName("precio") val precio: Double=0.0
 )
 
  {

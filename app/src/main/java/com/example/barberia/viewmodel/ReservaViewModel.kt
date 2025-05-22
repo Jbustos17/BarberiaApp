@@ -89,6 +89,8 @@ class ReservaViewModel : ViewModel() {
                 _error.value = "Error de red: ${e.message}"
             }
         }
+
+
         fun cargarReservasPorBarberoYFecha(
             idBarbero: Long,
             fecha: String, // formato "YYYY-MM-DD"

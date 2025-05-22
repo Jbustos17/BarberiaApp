@@ -9,8 +9,10 @@ data class Barbero(
     val telefono: String?,
     val usuario: String?,
     val fotoUrl: String? = null,
-    @SerializedName("contraseña") val contrasenia: String
-) {
+    @SerializedName("contraseña") val contrasenia: String,
+    @SerializedName("id_admin") val idAdministrador: Long
+)
+ {
     fun fotoResId(): Int = when (nombre.lowercase().trim()) {
         "andrés ramirez" -> R.drawable.foto_andres_ramirez
         "luis torres" -> R.drawable.foto_luis_torres

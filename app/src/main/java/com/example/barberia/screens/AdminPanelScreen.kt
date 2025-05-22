@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
@@ -46,6 +47,7 @@ import kotlinx.coroutines.launch
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.KeyboardType
 
 fun transformarDriveUrl(url: String?): String? {
     if (url == null) return null
@@ -197,26 +199,32 @@ fun AdminPanelScreen(
         }
 
         // Diálogo de agregar/editar barbero
-        if (showBarberoDialog) {
-            BarberoDialog(
+    val idAdministrador = 1L // O el valor real
 
-                initialBarbero = barberoToEdit,
-                onDismiss = { showBarberoDialog = false },
-                onSave = { barbero ->
-                    if (barberoToEdit == null) {
-                        barberoViewModel.guardarBarbero(barbero, idAdministrador)
-                    } else {
-                        barberoViewModel.guardarBarbero(
-                            barbero.copy(idBarbero = barberoToEdit!!.idBarbero),
-                            idAdministrador
-                        )
-                    }
-                    showBarberoDialog = false
+    if (showBarberoDialog) {
+        BarberoDialog(
+            initialBarbero = barberoToEdit,
+            idAdministrador = idAdministrador,
+            onDismiss = { showBarberoDialog = false },
+            onSave = { barbero ->
+                if (barberoToEdit == null) {
+                    barberoViewModel.guardarBarbero(barbero, idAdministrador)
+                } else {
+                    barberoViewModel.guardarBarbero(
+                        barbero.copy(
+                            idBarbero = barberoToEdit!!.idBarbero,
+                            idAdministrador = idAdministrador
+                        ),
+                        idAdministrador
+                    )
                 }
-            )
-        }
+                showBarberoDialog = false
+            }
+        )
+    }
 
-        // Diálogo de agregar/editar servicio
+
+    // Diálogo de agregar/editar servicio
         if (showServicioDialog) {
             ServicioDialog(
                 initialServicio = servicioToEdit,
@@ -717,6 +725,7 @@ fun ServicioCardAdmin(
 @Composable
 fun BarberoDialog(
     initialBarbero: Barbero? = null,
+    idAdministrador: Long,
     onDismiss: () -> Unit,
     onSave: (Barbero) -> Unit
 ) {
@@ -787,7 +796,8 @@ fun BarberoDialog(
                             telefono = telefono,
                             usuario = usuario,
                             fotoUrl = fotoUrl,
-                            contrasenia = contrasenia
+                            contrasenia = contrasenia,
+                            idAdministrador = idAdministrador // <-- AGREGA ESTA LÍNEA
                         )
                     )
                 }
@@ -809,6 +819,9 @@ fun ServicioDialog(
     var nombre by remember { mutableStateOf(initialServicio?.nombre ?: "") }
     var descripcion by remember { mutableStateOf(initialServicio?.descripcion ?: "") }
     var fotoUrl by remember { mutableStateOf(initialServicio?.fotoUrl ?: "") }
+    // Nuevo: campo de precio como texto para validación
+    var precioText by remember { mutableStateOf(initialServicio?.precio?.toString() ?: "") }
+    var precioError by remember { mutableStateOf(false) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -833,6 +846,26 @@ fun ServicioDialog(
                     label = { Text("URL de la imagen (Drive o web)") },
                     modifier = Modifier.fillMaxWidth()
                 )
+                // Campo de precio
+                OutlinedTextField(
+                    value = precioText,
+                    onValueChange = {
+                        // Solo permite números y punto decimal
+                        if (it.isEmpty() || it.matches(Regex("^\\d*\\.?\\d*\$"))) {
+                            precioText = it
+                            precioError = false
+                        } else {
+                            precioError = true
+                        }
+                    },
+                    label = { Text("Precio") },
+                    modifier = Modifier.fillMaxWidth(),
+                    isError = precioError,
+                    keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
+                )
+                if (precioError) {
+                    Text("Solo se permiten números y punto decimal", color = Color.Red, fontSize = 12.sp)
+                }
                 Spacer(Modifier.height(8.dp))
                 // Previsualización de la imagen
                 AsyncImage(
@@ -852,15 +885,20 @@ fun ServicioDialog(
         confirmButton = {
             TextButton(
                 onClick = {
+                    // Validación: el campo de precio no debe estar vacío y debe ser un número válido
+                    val precioDouble = precioText.toDoubleOrNull()
+                    if (precioDouble == null) {
+                        precioError = true
+                        return@TextButton
+                    }
                     onSave(
                         Servicio(
-                        id = initialServicio?.id,
-                        nombre = nombre,
-                        descripcion = descripcion,
-                        fotoUrl = fotoUrl,
-                        precio = initialServicio?.precio ?: 0.0 // <-- así nunca será null
-                    )
-
+                            id = initialServicio?.id,
+                            nombre = nombre,
+                            descripcion = descripcion,
+                            fotoUrl = fotoUrl,
+                            precio = precioDouble
+                        )
                     )
                 }
             ) { Text("Guardar") }
