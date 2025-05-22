@@ -1,5 +1,8 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
 package com.example.barberia.screens
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -31,26 +34,50 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.outlined.Campaign
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.rememberDatePickerState
 
 
+
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun BarberoPanelScreen(
     idBarbero: Long,
     navController: NavHostController,
     reservaViewModel: ReservaViewModel = viewModel(),
-    barberoViewModel: BarberoViewModel = viewModel()
+    barberoViewModel: BarberoViewModel = viewModel(),
+    horarioDisponibleViewModel: HorarioDisponibleViewModel = viewModel()
 ) {
+
     val reservas by reservaViewModel.reservas.collectAsState()
     val barberos by barberoViewModel.barberos.collectAsState()
     val barbero = barberos.find { it.idBarbero == idBarbero }
-    val horarioDisponibleViewModel: HorarioDisponibleViewModel = viewModel()
     val horarios by horarioDisponibleViewModel.horarios.collectAsState()
 
-    LaunchedEffect(idBarbero) {
+    // Estado para la fecha seleccionada
+    var fechaSeleccionada by remember { mutableStateOf(LocalDate.now()) }
+    var showDatePicker by remember { mutableStateOf(false) }
+
+    // Recarga reservas filtradas por barbero y fecha
+    LaunchedEffect(idBarbero, fechaSeleccionada) {
         barberoViewModel.obtenerBarberos()
-        reservaViewModel.cargarReservasPorBarbero(idBarbero)
+        reservaViewModel.cargarReservasPorBarberoYFecha(
+            idBarbero,
+            fechaSeleccionada.toString(),
+            null // o "TERMINADA" si solo quieres terminadas
+        )
         horarioDisponibleViewModel.cargarTodosLosHorarios()
     }
+
+    // Sumar el total de los cortes terminados ese día
+    val totalDia = reservas
+        .filter { it.estado == "TERMINADA" }
+        .sumOf { it.servicio.precio ?: 0.0 }
 
     Box(
         modifier = Modifier
@@ -117,11 +144,37 @@ fun BarberoPanelScreen(
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = "Panel de ${barbero?.nombre ?: "Barbero"}",
-                    style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold, fontSize = 28.sp),
+                    style = MaterialTheme.typography.headlineSmall.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 28.sp
+                    ),
                     color = AzulBarberi,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
             }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Fecha y botón para cambiarla
+            Row(
+                Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    "Fecha: ${fechaSeleccionada.format(DateTimeFormatter.ISO_DATE)}",
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.weight(1f)
+                )
+                Button(onClick = { showDatePicker = true }) {
+                    Text("Cambiar fecha")
+                }
+            }
+            Spacer(Modifier.height(8.dp))
+            Text(
+                "Total del día: $${"%.2f".format(totalDia)}",
+                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                color = AzulBarberi
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -142,16 +195,67 @@ fun BarberoPanelScreen(
                     modifier = Modifier.fillMaxSize()
                 ) {
                     items(reservas) { reserva ->
-                        ReservaCard(reserva, horarios)
+                        ReservaCard(
+                            reserva = reserva,
+                            horarios = horarios,
+                            onTerminar = {
+                                reservaViewModel.actualizarEstadoReserva(
+                                    reserva.idReserva!!, "TERMINADA", idBarbero
+                                )
+                            },
+                            onCancelar = {
+                                reservaViewModel.actualizarEstadoReserva(
+                                    reserva.idReserva!!, "CANCELADA", idBarbero
+                                )
+                            }
+                        )
                     }
                 }
             }
+        }
+
+    }
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = fechaSeleccionada
+            .atStartOfDay(ZoneId.systemDefault())
+            .toInstant()
+            .toEpochMilli()
+    )
+
+    // DatePickerDialog (usa el de tu framework Compose preferido)
+    if (showDatePicker) {
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val millis = datePickerState.selectedDateMillis
+                        if (millis != null) {
+                            fechaSeleccionada = Instant.ofEpochMilli(millis)
+                                .atZone(ZoneId.systemDefault())
+                                .toLocalDate()
+                        }
+                        showDatePicker = false
+                    }
+                ) { Text("OK") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) { Text("Cancelar") }
+            }
+        ) {
+            DatePicker(state = datePickerState)
         }
     }
 }
 
 @Composable
-fun ReservaCard(reserva: Reserva, horarios: List<HorarioDisponible>) {
+fun ReservaCard(
+    reserva: Reserva,
+    horarios: List<HorarioDisponible>,
+    onTerminar: (() -> Unit)? = null,
+    onCancelar: (() -> Unit)? = null,
+
+    ) {
     val horario = horarios.find { it.idHorario == reserva.horarioDisponible.idHorario }
     val textoHorario = if (horario != null) {
         "Fecha: ${horario.fecha} - Hora: ${horario.horaInicio} a ${horario.horaFin}"
@@ -202,7 +306,10 @@ fun ReservaCard(reserva: Reserva, horarios: List<HorarioDisponible>) {
                     Spacer(Modifier.width(8.dp))
                     Text(
                         text = reserva.nombreCliente,
-                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold, fontSize = 22.sp),
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 22.sp
+                        ),
                         color = AzulBarberi
                     )
                 }
@@ -217,8 +324,11 @@ fun ReservaCard(reserva: Reserva, horarios: List<HorarioDisponible>) {
                     )
                     Spacer(Modifier.width(8.dp))
                     Text(
-                        text = "Servicio: ${reserva.servicio.idServicio}",
-                        style = MaterialTheme.typography.titleMedium.copy(fontSize = 20.sp, fontWeight = FontWeight.SemiBold),
+                        text = "Servicio: ${reserva.servicio.id}",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.SemiBold
+                        ),
                         color = Color.DarkGray
                     )
                 }
@@ -234,7 +344,10 @@ fun ReservaCard(reserva: Reserva, horarios: List<HorarioDisponible>) {
                     Spacer(Modifier.width(8.dp))
                     Text(
                         text = textoHorario,
-                        style = MaterialTheme.typography.bodyLarge.copy(fontSize = 19.sp, fontWeight = FontWeight.Medium),
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            fontSize = 19.sp,
+                            fontWeight = FontWeight.Medium
+                        ),
                         color = Color.Black
                     )
                 }
@@ -251,8 +364,49 @@ fun ReservaCard(reserva: Reserva, horarios: List<HorarioDisponible>) {
                     style = MaterialTheme.typography.bodyLarge.copy(fontSize = 18.sp),
                     color = AzulBarberi.copy(alpha = 0.8f)
                 )
+                Spacer(Modifier.height(10.dp))
+
+                // Estado de la reserva
+                Text(
+                    text = "Estado: ${reserva.estado}",
+                    style = MaterialTheme.typography.bodyLarge.copy(
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold
+                    ),
+                    color = when (reserva.estado) {
+                        "TERMINADA" -> Color(0xFF388E3C)
+                        "CANCELADA" -> Color.Red
+                        else -> Color.Gray
+                    }
+                )
+
+                // Botones solo si la reserva está pendiente
+                if (reserva.estado == "PENDIENTE") {
+                    Spacer(Modifier.height(10.dp))
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        onTerminar?.let {
+                            Button(
+                                onClick = it,
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(
+                                        0xFF388E3C
+                                    )
+                                )
+                            ) { Text("Terminar") }
+                        }
+                        Spacer(Modifier.width(12.dp))
+                        onCancelar?.let {
+                            Button(
+                                onClick = it,
+                                colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                            ) { Text("Cancelar") }
+                        }
+                    }
+                }
             }
         }
     }
 }
-

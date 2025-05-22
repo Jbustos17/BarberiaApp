@@ -75,6 +75,64 @@ class ReservaViewModel : ViewModel() {
             }
         }
     }
+    fun actualizarEstadoReserva(id: Long, estado: String, idAdministrador: Long) {
+        viewModelScope.launch {
+            try {
+                val response = repository.actualizarEstadoReserva(id, estado, idAdministrador)
+                if (response.isSuccessful) {
+                    cargarReservas() // refresca la lista
+                } else {
+                    val errorMsg = response.errorBody()?.string() ?: "Error desconocido"
+                    _error.value = "No se pudo actualizar el estado: $errorMsg"
+                }
+            } catch (e: IOException) {
+                _error.value = "Error de red: ${e.message}"
+            }
+        }
+        fun cargarReservasPorBarberoYFecha(
+            idBarbero: Long,
+            fecha: String, // formato "YYYY-MM-DD"
+            estado: String? = null
+        ) {
+            viewModelScope.launch {
+                try {
+                    val response = repository.reservasPorBarberoYFecha(idBarbero, fecha, estado)
+                    if (response.isSuccessful) {
+                        _reservas.value = response.body() ?: emptyList()
+                    } else {
+                        val errorMsg = response.errorBody()?.string() ?: "Error desconocido"
+                        _error.value = "No se pudo cargar reservas: $errorMsg"
+                    }
+                } catch (e: IOException) {
+                    _error.value = "Error de red: ${e.message}"
+                }
+            }
+        }
+
+    }
+    fun clearError() {
+        _error.value = null
+    }
+    fun cargarReservasPorBarberoYFecha(
+        idBarbero: Long,
+        fecha: String,
+        estado: String? = null
+    ) {
+        viewModelScope.launch {
+            try {
+                val response = repository.reservasPorBarberoYFecha(idBarbero, fecha, estado)
+                if (response.isSuccessful) {
+                    _reservas.value = response.body() ?: emptyList()
+                } else {
+                    val errorMsg = response.errorBody()?.string() ?: "Error desconocido"
+                    _error.value = "No se pudo cargar reservas: $errorMsg"
+                }
+            } catch (e: Exception) {
+                _error.value = "Error de red: ${e.message}"
+            }
+        }
+    }
+
 
 
 

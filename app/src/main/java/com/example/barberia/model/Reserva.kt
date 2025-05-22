@@ -18,15 +18,20 @@ data class ClienteIdOnly(
     @SerializedName("id_cliente") val idCliente: Long
 )
 
+
+
 data class Reserva(
     @SerializedName("idReserva") val idReserva: Long? = null,
-    @SerializedName("servicio") val servicio: ServicioIdOnly,
+    @SerializedName("servicio") val servicio: ServicioIdOnly, // <--- Usa el modelo completo
     @SerializedName("barbero") val barbero: BarberoIdOnly,
     @SerializedName("horarioDisponible") val horarioDisponible: HorarioIdOnly,
     @SerializedName("cliente") val cliente: ClienteIdOnly,
     @SerializedName("nombreCliente") val nombreCliente: String,
     @SerializedName("celularCliente") val celularCliente: String,
-    @SerializedName("correoCliente") val correoCliente: String
+    @SerializedName("correoCliente") val correoCliente: String,
+    @SerializedName("estado") val estado: String = "PENDIENTE"
 )
+
+
 
 

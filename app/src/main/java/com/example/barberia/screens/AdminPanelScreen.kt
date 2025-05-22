@@ -854,11 +854,13 @@ fun ServicioDialog(
                 onClick = {
                     onSave(
                         Servicio(
-                            id = initialServicio?.id,
-                            nombre = nombre,
-                            descripcion = descripcion,
-                            fotoUrl = fotoUrl
-                        )
+                        id = initialServicio?.id,
+                        nombre = nombre,
+                        descripcion = descripcion,
+                        fotoUrl = fotoUrl,
+                        precio = initialServicio?.precio ?: 0.0 // <-- así nunca será null
+                    )
+
                     )
                 }
             ) { Text("Guardar") }

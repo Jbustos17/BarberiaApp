@@ -7,8 +7,10 @@ data class Servicio(
     @SerializedName("idServicio") val id: Long? = null,
     @SerializedName("nombreServicio") val nombre: String?,
     @SerializedName("descripcion") val descripcion: String?,
-    val fotoUrl: String? = null
+    val fotoUrl: String? = null,
+    @SerializedName("precio") val precio: Double=0.0 // <--- ¡Asegúrate de tener esto!
 )
+
  {
     fun iconoResId(): Int = when (nombre?.lowercase()?.trim()) {
         "corte" -> R.drawable.ic_corte
