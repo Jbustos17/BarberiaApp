@@ -40,14 +40,12 @@ import androidx.compose.material3.rememberDatePickerState
 import com.example.barberia.model.Servicio
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.platform.LocalContext
 import com.example.barberia.viewmodel.ServicioViewModel
 import com.example.barberia.screens.ReservacardTotalextrasbarbero
+import java.util.Calendar
 
 
-
-
-
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun BarberoPanelScreen(
     idBarbero: Long,
@@ -57,7 +55,7 @@ fun BarberoPanelScreen(
     barberoViewModel: BarberoViewModel = viewModel(),
     horarioDisponibleViewModel: HorarioDisponibleViewModel = viewModel(),
     servicioViewModel: ServicioViewModel = viewModel()
-){
+) {
     val reservas by reservaViewModel.reservas.collectAsState()
     val barberos by barberoViewModel.barberos.collectAsState()
     val servicios by servicioViewModel.servicios.collectAsState() // <-- Lista de servicios
@@ -69,21 +67,21 @@ fun BarberoPanelScreen(
 
     // Recarga todos los datos necesarios
     LaunchedEffect(idBarbero, fechaSeleccionada) {
-        barberoViewModel.obtenerBarberos()
-        servicioViewModel.cargarServicios(1L) // <-- Carga servicios (ajusta el idAdministrador si es necesario)
+        servicioViewModel.cargarServicios(idAdministrador)
+        horarioDisponibleViewModel.cargarTodosLosHorarios()
         reservaViewModel.cargarReservasPorBarberoYFecha(
             idBarbero,
             fechaSeleccionada.toString(),
             null
         )
-        horarioDisponibleViewModel.cargarTodosLosHorarios()
     }
 
     // Calcula el total de reservas CONFIRMADAS
     val totalDia = reservas
         .filter { it.estado == "CONFIRMADA" }
         .sumOf { reserva ->
-            servicios.find { it.id == reserva.servicio.idServicio }?.precio ?: 0.0
+            val servicio = servicios.find { it.id == reserva.servicio.idServicio }
+            servicio?.precio ?: 0.0
         }
 
     Box(
@@ -178,6 +176,7 @@ fun BarberoPanelScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+
             // Lista de reservas
             if (reservas.isEmpty()) {
                 Box(
@@ -190,26 +189,28 @@ fun BarberoPanelScreen(
                     )
                 }
             } else {
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(18.dp),
-                    modifier = Modifier.weight(1f)
-                ) {
-                    items(
-                        items = reservas,
-                        key = { it.idReserva ?: it.hashCode() }
-                    ) { reserva ->
+                LazyColumn {
+                    items(reservas) { reserva ->
                         ReservacardTotalextrasbarbero(
                             reserva = reserva,
                             servicios = servicios,
                             horarios = horarios,
                             onConfirmar = {
                                 reservaViewModel.actualizarEstadoReserva(
-                                    reserva.idReserva!!, "CONFIRMADA", idAdministrador
+                                    reserva.idReserva!!,
+                                    "CONFIRMADA",
+                                    idAdministrador,
+                                    idBarbero,
+                                    fechaSeleccionada.toString()
                                 )
                             },
                             onCancelar = {
                                 reservaViewModel.actualizarEstadoReserva(
-                                    reserva.idReserva!!, "CANCELADA", idAdministrador
+                                    reserva.idReserva!!,
+                                    "CANCELADA",
+                                    idAdministrador,
+                                    idBarbero,
+                                    fechaSeleccionada.toString()
                                 )
                             }
                         )
@@ -235,6 +236,12 @@ fun BarberoPanelScreen(
                                         fechaSeleccionada = Instant.ofEpochMilli(millis)
                                             .atZone(ZoneId.systemDefault())
                                             .toLocalDate()
+                                        // Recarga reservas tras cambiar fecha
+                                        reservaViewModel.cargarReservasPorBarberoYFecha(
+                                            idBarbero,
+                                            fechaSeleccionada.toString(),
+                                            null
+                                        )
                                     }
                                 },
                                 colors = ButtonDefaults.buttonColors(containerColor = AzulBarberi)
@@ -257,16 +264,16 @@ fun ReservacardTotalextrasbarbero(
     onConfirmar: () -> Unit,
     onCancelar: () -> Unit
 ) {
-    val horario =
-        horarios.find { it.idHorario == reserva.horarioDisponible.idHorario }
+    val servicio = servicios.find { it.id == reserva.servicio.idServicio }
+    val precio = servicio?.precio ?: 0.0
+    val nombreServicio = servicio?.nombre ?: "Servicio"
+
+    val horario = horarios.find { it.idHorario == reserva.horarioDisponible.idHorario }
     val textoHorario = if (horario != null) {
         "Fecha: ${horario.fecha} - Hora: ${horario.horaInicio} a ${horario.horaFin}"
     } else {
         "Horario no encontrado"
     }
-    val servicio = servicios.find { it.id == reserva.servicio.idServicio }
-    val precio = servicio?.precio ?: 0.0
-    val nombreServicio = servicio?.nombre ?: "Servicio"
 
     Box(
         modifier = Modifier
@@ -400,3 +407,5 @@ fun ReservacardTotalextrasbarbero(
     }
 
 }
+
+

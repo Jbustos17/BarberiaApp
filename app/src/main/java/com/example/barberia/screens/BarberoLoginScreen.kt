@@ -179,16 +179,17 @@ fun BarberoLoginScreen(
                     onClick = {
                         pressed = true
                         val barberoMatch = barberos.find {
-                            it.usuario?.trim() == usuario.trim() && it.contrasenia?.trim() == contrasenia.trim()
+                            it.usuario?.trim() == usuario.trim() && it.contrasenia.trim() == contrasenia.trim()
                         }
                         if (barberoMatch != null) {
-                            navController.navigate("barberoPanel/${barberoMatch.idBarbero}") {
+                            // Pasa idBarbero e idAdministrador correctamente
+                            navController.navigate("barberoPanel/${barberoMatch.idBarbero}/${barberoMatch.idAdministrador}") {
                                 popUpTo("barberoLogin") { inclusive = true }
                             }
                         } else {
                             error = true
                         }
-                    },
+                    }   ,
                     colors = ButtonDefaults.buttonColors(containerColor = AzulBarberi),
                     shape = RoundedCornerShape(26.dp),
                     modifier = Modifier
@@ -205,6 +206,7 @@ fun BarberoLoginScreen(
                         letterSpacing = 1.sp
                     )
                 }
+
 
                 LaunchedEffect(pressed) {
                     if (pressed) {

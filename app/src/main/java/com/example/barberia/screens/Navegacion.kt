@@ -24,8 +24,7 @@ fun Navegacion(navController: NavHostController) {
 
         composable("barberoPanel/{idBarbero}/{idAdministrador}") { backStackEntry ->
             val idBarbero = backStackEntry.arguments?.getString("idBarbero")?.toLongOrNull()
-            val idAdministrador =
-                backStackEntry.arguments?.getString("idAdministrador")?.toLongOrNull()
+            val idAdministrador = backStackEntry.arguments?.getString("idAdministrador")?.toLongOrNull()
             if (idBarbero != null && idAdministrador != null) {
                 BarberoPanelScreen(
                     idBarbero = idBarbero,
@@ -37,7 +36,8 @@ fun Navegacion(navController: NavHostController) {
 
 
 
-            composable("horarios/{idBarbero}") { backStackEntry ->
+
+        composable("horarios/{idBarbero}") { backStackEntry ->
             val idBarbero = backStackEntry.arguments?.getString("idBarbero")?.toLongOrNull()
             if (idBarbero != null) {
                 HorarioDisponibleScreen(idBarbero = idBarbero, navController = navController)
