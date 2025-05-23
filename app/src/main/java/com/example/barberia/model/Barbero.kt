@@ -5,13 +5,18 @@ import com.google.gson.annotations.SerializedName
 
 data class Barbero(
     val idBarbero: Long? = null,
-    val nombre: String,
-    val telefono: String?,
-    val usuario: String?,
+    val nombre: String? = null,
+    val telefono: String? = null,
+    val usuario: String? = null,
     val fotoUrl: String? = null,
-    @SerializedName("contraseña") val contrasenia: String
+    @SerializedName("contraseña") val contrasenia: String? = null,
+    @SerializedName("id_admin") val idAdministrador: Long? = null,
+    val administrador: Administrador? = null
 ) {
-    fun fotoResId(): Int = when (nombre.lowercase().trim()) {
+    val idAdministradorSeguro: Long
+        get() = administrador?.idAdmin ?: idAdministrador ?: 1L
+
+    fun fotoResId(): Int = when (nombre?.lowercase()?.trim()) {
         "andrés ramirez" -> R.drawable.foto_andres_ramirez
         "luis torres" -> R.drawable.foto_luis_torres
         "mateo hernandez" -> R.drawable.foto_mateo_hernandez

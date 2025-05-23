@@ -163,7 +163,8 @@ fun BarberoLoginScreen(
                     textStyle = TextStyle(fontSize = 22.sp),
                     visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
                     trailingIcon = {
-                        val icon = if (showPassword) Icons.Filled.VisibilityOff else Icons.Filled.Visibility
+                        val icon =
+                            if (showPassword) Icons.Filled.VisibilityOff else Icons.Filled.Visibility
                         IconButton(onClick = { showPassword = !showPassword }) {
                             Icon(imageVector = icon, contentDescription = null)
                         }
@@ -173,6 +174,7 @@ fun BarberoLoginScreen(
                         .padding(bottom = 28.dp)
                 )
 
+
                 val scale by animateFloatAsState(if (pressed) 0.97f else 1f, label = "")
 
                 Button(
@@ -181,8 +183,11 @@ fun BarberoLoginScreen(
                         val barberoMatch = barberos.find {
                             it.usuario?.trim() == usuario.trim() && it.contrasenia?.trim() == contrasenia.trim()
                         }
+
                         if (barberoMatch != null) {
-                            navController.navigate("barberoPanel/${barberoMatch.idBarbero}") {
+                            val idAdministradorSeguro = barberoMatch.idAdministradorSeguro
+                            println("DEBUG: Navegando con idBarbero=${barberoMatch.idBarbero}, idAdmin=$idAdministradorSeguro")
+                            navController.navigate("barberoPanel/${barberoMatch.idBarbero}/$idAdministradorSeguro") {
                                 popUpTo("barberoLogin") { inclusive = true }
                             }
                         } else {
@@ -205,7 +210,6 @@ fun BarberoLoginScreen(
                         letterSpacing = 1.sp
                     )
                 }
-
                 LaunchedEffect(pressed) {
                     if (pressed) {
                         delay(120)
@@ -231,3 +235,7 @@ fun BarberoLoginScreen(
         }
     }
 }
+
+
+
+

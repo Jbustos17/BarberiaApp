@@ -6,16 +6,14 @@ import retrofit2.Response
 
 class ServicioRepository(private val apiService: ApiService) {
 
-
+    // Devuelve el Response, el ViewModel decide cómo manejarlo
     suspend fun obtenerServicios(idAdministrador: Long): Response<List<Servicio>> {
         return apiService.obtenerServicios(idAdministrador)
     }
 
-
     suspend fun guardarServicio(servicio: Servicio, idAdministrador: Long): Response<Servicio> {
         return apiService.guardarServicio(servicio, idAdministrador)
     }
-
 
     suspend fun eliminarServicio(id: Long, idAdministrador: Long): Response<Void> {
         return apiService.eliminarServicio(id, idAdministrador)

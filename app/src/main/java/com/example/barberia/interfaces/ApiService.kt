@@ -11,6 +11,7 @@ import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
+import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.Path
 import retrofit2.http.Query
@@ -89,6 +90,12 @@ interface ApiService {
  @DELETE("/horarios/{id}")
  suspend fun eliminarHorario(@Path("id") id: Long)
 
+ @PATCH("horarios/{id}/disponibilidad")
+ suspend fun actualizarDisponibilidadHorario(
+  @Path("id") idHorario: Long,
+  @Query("disponible") disponible: Boolean
+ )
+
 
  @GET("/api/reservas")
  suspend fun obtenerReservas(): List<Reserva>
@@ -115,6 +122,7 @@ interface ApiService {
  )
 
 
+
  @POST("/clientes")
  suspend fun guardarCliente(
   @Body cliente: Cliente,
@@ -138,6 +146,25 @@ interface ApiService {
  suspend fun obtenerReservasPorBarbero(@Path("idBarbero") idBarbero: Long): List<Reserva>
  @GET("horarios")
  suspend fun obtenerTodosLosHorarios(): List<HorarioDisponible>
+
+ @PATCH("/reservas/{id}/estado")
+ suspend fun actualizarEstadoReserva(
+  @Path("id") id: Long,
+  @Query("estado") estado: String,
+  @Query("idAdministrador") idAdministrador: Long
+ ): Response<Reserva>
+
+ @GET("/reservas/barbero/{idBarbero}/fecha")
+ suspend fun reservasPorBarberoYFecha(
+  @Path("idBarbero") idBarbero: Long,
+  @Query("fecha") fecha: String, // Formato: "2024-05-21"
+  @Query("estado") estado: String? = null // Puede ser null para traer todas
+ ): Response<List<Reserva>>
+
+ @GET("/reservas/{id}")
+ suspend fun obtenerReservaPorId(@Path("id") id: Long): Response<Reserva>
+
+
 
 
 }

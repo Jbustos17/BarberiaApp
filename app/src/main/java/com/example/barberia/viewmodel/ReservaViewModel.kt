@@ -16,7 +16,6 @@ class ReservaViewModel : ViewModel() {
     private val _reservas = MutableStateFlow<List<Reserva>>(emptyList())
     val reservas: StateFlow<List<Reserva>> = _reservas
 
-
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error
 
@@ -75,8 +74,49 @@ class ReservaViewModel : ViewModel() {
             }
         }
     }
+    fun actualizarEstadoReserva(
+        id: Long,
+        estado: String,
+        idAdministrador: Long,
+        idBarbero: Long,
+        fecha: String
+    ) {
+        viewModelScope.launch {
+            try {
+                val response = repository.actualizarEstadoReserva(id, estado, idAdministrador)
+                if (response.isSuccessful) {
+                    cargarReservasPorBarberoYFecha(idBarbero, fecha) // Recarga las reservas filtradas
+                } else {
+                    val errorMsg = response.errorBody()?.string() ?: "Error desconocido"
+                    _error.value = "No se pudo actualizar el estado: $errorMsg"
+                }
+            } catch (e: Exception) {
+                _error.value = "Error de red: ${e.message}"
+            }
+        }
+    }
 
-
-
+    fun cargarReservasPorBarberoYFecha(
+        idBarbero: Long,
+        fecha: String,
+        estado: String? = null
+    ) {
+        viewModelScope.launch {
+            try {
+                val response = repository.reservasPorBarberoYFecha(idBarbero, fecha, estado)
+                if (response.isSuccessful) {
+                    _reservas.value = response.body() ?: emptyList()
+                } else {
+                    val errorMsg = response.errorBody()?.string() ?: "Error desconocido"
+                    _error.value = "No se pudo cargar reservas: $errorMsg"
+                }
+            } catch (e: Exception) {
+                _error.value = "Error de red: ${e.message}"
+            }
+        }
+    }
 }
+
+
+
 
