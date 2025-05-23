@@ -49,9 +49,11 @@ fun toDirectDriveUrl(url: String?): String? {
 @Composable
 fun BarberoScreen(
     navController: NavHostController,
+    servicioId: Long,
     viewModel: BarberoViewModel = viewModel()
 ) {
     val barberos by viewModel.barberos.collectAsState()
+    val idAdministrador = 1L // O pásalo como parámetro si lo necesitas dinámico
 
     LaunchedEffect(Unit) { viewModel.obtenerBarberos() }
 
@@ -60,9 +62,7 @@ fun BarberoScreen(
             .fillMaxSize()
             .background(GrisClaro)
     ) {
-
         Canvas(modifier = Modifier.fillMaxSize()) {
-
             drawCircle(
                 color = DoradoBarberia.copy(alpha = 0.18f),
                 center = Offset(size.width * 0.85f, size.height * 0.97f),
@@ -73,7 +73,6 @@ fun BarberoScreen(
                 center = Offset(size.width * 0.18f, size.height * 0.92f),
                 radius = size.width * 0.08f
             )
-            // Línea diagonal abajo
             drawLine(
                 color = AzulBarberi,
                 start = Offset(0f, size.height),
@@ -100,7 +99,7 @@ fun BarberoScreen(
                     Icon(
                         imageVector = Icons.Filled.ArrowBack,
                         contentDescription = "Volver",
-                        tint = AzulBarberi // O el color que prefieras
+                        tint = AzulBarberi
                     )
                 }
             }
@@ -126,8 +125,8 @@ fun BarberoScreen(
                     BarberoCardEspecial(
                         nombre = "Cualquier profesional",
                         descripcion = "Máxima disponibilidad",
-                        iconRes = R.drawable.ic_random, // Usa tu icono de "aleatorio"
-                        onClick = { navController.navigate("horarios/0") }
+                        iconRes = R.drawable.ic_random,
+                        onClick = { navController.navigate("horarios/0/$servicioId/$idAdministrador") }
                     )
                 }
 
@@ -137,13 +136,16 @@ fun BarberoScreen(
                 ) { barbero ->
                     BarberoCardPersonalizado(
                         barbero = barbero,
-                        onClick = { navController.navigate("horarios/${barbero.idBarbero}") }
+                        onClick = {
+                            navController.navigate("horarios/${barbero.idBarbero}/$servicioId/$idAdministrador")
+                        }
                     )
                 }
             }
         }
     }
 }
+
 
 
 @Composable

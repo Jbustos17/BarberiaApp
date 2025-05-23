@@ -3,6 +3,7 @@ package com.example.barberia.repository
 import com.example.barberia.interfaces.RetrofitClient
 import com.example.barberia.interfaces.RetrofitClient.apiService
 import com.example.barberia.model.Reserva
+import com.example.barberia.model.Servicio
 import retrofit2.Response
 
 class ReservaRepository {
@@ -39,5 +40,7 @@ class ReservaRepository {
     suspend fun reservasPorBarberoYFecha(idBarbero: Long, fecha: String, estado: String? = null): Response<List<Reserva>> {
         return apiService.reservasPorBarberoYFecha(idBarbero, fecha, estado)
     }
+
+
 
 }

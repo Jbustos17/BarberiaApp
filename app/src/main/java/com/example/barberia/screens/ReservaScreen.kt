@@ -14,6 +14,7 @@ import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -26,6 +27,7 @@ import com.example.barberia.model.*
 import com.example.barberia.viewmodel.ClienteViewModel
 import com.example.barberia.viewmodel.ReservaViewModel
 import com.example.barberia.viewmodel.HorarioDisponibleViewModel
+import com.example.barberia.viewmodel.ServicioViewModel
 import kotlinx.coroutines.launch
 
 
@@ -37,11 +39,11 @@ fun ReservaScreen(
     servicioId: Long,
     horarioDisponibleId: Long,
     idAdministrador: Long,
-    total: Double = 30000.0,
     navController: NavHostController,
     reservaViewModel: ReservaViewModel = viewModel(),
     clienteViewModel: ClienteViewModel = viewModel(),
-    horarioDisponibleViewModel: HorarioDisponibleViewModel = viewModel() // <-- Asegúrate de tener este ViewModel
+    horarioDisponibleViewModel: HorarioDisponibleViewModel = viewModel(),
+    servicioViewModel: ServicioViewModel = viewModel()
 ) {
     var nombre by remember { mutableStateOf("") }
     var celular by remember { mutableStateOf("") }
@@ -52,16 +54,26 @@ fun ReservaScreen(
     var isSaving by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
+    val servicios by servicioViewModel.servicios.collectAsState()
+
+
+    LaunchedEffect(Unit) {
+        if (servicios.isEmpty()) {
+            servicioViewModel.cargarServicios(idAdministrador)
+        }
+    }
+
+    val servicioSeleccionado = servicios.find { it.idServicio == servicioId }
+    val nombreServicio = servicioSeleccionado?.nombre ?: "Servicio"
+    val precioReal = servicioSeleccionado?.precio ?: 0.0
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(GrisClaro)
     ) {
-
         Canvas(modifier = Modifier.fillMaxSize()) {
             val height = size.height
             val width = size.width
-
 
             drawPath(
                 path = Path().apply {
@@ -103,7 +115,8 @@ fun ReservaScreen(
                     .padding(bottom = 8.dp)
             ) {
                 IconButton(
-                    onClick = { navController.navigate("horarios/$idBarbero") },
+                    onClick = { navController.popBackStack()
+                    },
                     modifier = Modifier.size(40.dp)
                 ) {
                     Icon(
@@ -153,9 +166,10 @@ fun ReservaScreen(
                         Icon(Icons.Default.AttachMoney, contentDescription = null, tint = AzulBarberi)
                         Spacer(Modifier.width(8.dp))
                         Text(
-                            "Total: $${"%,.0f".format(total)} COP",
+                            text = "Precio: $${"%.2f".format(precioReal)}",
                             style = MaterialTheme.typography.bodyMedium
                         )
+                        Spacer(Modifier.width(8.dp))
                     }
                 }
             }
@@ -184,7 +198,7 @@ fun ReservaScreen(
                 leadingIcon = { Icon(Icons.Default.Phone, contentDescription = null) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                )
+            )
             Spacer(modifier = Modifier.height(10.dp))
 
             OutlinedTextField(
@@ -208,7 +222,7 @@ fun ReservaScreen(
                         scope.launch {
                             try {
                                 val cliente = Cliente(
-                                    idCliente = null, // Usa el nombre correcto
+                                    idCliente = null,
                                     nombre = nombre,
                                     celular = celular,
                                     correo = correo
@@ -219,13 +233,14 @@ fun ReservaScreen(
                                     val reserva = Reserva(
                                         idReserva = null,
                                         servicio = Servicio(idServicio = servicioId),
-                                        barbero = Barbero(idBarbero = idBarbero), // <-- Aquí usas el parámetro recibido
+                                        barbero = Barbero(idBarbero = idBarbero),
                                         horarioDisponible = HorarioDisponible(idHorario = horarioDisponibleId),
                                         cliente = Cliente(idCliente = idCliente),
                                         nombreCliente = nombre,
                                         celularCliente = celular,
                                         correoCliente = correo
                                     )
+
 
                                     reservaViewModel.guardarReserva(reserva, idAdministrador)
                                     horarioDisponibleViewModel.cargarHorasDisponibles(idBarbero, fecha)

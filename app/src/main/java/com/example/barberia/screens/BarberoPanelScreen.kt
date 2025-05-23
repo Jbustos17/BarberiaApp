@@ -3,6 +3,7 @@
 package com.example.barberia.screens
 
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -223,6 +224,8 @@ fun BarberoPanelScreen(
                                     idBarbero,
                                     fechaSeleccionada.toString()
                                 )
+                                // Recarga los horarios disponibles después de cancelar
+                                horarioDisponibleViewModel.cargarHorasDisponibles(idBarbero, fechaSeleccionada.toString())
                             }
                         )
                     }
@@ -270,10 +273,11 @@ fun ReservacardTotalextrasbarbero(
     onConfirmar: () -> Unit,
     onCancelar: () -> Unit
 ) {
-
+    // Busca el servicio por ID
     val servicio = servicios.find { it.idServicio == reserva.servicio.idServicio }
-    val precio = servicio?.precio ?: 0.0
+    println("DEBUG: Card reserva.servicio.idServicio=${reserva.servicio.idServicio}, servicio encontrado: ${servicio?.nombre}, precio=${servicio?.precio}")
     val nombreServicio = servicio?.nombre ?: "Servicio"
+    val precio = servicio?.precio ?: 0.0
 
     val horario = horarios.find { it.idHorario == reserva.horarioDisponible.idHorario }
     val textoHorario = if (horario != null) {
@@ -282,6 +286,18 @@ fun ReservacardTotalextrasbarbero(
         "Horario no encontrado"
     }
 
+    var showConfirmDialog by remember { mutableStateOf(false) }
+    if (showConfirmDialog) {
+        ConfirmarCancelacionDialog(
+            onConfirmar = {
+                showConfirmDialog = false
+                onCancelar()
+            },
+            onDismiss = { showConfirmDialog = false }
+        )
+    }
+
+    Log.d("ReservaDebug", "Servicio: ${reserva.servicio.idServicio}, Nombre: ${reserva.servicio.nombre}, Precio: ${reserva.servicio.precio}")
 
     Box(
         modifier = Modifier
@@ -397,7 +413,7 @@ fun ReservacardTotalextrasbarbero(
                         }
                         Spacer(Modifier.width(12.dp))
                         Button(
-                            onClick = onCancelar,
+                            onClick = { showConfirmDialog = true },
                             colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
                             shape = RoundedCornerShape(12.dp),
                             modifier = Modifier.height(40.dp)
@@ -416,4 +432,36 @@ fun ReservacardTotalextrasbarbero(
 
 }
 
-
+@Composable
+fun ConfirmarCancelacionDialog(
+    onConfirmar: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("¿Estás seguro?", color = Color.Red, fontWeight = FontWeight.Bold) },
+        text = {
+            Text(
+                "¿Seguro que deseas cancelar la reserva? Esta acción no se puede deshacer.",
+                color = Color.Gray,
+                fontWeight = FontWeight.Bold
+            )
+        },
+        confirmButton = {
+            TextButton(
+                onClick = onConfirmar
+            ) {
+                Text(
+                    "Sí, cancelar reserva",
+                    color = Color.Red,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("No, volver", color = Color.Gray)
+            }
+        }
+    )
+}

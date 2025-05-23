@@ -56,4 +56,14 @@ class HorarioDisponibleRepository {
         return apiService.obtenerTodosLosHorarios() // Define este endpoint en tu ApiService y backend si no existe
     }
 
+    suspend fun actualizarDisponibilidad(idHorario: Long, disponible: Boolean): Boolean {
+        return try {
+            RetrofitClient.apiService.actualizarDisponibilidadHorario(idHorario, disponible)
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+
 }

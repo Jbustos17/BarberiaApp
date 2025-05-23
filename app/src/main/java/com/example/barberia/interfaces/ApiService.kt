@@ -90,6 +90,12 @@ interface ApiService {
  @DELETE("/horarios/{id}")
  suspend fun eliminarHorario(@Path("id") id: Long)
 
+ @PATCH("horarios/{id}/disponibilidad")
+ suspend fun actualizarDisponibilidadHorario(
+  @Path("id") idHorario: Long,
+  @Query("disponible") disponible: Boolean
+ )
+
 
  @GET("/api/reservas")
  suspend fun obtenerReservas(): List<Reserva>

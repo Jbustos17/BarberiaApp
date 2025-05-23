@@ -33,6 +33,8 @@ import java.net.URLEncoder
 fun HorarioDisponibleScreen(
     idBarbero: Long,
     navController: NavHostController,
+    servicioId: Long,
+    idAdministrador: Long,
     viewModel: HorarioDisponibleViewModel = viewModel()
 ) {
     val calendarState = rememberSelectableCalendarState(
@@ -63,15 +65,16 @@ fun HorarioDisponibleScreen(
                 .padding(bottom = 8.dp)
         ) {
             IconButton(
-                onClick = { navController.navigate("barberos") },
+                onClick = { navController.navigate("barberos/$servicioId") },
                 modifier = Modifier.size(40.dp)
             ) {
                 Icon(
                     imageVector = Icons.Filled.ArrowBack,
                     contentDescription = "Volver",
-                    tint = AzulBarberi // O el color que prefieras
+                    tint = AzulBarberi
                 )
             }
+
         }
 
         Text(
@@ -192,10 +195,9 @@ fun HorarioDisponibleScreen(
 
         Button(
             onClick = {
-                val horaCodificada = URLEncoder.encode(horarioSeleccionado?.horaInicio ?: "", "UTF-8")
-                val servicioId = 1L // Reemplaza con el valor real
+                val horaCodificada =
+                    URLEncoder.encode(horarioSeleccionado?.horaInicio ?: "", "UTF-8")
                 val horarioDisponibleId = horarioSeleccionado?.idHorario ?: 0L
-                val idAdministrador = 1L
 
                 navController.navigate(
                     "reserva/$idBarbero/$fechaSeleccionada/$horaCodificada/$servicioId/$horarioDisponibleId/$idAdministrador"
@@ -207,7 +209,11 @@ fun HorarioDisponibleScreen(
                 .fillMaxWidth()
                 .height(52.dp)
         ) {
-            Text("Confirmar reserva", style = MaterialTheme.typography.titleMedium, color = Color.White)
+            Text(
+                "Confirmar reserva",
+                style = MaterialTheme.typography.titleMedium,
+                color = Color.White
+            )
         }
     }
 }

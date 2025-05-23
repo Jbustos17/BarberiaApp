@@ -1,5 +1,6 @@
 package com.example.barberia.screens
 
+import android.R.attr.shape
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -12,6 +13,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
+import androidx.compose.material3.CheckboxDefaults.colors
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,7 +49,6 @@ fun getDriveDirectUrl(url: String?): String? {
 
 @Composable
 fun ServicioScreen(
-
     navController: NavHostController,
     viewModel: ServicioViewModel = viewModel()
 ) {
@@ -125,7 +126,11 @@ fun ServicioScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(180.dp)
-                            .clickable { navController.navigate("barberos") },
+                            .clickable {
+                                servicio.idServicio?.let {
+                                    navController.navigate("barberos/$it")
+                                }
+                            },
                         shape = RoundedCornerShape(22.dp),
                         elevation = CardDefaults.cardElevation(8.dp)
                     ) {
@@ -173,8 +178,11 @@ fun ServicioScreen(
                                 )
                             }
                             Button(
-                                onClick = { navController.navigate("barberos") },
-                                colors = ButtonDefaults.buttonColors(containerColor = AzulBarberi),
+                                onClick = {
+                                    servicio.idServicio?.let {
+                                        navController.navigate("barberos/$it")}
+                                          },
+                                        colors = ButtonDefaults.buttonColors(containerColor = AzulBarberi),
                                 shape = RoundedCornerShape(10.dp),
                                 modifier = Modifier
                                     .padding(start = 12.dp)
