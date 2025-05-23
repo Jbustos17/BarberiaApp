@@ -35,19 +35,18 @@ import com.example.barberia.model.Servicio
 import com.example.barberia.viewmodel.BarberoViewModel
 import com.example.barberia.viewmodel.ServicioViewModel
 import com.example.barberia.R
-import com.example.barberia.model.BarberoIdOnly
-import com.example.barberia.model.ClienteIdOnly
 import com.example.barberia.model.HorarioDisponible
-import com.example.barberia.model.HorarioIdOnly
 import com.example.barberia.viewmodel.ReservaViewModel
 import com.example.barberia.model.Reserva
-import com.example.barberia.model.ServicioIdOnly
 import com.example.barberia.viewmodel.HorarioDisponibleViewModel
 import kotlinx.coroutines.launch
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
+import com.example.barberia.model.Cliente
+import com.example.barberia.model.*
+import kotlinx.coroutines.coroutineScope
 
 fun transformarDriveUrl(url: String?): String? {
     if (url == null) return null
@@ -70,9 +69,7 @@ fun AdminPanelScreen(
     servicioViewModel: ServicioViewModel = viewModel(),
     idAdministrador: Long = 1L
 ) {
-
-
-    val tabTitles = listOf("Barberos", "Servicios","Reservas")
+    val tabTitles = listOf("Barberos", "Servicios", "Reservas")
     var selectedTab by remember { mutableStateOf(0) }
 
     var showBarberoDialog by remember { mutableStateOf(false) }
@@ -80,7 +77,6 @@ fun AdminPanelScreen(
 
     var showServicioDialog by remember { mutableStateOf(false) }
     var servicioToEdit by remember { mutableStateOf<Servicio?>(null) }
-
 
     var barberoToDelete by remember { mutableStateOf<Barbero?>(null) }
     var servicioToDelete by remember { mutableStateOf<Servicio?>(null) }
@@ -234,7 +230,7 @@ fun AdminPanelScreen(
                         servicioViewModel.guardarServicio(servicio, idAdministrador)
                     } else {
                         servicioViewModel.guardarServicio(
-                            servicio.copy(id = servicioToEdit!!.id),
+                            servicio.copy(idServicio = servicioToEdit!!.idServicio),
                             idAdministrador
                         )
                     }
@@ -274,7 +270,7 @@ fun AdminPanelScreen(
             confirmButton = {
                 TextButton(onClick = {
                     servicioToDelete?.let {
-                        servicioViewModel.eliminarServicio(it.id!!, idAdministrador)
+                        servicioViewModel.eliminarServicio(it.idServicio!!, idAdministrador)
                         coroutineScope.launch {
                             snackbarHostState.showSnackbar("Servicio eliminado correctamente")
                         }
@@ -341,7 +337,7 @@ fun ReservaCardAdmin(
     onDelete: () -> Unit
 ) {
     val nombreBarbero = barberos.find { it.idBarbero == reserva.barbero.idBarbero }?.nombre ?: "N/A"
-    val nombreServicio = servicios.find { it.id == reserva.servicio.idServicio }?.nombre ?: "N/A"
+    val nombreServicio = servicios.find { it.idServicio == reserva.servicio.idServicio }?.nombre ?: "N/A"
     val horario = horarios.find { it.idHorario == reserva.horarioDisponible.idHorario }
     val textoHorario = if (horario != null) {
         "Fecha: ${horario.fecha} - Hora: ${horario.horaInicio} a ${horario.horaFin}"
@@ -613,7 +609,7 @@ fun BarberoCardAdmin(
                 Spacer(Modifier.width(16.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = barbero.nombre,
+                        barbero.nombre ?: "Sin nombre",
                         style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold, fontSize = 26.sp),
                         color = AzulBarberi
                     )
@@ -893,12 +889,13 @@ fun ServicioDialog(
                     }
                     onSave(
                         Servicio(
-                            id = initialServicio?.id,
+                            idServicio = initialServicio?.idServicio,
                             nombre = nombre,
                             descripcion = descripcion,
                             fotoUrl = fotoUrl,
                             precio = precioDouble
                         )
+
                     )
                 }
             ) { Text("Guardar") }
@@ -921,7 +918,15 @@ fun ReservaDialog(
     var celularCliente by remember { mutableStateOf(initialReserva?.celularCliente ?: "") }
     var correoCliente by remember { mutableStateOf(initialReserva?.correoCliente ?: "") }
     var barberoSeleccionado by remember { mutableStateOf(initialReserva?.barbero?.idBarbero ?: barberos.firstOrNull()?.idBarbero) }
-    var servicioSeleccionado by remember { mutableStateOf(initialReserva?.servicio?.idServicio ?: servicios.firstOrNull()?.id) }
+    var servicioSeleccionado by remember { mutableStateOf(initialReserva?.servicio?.idServicio ?: servicios.firstOrNull()?.idServicio) }
+    var selectedServicioId by remember { mutableStateOf<Long?>(null) }
+    var selectedBarberoId by remember { mutableStateOf<Long?>(null) }
+    var selectedHorarioId by remember { mutableStateOf<Long?>(null) }
+    var selectedClienteId by remember { mutableStateOf<Long?>(null) }
+
+    var nombre by remember { mutableStateOf("") }
+    var celular by remember { mutableStateOf("") }
+    var correo by remember { mutableStateOf("") }
 
 
 
@@ -962,19 +967,26 @@ fun ReservaDialog(
         },
         confirmButton = {
             TextButton(onClick = {
-                // Crea el objeto Reserva y llama a onSave
-                val reserva = Reserva(
-                    idReserva = initialReserva?.idReserva,
-                    nombreCliente = nombreCliente,
-                    celularCliente = celularCliente,
-                    correoCliente = correoCliente,
-                    barbero = BarberoIdOnly(barberoSeleccionado!!),
-                    servicio = ServicioIdOnly(servicioSeleccionado!!),
-                    horarioDisponible = initialReserva?.horarioDisponible ?: HorarioIdOnly(0), // Ajusta esto según tu lógica
-                    cliente = initialReserva?.cliente ?: ClienteIdOnly(0) // Ajusta esto según tu lógica
-                )
-                onSave(reserva)
-            }) { Text("Guardar") }
+                if (barberoSeleccionado != null && servicioSeleccionado != null
+                    && nombreCliente.isNotBlank() && celularCliente.isNotBlank() && correoCliente.isNotBlank()
+                ) {
+                    val reserva = Reserva(
+                        idReserva = initialReserva?.idReserva,
+                        servicio = Servicio(idServicio = servicioSeleccionado!!),
+                        barbero = Barbero(idBarbero = barberoSeleccionado!!),
+                        horarioDisponible = initialReserva?.horarioDisponible ?: HorarioDisponible(idHorario = 0L),
+                        cliente = initialReserva?.cliente ?: Cliente(idCliente = 0L),
+                        nombreCliente = nombreCliente,
+                        celularCliente = celularCliente,
+                        correoCliente = correoCliente
+                    )
+                    onSave(reserva)
+                } else {
+
+                }
+            }) {
+                Text("Guardar reserva")
+            }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) { Text("Cancelar") }
@@ -1004,8 +1016,8 @@ fun DropdownMenuBarbero(
                 DropdownMenuItem(
                     text = {
                         Text(
-                            barbero.nombre,
-                            fontSize = 18.sp, // Letra más grande en el menú
+                            barbero.nombre ?: "Sin nombre",
+                            fontSize = 18.sp,
                             fontWeight = FontWeight.Medium
                         )
                     },
@@ -1026,7 +1038,7 @@ fun DropdownMenuServicio(
     onSeleccionado: (Long) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
-    val nombreSeleccionado = servicios.find { it.id == seleccionado }?.nombre ?: "Selecciona Servicio"
+    val nombreSeleccionado = servicios.find { it.idServicio == seleccionado }?.nombre ?: "Selecciona Servicio"
     Box {
         OutlinedButton(onClick = { expanded = true }) {
             Text(
@@ -1046,7 +1058,7 @@ fun DropdownMenuServicio(
                         )
                     },
                     onClick = {
-                        onSeleccionado(servicio.id!!)
+                        onSeleccionado(servicio.idServicio!!)
                         expanded = false
                     }
                 )

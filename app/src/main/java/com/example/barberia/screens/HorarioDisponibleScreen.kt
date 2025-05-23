@@ -44,7 +44,7 @@ fun HorarioDisponibleScreen(
     val horasDisponibles by viewModel.horasDisponibles.collectAsState()
     var horarioSeleccionado by remember { mutableStateOf<com.example.barberia.model.HorarioUi?>(null) }
 
-    // Recarga horas cada vez que cambia el barbero o el día
+
     LaunchedEffect(idBarbero, fechaSeleccionada) {
         viewModel.cargarHorasDisponibles(idBarbero, fechaSeleccionada)
         horarioSeleccionado = null
@@ -195,7 +195,7 @@ fun HorarioDisponibleScreen(
                 val horaCodificada = URLEncoder.encode(horarioSeleccionado?.horaInicio ?: "", "UTF-8")
                 val servicioId = 1L // Reemplaza con el valor real
                 val horarioDisponibleId = horarioSeleccionado?.idHorario ?: 0L
-                val idAdministrador = 1L // Reemplaza con el valor real
+                val idAdministrador = 1L
 
                 navController.navigate(
                     "reserva/$idBarbero/$fechaSeleccionada/$horaCodificada/$servicioId/$horarioDisponibleId/$idAdministrador"

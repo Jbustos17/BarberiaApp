@@ -1,3 +1,4 @@
+
 @file:OptIn(ExperimentalMaterial3Api::class)
 package com.example.barberia.screens
 
@@ -58,12 +59,12 @@ fun BarberoPanelScreen(
 ) {
     val reservas by reservaViewModel.reservas.collectAsState()
     val barberos by barberoViewModel.barberos.collectAsState()
-    val servicios by servicioViewModel.servicios.collectAsState() // <-- Lista de servicios
+    val servicios by servicioViewModel.servicios.collectAsState()
     val horarios by horarioDisponibleViewModel.horarios.collectAsState()
 
-    val barbero = barberos.find { it.idBarbero == idBarbero }
     var fechaSeleccionada by remember { mutableStateOf(LocalDate.now()) }
     var showDatePicker by remember { mutableStateOf(false) }
+    val barbero = barberos.find { it.idBarbero == idBarbero }
 
     // Recarga todos los datos necesarios
     LaunchedEffect(idBarbero, fechaSeleccionada) {
@@ -76,11 +77,22 @@ fun BarberoPanelScreen(
         )
     }
 
+    // Mientras servicios u horarios están vacíos, muestra loading
+    if (servicios.isEmpty() || horarios.isEmpty()) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
+        }
+        return
+    }
+
     // Calcula el total de reservas CONFIRMADAS
     val totalDia = reservas
         .filter { it.estado == "CONFIRMADA" }
         .sumOf { reserva ->
-            val servicio = servicios.find { it.id == reserva.servicio.idServicio }
+            val servicio = servicios.find { it.idServicio == reserva.servicio.idServicio }
             servicio?.precio ?: 0.0
         }
 
@@ -176,7 +188,6 @@ fun BarberoPanelScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-
             // Lista de reservas
             if (reservas.isEmpty()) {
                 Box(
@@ -216,40 +227,35 @@ fun BarberoPanelScreen(
                         )
                     }
                 }
+            }
 
+            // DatePicker
+            val datePickerState = rememberDatePickerState(
+                initialSelectedDateMillis = fechaSeleccionada
+                    .atStartOfDay(ZoneId.systemDefault())
+                    .toInstant()
+                    .toEpochMilli()
+            )
 
-                val datePickerState = rememberDatePickerState(
-                    initialSelectedDateMillis = fechaSeleccionada
-                        .atStartOfDay(ZoneId.systemDefault())
-                        .toInstant()
-                        .toEpochMilli()
-                )
-
-                if (showDatePicker) {
-                    DatePickerDialog(
-                        onDismissRequest = { showDatePicker = false },
-                        confirmButton = {
-                            Button(
-                                onClick = {
-                                    showDatePicker = false
-                                    datePickerState.selectedDateMillis?.let { millis ->
-                                        fechaSeleccionada = Instant.ofEpochMilli(millis)
-                                            .atZone(ZoneId.systemDefault())
-                                            .toLocalDate()
-                                        // Recarga reservas tras cambiar fecha
-                                        reservaViewModel.cargarReservasPorBarberoYFecha(
-                                            idBarbero,
-                                            fechaSeleccionada.toString(),
-                                            null
-                                        )
-                                    }
-                                },
-                                colors = ButtonDefaults.buttonColors(containerColor = AzulBarberi)
-                            ) { Text("OK") }
-                        }
-                    ) {
-                        DatePicker(state = datePickerState)
+            if (showDatePicker) {
+                DatePickerDialog(
+                    onDismissRequest = { showDatePicker = false },
+                    confirmButton = {
+                        Button(
+                            onClick = {
+                                showDatePicker = false
+                                datePickerState.selectedDateMillis?.let { millis ->
+                                    fechaSeleccionada = Instant.ofEpochMilli(millis)
+                                        .atZone(ZoneId.systemDefault())
+                                        .toLocalDate()
+                                }
+                                // LaunchedEffect recarga automáticamente
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = AzulBarberi)
+                        ) { Text("OK") }
                     }
+                ) {
+                    DatePicker(state = datePickerState)
                 }
             }
         }
@@ -264,7 +270,8 @@ fun ReservacardTotalextrasbarbero(
     onConfirmar: () -> Unit,
     onCancelar: () -> Unit
 ) {
-    val servicio = servicios.find { it.id == reserva.servicio.idServicio }
+
+    val servicio = servicios.find { it.idServicio == reserva.servicio.idServicio }
     val precio = servicio?.precio ?: 0.0
     val nombreServicio = servicio?.nombre ?: "Servicio"
 
@@ -274,6 +281,7 @@ fun ReservacardTotalextrasbarbero(
     } else {
         "Horario no encontrado"
     }
+
 
     Box(
         modifier = Modifier

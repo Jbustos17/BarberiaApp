@@ -182,7 +182,7 @@ fun BarberoCardPersonalizado(
 
             Spacer(Modifier.height(8.dp))
             Text(
-                text = barbero.nombre,
+                barbero.nombre ?: "Sin nombre",
                 fontWeight = FontWeight.Bold,
                 fontSize = 19.sp,
                 modifier = Modifier.padding(horizontal = 12.dp)

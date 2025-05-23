@@ -4,12 +4,11 @@ import com.google.gson.annotations.SerializedName
 import com.example.barberia.R
 
 data class Servicio(
-
-    @SerializedName("idServicio") val id: Long? = null,
-    @SerializedName("nombreServicio") val nombre: String?,
-    @SerializedName("descripcion") val descripcion: String?,
+    @SerializedName("idServicio") val idServicio: Long? = null,
+    @SerializedName("nombreServicio") val nombre: String? = null,
+    @SerializedName("descripcion") val descripcion: String? = null,
     val fotoUrl: String? = null,
-    @SerializedName("precio") val precio: Double=0.0
+    @SerializedName("precio") val precio: Double? = null
 )
 
  {

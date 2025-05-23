@@ -208,27 +208,26 @@ fun ReservaScreen(
                         scope.launch {
                             try {
                                 val cliente = Cliente(
-                                    id_cliente = null,
+                                    idCliente = null, // Usa el nombre correcto
                                     nombre = nombre,
                                     celular = celular,
                                     correo = correo
                                 )
                                 val clienteGuardado = clienteViewModel.guardarCliente(cliente, idAdministrador)
 
-                                clienteGuardado.id_cliente?.let { idCliente ->
+                                clienteGuardado.idCliente?.let { idCliente ->
                                     val reserva = Reserva(
                                         idReserva = null,
-                                        servicio = ServicioIdOnly(servicioId),
-                                        barbero = BarberoIdOnly(idBarbero),
-                                        horarioDisponible = HorarioIdOnly(horarioDisponibleId),
-                                        cliente = ClienteIdOnly(idCliente),
+                                        servicio = Servicio(idServicio = servicioId),
+                                        barbero = Barbero(idBarbero = idBarbero), // <-- Aquí usas el parámetro recibido
+                                        horarioDisponible = HorarioDisponible(idHorario = horarioDisponibleId),
+                                        cliente = Cliente(idCliente = idCliente),
                                         nombreCliente = nombre,
                                         celularCliente = celular,
                                         correoCliente = correo
                                     )
+
                                     reservaViewModel.guardarReserva(reserva, idAdministrador)
-
-
                                     horarioDisponibleViewModel.cargarHorasDisponibles(idBarbero, fecha)
 
                                     showSuccess = true
