@@ -6,7 +6,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import java.net.URLDecoder
 
-// Define el ID de administrador por defecto (ajústalo según tu base de datos)
+
 const val ADMIN_ID_DEFAULT = 1L
 
 @Composable
@@ -29,7 +29,7 @@ fun Navegacion(navController: NavHostController) {
 
         composable("barberoPanel/{idBarbero}/{idAdministrador}") { backStackEntry ->
             val idBarbero = backStackEntry.arguments?.getString("idBarbero")?.toLongOrNull()
-            // Si el valor es nulo o 0, usa el valor por defecto
+
             val idAdministrador =
                 backStackEntry.arguments?.getString("idAdministrador")?.toLongOrNull()
                     ?.takeIf { it != 0L } ?: ADMIN_ID_DEFAULT

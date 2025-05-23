@@ -58,25 +58,25 @@ fun BarberoLoginScreen(
             .fillMaxSize()
             .background(GrisClaro)
     ) {
-        // Canvas de fondo decorativo
+
         Canvas(
             modifier = Modifier
                 .fillMaxSize()
                 .matchParentSize()
         ) {
-            // Círculo azul grande arriba a la izquierda
+
             drawCircle(
                 color = AzulBarberi.copy(alpha = 0.16f),
                 radius = size.minDimension * 0.55f,
                 center = Offset(x = size.width * -0.18f, y = size.height * -0.1f)
             )
-            // Círculo azul pequeño abajo a la derecha
+
             drawCircle(
                 color = AzulBarberi.copy(alpha = 0.11f),
                 radius = size.minDimension * 0.28f,
                 center = Offset(x = size.width * 1.13f, y = size.height * 1.1f)
             )
-            // Onda azul suave
+
             val path = Path().apply {
                 moveTo(0f, size.height * 0.32f)
                 cubicTo(
@@ -95,7 +95,6 @@ fun BarberoLoginScreen(
             )
         }
 
-        // Card del formulario con sombra y borde azul
         Card(
             modifier = Modifier
                 .align(Alignment.Center)

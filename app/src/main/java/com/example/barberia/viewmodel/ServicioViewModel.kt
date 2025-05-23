@@ -41,7 +41,7 @@ class ServicioViewModel : ViewModel() {
     }
 
 
-    // Eliminar un servicio
+
     fun eliminarServicio(id: Long, idAdministrador: Long) {
         viewModelScope.launch {
             val response: Response<Void> = repository.eliminarServicio(id, idAdministrador)

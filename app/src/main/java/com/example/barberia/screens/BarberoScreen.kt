@@ -53,7 +53,7 @@ fun BarberoScreen(
     viewModel: BarberoViewModel = viewModel()
 ) {
     val barberos by viewModel.barberos.collectAsState()
-    val idAdministrador = 1L // O pásalo como parámetro si lo necesitas dinámico
+    val idAdministrador = 1L
 
     LaunchedEffect(Unit) { viewModel.obtenerBarberos() }
 

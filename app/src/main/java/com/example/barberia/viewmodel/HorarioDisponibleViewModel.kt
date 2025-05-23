@@ -57,8 +57,7 @@ class HorarioDisponibleViewModel : ViewModel() {
         fun marcarHorarioDisponible(idHorario: Long) {
             viewModelScope.launch {
                 repository.actualizarDisponibilidad(idHorario, true)
-                // Opcional: recarga la lista de horarios para actualizar la UI
-                // cargarTodosLosHorarios()
+
             }
         }
     }

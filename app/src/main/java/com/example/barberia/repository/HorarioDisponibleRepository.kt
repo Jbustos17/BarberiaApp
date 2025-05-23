@@ -7,7 +7,7 @@ import com.example.barberia.model.HorarioUi
 
 class HorarioDisponibleRepository {
 
-    // Obtiene todos los horarios (no solo los disponibles)
+
     suspend fun obtenerHorarios(idBarbero: Long): List<HorarioDisponible> {
         return try {
             RetrofitClient.apiService.obtenerHorarios(idBarbero)
@@ -16,7 +16,7 @@ class HorarioDisponibleRepository {
         }
     }
 
-    // Obtiene los horarios disponibles (con idHorario y horaInicio)
+
     suspend fun obtenerHorariosDisponibles(idBarbero: Long, fecha: String): List<HorarioUi> {
         return try {
             RetrofitClient.apiService.obtenerHorariosDisponibles(idBarbero, fecha)
@@ -33,7 +33,7 @@ class HorarioDisponibleRepository {
         }
     }
 
-    // Guarda un nuevo horario
+
     suspend fun guardarHorario(horario: HorarioDisponible): HorarioDisponible? {
         return try {
             RetrofitClient.apiService.guardarHorario(horario)
@@ -51,9 +51,8 @@ class HorarioDisponibleRepository {
         }
     }
 
-    // En HorarioDisponibleRepository
     suspend fun obtenerTodosLosHorarios(): List<HorarioDisponible> {
-        return apiService.obtenerTodosLosHorarios() // Define este endpoint en tu ApiService y backend si no existe
+        return apiService.obtenerTodosLosHorarios()
     }
 
     suspend fun actualizarDisponibilidad(idHorario: Long, disponible: Boolean): Boolean {

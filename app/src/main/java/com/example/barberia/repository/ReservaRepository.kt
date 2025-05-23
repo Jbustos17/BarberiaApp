@@ -8,9 +8,6 @@ import retrofit2.Response
 
 class ReservaRepository {
 
-    /*suspend fun obtenerReservas(): List<Reserva> {
-        return RetrofitClient.apiService.obtenerReservas()
-    }*/
     suspend fun obtenerReservas(): List<Reserva> {
         return apiService.listarReservas()
     }
@@ -26,9 +23,7 @@ class ReservaRepository {
     suspend fun eliminarReserva(id: Long, idAdministrador: Long) {
         apiService.eliminarReserva(id, idAdministrador)
     }
-    /*suspend fun eliminarReserva(id: Long, idAdministrador: Long) {
-        RetrofitClient.apiService.eliminarReserva(id, idAdministrador)
-    }*/
+
     suspend fun obtenerReservasPorBarbero(idBarbero: Long): List<Reserva> {
         return apiService.obtenerReservasPorBarbero(idBarbero)
     }

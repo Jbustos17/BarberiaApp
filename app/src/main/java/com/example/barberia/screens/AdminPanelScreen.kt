@@ -137,13 +137,13 @@ fun AdminPanelScreen(
                 .padding(innerPadding)
         ) {
             IconButton(
-                onClick = { navController.navigate("inicio") }, // Cambia el nombre si tu ruta es diferente
+                onClick = { navController.navigate("inicio") },
                 modifier = Modifier.size(40.dp)
             ) {
                 Icon(
                     imageVector = Icons.Filled.ArrowBack,
                     contentDescription = "Volver",
-                    tint = AzulBarberi // Usa tu color principal o Color.Black si prefieres
+                    tint = AzulBarberi
                 )
             }
             Text(
@@ -194,7 +194,7 @@ fun AdminPanelScreen(
         }
         }
 
-        // Diálogo de agregar/editar barbero
+
     val idAdministrador = 1L // O el valor real
 
     if (showBarberoDialog) {
@@ -220,7 +220,6 @@ fun AdminPanelScreen(
     }
 
 
-    // Diálogo de agregar/editar servicio
         if (showServicioDialog) {
             ServicioDialog(
                 initialServicio = servicioToEdit,
@@ -261,7 +260,7 @@ fun AdminPanelScreen(
         )
     }
 
-// Diálogo de confirmación para eliminar servicio
+
     if (servicioToDelete != null) {
         AlertDialog(
             onDismissRequest = { servicioToDelete = null },
@@ -563,7 +562,7 @@ fun BarberoCardAdmin(
             .fillMaxWidth()
             .height(IntrinsicSize.Min)
     ) {
-        // Canvas decorativo en la tarjeta
+
         Canvas(
             modifier = Modifier.matchParentSize()
         ) {
@@ -599,7 +598,7 @@ fun BarberoCardAdmin(
                     contentDescription = "Foto barbero",
                     placeholder = painterResource(R.drawable.ic_barbero_placeholder),
                     error = painterResource(R.drawable.ic_barbero_placeholder),
-                    fallback = painterResource(R.drawable.ic_barbero_placeholder), // <-- ¡ESTE ES CLAVE!
+                    fallback = painterResource(R.drawable.ic_barbero_placeholder),
                     modifier = Modifier
                         .size(56.dp)
                         .clip(CircleShape)
@@ -767,7 +766,7 @@ fun BarberoDialog(
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(Modifier.height(8.dp))
-                // Previsualización de la imagen
+
                 AsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)
                         .data(transformarDriveUrl(fotoUrl))
@@ -793,7 +792,7 @@ fun BarberoDialog(
                             usuario = usuario,
                             fotoUrl = fotoUrl,
                             contrasenia = contrasenia,
-                            idAdministrador = idAdministrador // <-- AGREGA ESTA LÍNEA
+                            idAdministrador = idAdministrador
                         )
                     )
                 }
@@ -842,11 +841,11 @@ fun ServicioDialog(
                     label = { Text("URL de la imagen (Drive o web)") },
                     modifier = Modifier.fillMaxWidth()
                 )
-                // Campo de precio
+
                 OutlinedTextField(
                     value = precioText,
                     onValueChange = {
-                        // Solo permite números y punto decimal
+
                         if (it.isEmpty() || it.matches(Regex("^\\d*\\.?\\d*\$"))) {
                             precioText = it
                             precioError = false
@@ -863,7 +862,7 @@ fun ServicioDialog(
                     Text("Solo se permiten números y punto decimal", color = Color.Red, fontSize = 12.sp)
                 }
                 Spacer(Modifier.height(8.dp))
-                // Previsualización de la imagen
+
                 AsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)
                         .data(transformarDriveUrl(fotoUrl))
@@ -881,7 +880,7 @@ fun ServicioDialog(
         confirmButton = {
             TextButton(
                 onClick = {
-                    // Validación: el campo de precio no debe estar vacío y debe ser un número válido
+
                     val precioDouble = precioText.toDoubleOrNull()
                     if (precioDouble == null) {
                         precioError = true
@@ -950,19 +949,19 @@ fun ReservaDialog(
                     onValueChange = { correoCliente = it },
                     label = { Text("Correo Cliente") }
                 )
-                // Selector de barbero
+
                 DropdownMenuBarbero(
                     barberos = barberos,
                     seleccionado = barberoSeleccionado,
                     onSeleccionado = { barberoSeleccionado = it }
                 )
-                // Selector de servicio
+
                 DropdownMenuServicio(
                     servicios = servicios,
                     seleccionado = servicioSeleccionado,
                     onSeleccionado = { servicioSeleccionado = it }
                 )
-                // Agrega aquí más campos si es necesario
+
             }
         },
         confirmButton = {
@@ -1007,7 +1006,7 @@ fun DropdownMenuBarbero(
         OutlinedButton(onClick = { expanded = true }) {
             Text(
                 nombreSeleccionado,
-                fontSize = 20.sp, // Letra más grande
+                fontSize = 20.sp,
                 fontWeight = FontWeight.SemiBold
             )
         }
@@ -1053,7 +1052,7 @@ fun DropdownMenuServicio(
                     text = {
                         Text(
                             servicio.nombre!!,
-                            fontSize = 18.sp, // Letra más grande en el menú
+                            fontSize = 18.sp,
                             fontWeight = FontWeight.Medium
                         )
                     },

@@ -117,7 +117,7 @@ fun LoginScreen(
                 modifier = Modifier.fillMaxSize()
             ) {
 
-                // Card del formulario con sombra y borde azul
+
                 Card(
                     modifier = Modifier
                         .align(Alignment.Center)

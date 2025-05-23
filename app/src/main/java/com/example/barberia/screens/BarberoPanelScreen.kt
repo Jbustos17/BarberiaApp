@@ -67,7 +67,7 @@ fun BarberoPanelScreen(
     var showDatePicker by remember { mutableStateOf(false) }
     val barbero = barberos.find { it.idBarbero == idBarbero }
 
-    // Recarga todos los datos necesarios
+
     LaunchedEffect(idBarbero, fechaSeleccionada) {
         servicioViewModel.cargarServicios(idAdministrador)
         horarioDisponibleViewModel.cargarTodosLosHorarios()
@@ -78,7 +78,7 @@ fun BarberoPanelScreen(
         )
     }
 
-    // Mientras servicios u horarios están vacíos, muestra loading
+
     if (servicios.isEmpty() || horarios.isEmpty()) {
         Box(
             modifier = Modifier.fillMaxSize(),
@@ -89,7 +89,7 @@ fun BarberoPanelScreen(
         return
     }
 
-    // Calcula el total de reservas CONFIRMADAS
+
     val totalDia = reservas
         .filter { it.estado == "CONFIRMADA" }
         .sumOf { reserva ->
@@ -102,7 +102,7 @@ fun BarberoPanelScreen(
             .fillMaxSize()
             .background(GrisClaro)
     ) {
-        // Fondo decorativo (opcional)
+
         Canvas(modifier = Modifier.fillMaxSize()) {
             drawPath(
                 path = Path().apply {
@@ -132,7 +132,7 @@ fun BarberoPanelScreen(
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
-            // Header con botón de volver
+
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
@@ -157,7 +157,7 @@ fun BarberoPanelScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Selector de fecha
+
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
@@ -177,7 +177,7 @@ fun BarberoPanelScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Total del día
+
             Text(
                 text = "Total confirmado: $${"%.2f".format(totalDia)}",
                 style = MaterialTheme.typography.headlineSmall.copy(
@@ -189,7 +189,7 @@ fun BarberoPanelScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Lista de reservas
+
             if (reservas.isEmpty()) {
                 Box(
                     contentAlignment = Alignment.Center,
@@ -224,7 +224,7 @@ fun BarberoPanelScreen(
                                     idBarbero,
                                     fechaSeleccionada.toString()
                                 )
-                                // Recarga los horarios disponibles después de cancelar
+
                                 horarioDisponibleViewModel.cargarHorasDisponibles(idBarbero, fechaSeleccionada.toString())
                             }
                         )
@@ -252,7 +252,7 @@ fun BarberoPanelScreen(
                                         .atZone(ZoneId.systemDefault())
                                         .toLocalDate()
                                 }
-                                // LaunchedEffect recarga automáticamente
+
                             },
                             colors = ButtonDefaults.buttonColors(containerColor = AzulBarberi)
                         ) { Text("OK") }
@@ -273,7 +273,7 @@ fun ReservacardTotalextrasbarbero(
     onConfirmar: () -> Unit,
     onCancelar: () -> Unit
 ) {
-    // Busca el servicio por ID
+
     val servicio = servicios.find { it.idServicio == reserva.servicio.idServicio }
     println("DEBUG: Card reserva.servicio.idServicio=${reserva.servicio.idServicio}, servicio encontrado: ${servicio?.nombre}, precio=${servicio?.precio}")
     val nombreServicio = servicio?.nombre ?: "Servicio"
@@ -304,7 +304,7 @@ fun ReservacardTotalextrasbarbero(
             .fillMaxWidth()
             .height(IntrinsicSize.Min)
     ) {
-        // Canvas decorativo en la tarjeta
+
         Canvas(
             modifier = Modifier.matchParentSize()
         ) {
@@ -337,7 +337,7 @@ fun ReservacardTotalextrasbarbero(
             Column(
                 Modifier.padding(horizontal = 24.dp, vertical = 20.dp)
             ) {
-                // Cliente
+
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = Icons.Filled.Person,
@@ -353,7 +353,7 @@ fun ReservacardTotalextrasbarbero(
                 }
                 Spacer(Modifier.height(8.dp))
 
-                // Servicio y precio
+
                 Text(
                     text = "Servicio: $nombreServicio",
                     style = MaterialTheme.typography.bodyLarge
@@ -365,7 +365,7 @@ fun ReservacardTotalextrasbarbero(
 
                 Spacer(Modifier.height(8.dp))
 
-                // Horario
+
                 Text(
                     text = textoHorario,
                     style = MaterialTheme.typography.bodyMedium,
@@ -374,7 +374,7 @@ fun ReservacardTotalextrasbarbero(
 
                 Spacer(Modifier.height(8.dp))
 
-                // Estado de la reserva
+
                 Text(
                     text = "Estado: ${reserva.estado}",
                     style = MaterialTheme.typography.bodyLarge.copy(
@@ -388,7 +388,7 @@ fun ReservacardTotalextrasbarbero(
                     }
                 )
 
-                // Botones solo si la reserva está pendiente
+
                 if (reserva.estado == "PENDIENTE") {
                     Spacer(Modifier.height(10.dp))
                     Row(

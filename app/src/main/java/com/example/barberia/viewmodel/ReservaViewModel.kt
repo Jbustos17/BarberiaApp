@@ -58,7 +58,7 @@ class ReservaViewModel : ViewModel() {
                 repository.eliminarReserva(id, idAdministrador)
                 cargarReservas() // refresca la lista
             } catch (e: Exception) {
-                // Aquí puedes mostrar un error en la UI
+
                 _error.value = "No se pudo eliminar la reserva: ${e.message}"
             }
         }
