@@ -10,11 +10,24 @@ import java.net.URLDecoder
 fun Navegacion(navController: NavHostController) {
     NavHost(
         navController = navController,
-        startDestination = "inicio"
+        startDestination = "splash"
     ) {
+        // Splash Screen - Verifica sesión al inicio
+        composable("splash") { SplashScreen(navController) }
+        
+        // Pantalla de inicio
         composable("inicio") { InicioScreen(navController) }
+        
+        // Autenticación de administradores
         composable("login") { LoginScreen(navController) }
         composable("adminPanel") { AdminPanelScreen(navController) }
+        
+        // Autenticación de clientes
+        composable("clienteLogin") { ClienteLoginScreen(navController) }
+        composable("clienteRegistro") { ClienteRegistroScreen(navController) }
+        composable("perfil") { PerfilScreen(navController) }
+        
+        // Pantallas principales (requieren autenticación de cliente)
         composable("servicios") { ServicioScreen(navController) }
         composable("barberos") { BarberoScreen(navController) }
 

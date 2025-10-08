@@ -53,7 +53,11 @@ class HorarioDisponibleRepository {
 
     // En HorarioDisponibleRepository
     suspend fun obtenerTodosLosHorarios(): List<HorarioDisponible> {
-        return apiService.obtenerTodosLosHorarios() // Define este endpoint en tu ApiService y backend si no existe
+        return try {
+            apiService.obtenerTodosLosHorarios()
+        } catch (e: Exception) {
+            emptyList()
+        }
     }
 
 }

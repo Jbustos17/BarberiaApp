@@ -59,6 +59,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
     implementation("io.github.boguszpawlowski.composecalendar:composecalendar:1.4.0")
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.2")
+    implementation(libs.firebase.crashlytics.buildtools)
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")

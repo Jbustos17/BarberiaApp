@@ -134,9 +134,9 @@ interface ApiService {
  @GET("/clientes/{id}")
  suspend fun obtenerCliente(@Path("id") id: Long): Cliente
 
- @GET("reservas/barbero/{idBarbero}")
+ @GET("/reservas/barbero/{idBarbero}")
  suspend fun obtenerReservasPorBarbero(@Path("idBarbero") idBarbero: Long): List<Reserva>
- @GET("horarios")
+ @GET("/horarios")
  suspend fun obtenerTodosLosHorarios(): List<HorarioDisponible>
 
 

@@ -68,7 +68,8 @@ fun AdminPanelScreen(
     servicioViewModel: ServicioViewModel = viewModel(),
     idAdministrador: Long = 1L
 ) {
-
+    var showErrorDialog by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf("") }
 
     val tabTitles = listOf("Barberos", "Servicios","Reservas")
     var selectedTab by remember { mutableStateOf(0) }
@@ -85,9 +86,13 @@ fun AdminPanelScreen(
 
     val barberos by barberoViewModel.barberos.collectAsState()
     val servicios by servicioViewModel.servicios.collectAsState()
+    val barberoError by barberoViewModel.error.collectAsState()
+    val servicioError by servicioViewModel.error.collectAsState()
+    val barberoLoading by barberoViewModel.isLoading.collectAsState()
 
     val reservaViewModel: ReservaViewModel = viewModel()
     val reservas by reservaViewModel.reservas.collectAsState()
+    val reservaError by reservaViewModel.error.collectAsState()
 
     var reservaToEdit by remember { mutableStateOf<Reserva?>(null) }
     var reservaToDelete by remember { mutableStateOf<Reserva?>(null) }
@@ -97,6 +102,7 @@ fun AdminPanelScreen(
     val coroutineScope = rememberCoroutineScope()
     val horarioDisponibleViewModel: HorarioDisponibleViewModel = viewModel()
     val horarios by horarioDisponibleViewModel.horarios.collectAsState()
+    val horarioError by horarioDisponibleViewModel.error.collectAsState()
 
 
 
@@ -108,7 +114,15 @@ fun AdminPanelScreen(
         servicioViewModel.cargarServicios(idAdministrador)
         reservaViewModel.cargarReservas()
         horarioDisponibleViewModel.cargarTodosLosHorarios()
+    }
 
+    // Detectar errores de los ViewModels
+    LaunchedEffect(barberoError, servicioError, reservaError, horarioError) {
+        val error = barberoError ?: servicioError ?: reservaError ?: horarioError
+        if (error != null) {
+            errorMessage = error
+            showErrorDialog = true
+        }
     }
 
     Scaffold(
@@ -199,9 +213,13 @@ fun AdminPanelScreen(
         // Diálogo de agregar/editar barbero
         if (showBarberoDialog) {
             BarberoDialog(
-
                 initialBarbero = barberoToEdit,
-                onDismiss = { showBarberoDialog = false },
+                isLoading = barberoLoading,
+                onDismiss = { 
+                    if (!barberoLoading) {
+                        showBarberoDialog = false
+                    }
+                },
                 onSave = { barbero ->
                     if (barberoToEdit == null) {
                         barberoViewModel.guardarBarbero(barbero, idAdministrador)
@@ -211,7 +229,7 @@ fun AdminPanelScreen(
                             idAdministrador
                         )
                     }
-                    showBarberoDialog = false
+                    // No cerrar inmediatamente, esperar a que termine la operación
                 }
             )
         }
@@ -315,6 +333,26 @@ fun AdminPanelScreen(
                     reservaViewModel.guardarReserva(reserva.copy(idReserva = reservaToEdit!!.idReserva), idAdministrador)
                 }
                 showReservaDialog = false
+            }
+        )
+    }
+
+    // Diálogo de error
+    if (showErrorDialog) {
+        AlertDialog(
+            onDismissRequest = { 
+                showErrorDialog = false
+                navController.navigate("inicio")
+            },
+            title = { Text("Error de Acceso") },
+            text = { Text(errorMessage) },
+            confirmButton = {
+                TextButton(
+                    onClick = { 
+                        showErrorDialog = false
+                        navController.navigate("inicio")
+                    }
+                ) { Text("Volver al Inicio") }
             }
         )
     }
@@ -717,6 +755,7 @@ fun ServicioCardAdmin(
 @Composable
 fun BarberoDialog(
     initialBarbero: Barbero? = null,
+    isLoading: Boolean = false,
     onDismiss: () -> Unit,
     onSave: (Barbero) -> Unit
 ) {
@@ -725,6 +764,18 @@ fun BarberoDialog(
     var usuario by remember { mutableStateOf(initialBarbero?.usuario ?: "") }
     var contrasenia by remember { mutableStateOf(initialBarbero?.contrasenia ?: "") }
     var fotoUrl by remember { mutableStateOf(initialBarbero?.fotoUrl ?: "") }
+
+    // Variable para controlar si se ha iniciado una operación
+    var operationStarted by remember { mutableStateOf(false) }
+    
+    // Cerrar el diálogo automáticamente cuando termine la operación
+    LaunchedEffect(isLoading, operationStarted) {
+        if (operationStarted && !isLoading) {
+            // Pequeño delay para que el usuario vea que se completó
+            kotlinx.coroutines.delay(500)
+            onDismiss()
+        }
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -780,21 +831,41 @@ fun BarberoDialog(
         confirmButton = {
             TextButton(
                 onClick = {
-                    onSave(
-                        Barbero(
-                            idBarbero = initialBarbero?.idBarbero,
-                            nombre = nombre,
-                            telefono = telefono,
-                            usuario = usuario,
-                            fotoUrl = fotoUrl,
-                            contrasenia = contrasenia
+                    if (!isLoading) {
+                        operationStarted = true
+                        onSave(
+                            Barbero(
+                                idBarbero = initialBarbero?.idBarbero,
+                                nombre = nombre,
+                                telefono = telefono,
+                                usuario = usuario,
+                                fotoUrl = fotoUrl,
+                                contrasenia = contrasenia
+                            )
                         )
-                    )
+                    }
+                },
+                enabled = !isLoading
+            ) { 
+                if (isLoading) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            strokeWidth = 2.dp
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Guardando...")
+                    }
+                } else {
+                    Text("Guardar")
                 }
-            ) { Text("Guardar") }
+            }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancelar") }
+            TextButton(
+                onClick = onDismiss,
+                enabled = !isLoading
+            ) { Text("Cancelar") }
         }
     )
 }

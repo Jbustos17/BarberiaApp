@@ -18,8 +18,10 @@ class HorarioDisponibleViewModel : ViewModel() {
     val horarios: StateFlow<List<HorarioDisponible>> = _horarios
 
     private val _horasDisponibles = MutableStateFlow<List<HorarioUi>>(emptyList())
-    val horasDisponibles: StateFlow<List<   HorarioUi>> = _horasDisponibles
+    val horasDisponibles: StateFlow<List<HorarioUi>> = _horasDisponibles
 
+    private val _error = MutableStateFlow<String?>(null)
+    val error: StateFlow<String?> = _error
 
     fun cargarHorarios(idBarbero: Long) {
         this.idBarbero = idBarbero
@@ -50,7 +52,18 @@ class HorarioDisponibleViewModel : ViewModel() {
     }
     fun cargarTodosLosHorarios() {
         viewModelScope.launch {
-            _horarios.value = repository.obtenerTodosLosHorarios()
+            try {
+                _error.value = null
+                _horarios.value = repository.obtenerTodosLosHorarios()
+            } catch (e: retrofit2.HttpException) {
+                when (e.code()) {
+                    403 -> _error.value = "No tienes permisos de administrador"
+                    401 -> _error.value = "Sesión expirada. Por favor, inicia sesión nuevamente"
+                    else -> _error.value = "Error al obtener horarios: ${e.message()}"
+                }
+            } catch (e: Exception) {
+                _error.value = "Error de conexión: ${e.message}"
+            }
         }
     }
 

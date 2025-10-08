@@ -158,7 +158,7 @@ fun InicioScreen(navController: NavHostController) {
             Spacer(modifier = Modifier.height(16.dp))
 
             Button(
-                onClick = { navController.navigate("servicios") },
+                onClick = { navController.navigate("clienteLogin") },
                 colors = ButtonDefaults.buttonColors(containerColor = AzulBarberi),
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier

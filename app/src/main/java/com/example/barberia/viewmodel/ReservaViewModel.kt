@@ -22,33 +22,51 @@ class ReservaViewModel : ViewModel() {
 
     fun cargarReservas() {
         viewModelScope.launch {
-            _reservas.value = repository.obtenerReservas()
+            try {
+                _error.value = null
+                _reservas.value = repository.obtenerReservas()
+            } catch (e: retrofit2.HttpException) {
+                when (e.code()) {
+                    403 -> _error.value = "No tienes permisos de administrador"
+                    401 -> _error.value = "Sesión expirada. Por favor, inicia sesión nuevamente"
+                    else -> _error.value = "Error al obtener reservas: ${e.message()}"
+                }
+            } catch (e: Exception) {
+                _error.value = "Error de conexión: ${e.message}"
+            }
         }
     }
 
     fun guardarReserva(reserva: Reserva, idAdministrador: Long) {
         viewModelScope.launch {
-            var intentos = 0
-            var exito = false
-
-            while (intentos < 3 && !exito) {
-                try {
-                    val response = repository.guardarReserva(reserva, idAdministrador)
-                    if (response.isSuccessful) {
-                        exito = true
-
-                    } else {
-
-                        val errorMsg = response.errorBody()?.string() ?: "Error desconocido"
-                        _error.value = "Error al guardar reserva: $errorMsg"
-                        break
-                    }
-                } catch (e: Exception) {
-                    intentos++
-                    if (intentos == 3) {
-                        _error.value = "Error de red: ${e.message}"
+            try {
+                _error.value = null
+                val response = repository.guardarReserva(reserva, idAdministrador)
+                if (response.isSuccessful) {
+                    // Reserva guardada exitosamente
+                    cargarReservas() // Refrescar la lista
+                } else {
+                    when (response.code()) {
+                        404 -> _error.value = "Endpoint no encontrado. Verifica la configuración del servidor."
+                        400 -> _error.value = "Datos inválidos en la reserva."
+                        403 -> _error.value = "No tienes permisos para crear reservas."
+                        401 -> _error.value = "Sesión expirada. Por favor, inicia sesión nuevamente."
+                        else -> {
+                            val errorMsg = response.errorBody()?.string() ?: "Error desconocido"
+                            _error.value = "Error al guardar reserva: HTTP ${response.code()} - $errorMsg"
+                        }
                     }
                 }
+            } catch (e: retrofit2.HttpException) {
+                when (e.code()) {
+                    404 -> _error.value = "Endpoint no encontrado. Verifica la configuración del servidor."
+                    400 -> _error.value = "Datos inválidos en la reserva."
+                    403 -> _error.value = "No tienes permisos para crear reservas."
+                    401 -> _error.value = "Sesión expirada. Por favor, inicia sesión nuevamente."
+                    else -> _error.value = "Error HTTP ${e.code()}: ${e.message()}"
+                }
+            } catch (e: Exception) {
+                _error.value = "Error de conexión: ${e.message}"
             }
         }
     }
@@ -79,4 +97,5 @@ class ReservaViewModel : ViewModel() {
 
 
 }
+
 

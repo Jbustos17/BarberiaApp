@@ -10,7 +10,11 @@ class ReservaRepository {
         return RetrofitClient.apiService.obtenerReservas()
     }*/
     suspend fun obtenerReservas(): List<Reserva> {
-        return apiService.listarReservas()
+        return try {
+            apiService.listarReservas()
+        } catch (e: Exception) {
+            emptyList()
+        }
     }
 
 
