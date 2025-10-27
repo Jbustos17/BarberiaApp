@@ -115,5 +115,10 @@ fun Navegacion(navController: NavHostController) {
                 )
             }
         }
+        
+        // Dashboard financiero
+        composable("dashboard") {
+            DashboardScreen(navController = navController)
+        }
     }
 }

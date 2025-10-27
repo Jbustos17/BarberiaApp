@@ -3,6 +3,9 @@ package com.example.barberia.interfaces
 import com.example.barberia.model.Administrador
 import com.example.barberia.model.Barbero
 import com.example.barberia.model.Cliente
+import com.example.barberia.model.ComisionesConfig
+import com.example.barberia.model.DashboardEstadisticas
+import com.example.barberia.model.EstadisticasBarbero
 import com.example.barberia.model.GaleriaCorte
 import com.example.barberia.model.HorarioDisponible
 import com.example.barberia.model.HorarioUi
@@ -155,6 +158,23 @@ interface ApiService {
 
  @GET("/galeria/{idGaleria}")
  suspend fun obtenerFotoGaleria(@Path("idGaleria") idGaleria: Long): Response<GaleriaCorte>
+
+ // Dashboard y estadísticas
+ @GET("/dashboard/estadisticas")
+ suspend fun obtenerEstadisticasDashboard(): Response<DashboardEstadisticas>
+
+ @GET("/dashboard/barberos")
+ suspend fun obtenerEstadisticasBarberos(): Response<List<EstadisticasBarbero>>
+
+ @GET("/dashboard/barbero/{idBarbero}")
+ suspend fun obtenerEstadisticasBarbero(@Path("idBarbero") idBarbero: Long): Response<EstadisticasBarbero>
+
+ // Configuración de comisiones
+ @GET("/configuracion/comisiones")
+ suspend fun obtenerComisiones(): Response<ComisionesConfig>
+
+ @retrofit2.http.PUT("/configuracion/comisiones")
+ suspend fun actualizarComisiones(@Body comisiones: ComisionesConfig): Response<Map<String, String>>
 
 }
 

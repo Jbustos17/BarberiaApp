@@ -27,6 +27,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Build
@@ -34,6 +35,7 @@ import androidx.compose.material.icons.outlined.Campaign
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -42,6 +44,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.graphics.Brush
 import coil.compose.AsyncImage
 import com.example.barberia.viewmodel.GaleriaViewModel
+import com.example.barberia.viewmodel.DashboardViewModel
 import kotlinx.coroutines.launch
 
 
@@ -51,7 +54,8 @@ fun BarberoPanelScreen(
     navController: NavHostController,
     reservaViewModel: ReservaViewModel = viewModel(),
     barberoViewModel: BarberoViewModel = viewModel(),
-    galeriaViewModel: GaleriaViewModel = viewModel()
+    galeriaViewModel: GaleriaViewModel = viewModel(),
+    dashboardViewModel: DashboardViewModel = viewModel()
 ) {
     val reservas by reservaViewModel.reservas.collectAsState()
     val barberos by barberoViewModel.barberos.collectAsState()
@@ -69,6 +73,7 @@ fun BarberoPanelScreen(
         reservaViewModel.cargarReservasPorBarbero(idBarbero)
         horarioDisponibleViewModel.cargarTodosLosHorarios()
         galeriaViewModel.cargarGaleria(idBarbero)
+        dashboardViewModel.cargarEstadisticasBarberos()
     }
     
     // Mostrar mensajes de error
@@ -158,7 +163,7 @@ fun BarberoPanelScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Tabs para Reservas y Galería
+            // Tabs para Reservas, Ganancias y Galería
             TabRow(
                 selectedTabIndex = selectedTab,
                 containerColor = Color.Transparent,
@@ -173,6 +178,12 @@ fun BarberoPanelScreen(
                 Tab(
                     selected = selectedTab == 1,
                     onClick = { selectedTab = 1 },
+                    text = { Text("Mis Ganancias") },
+                    icon = { Icon(Icons.Default.AttachMoney, null) }
+                )
+                Tab(
+                    selected = selectedTab == 2,
+                    onClick = { selectedTab = 2 },
                     text = { Text("Mi Galería") },
                     icon = { Icon(Icons.Default.PhotoLibrary, null) }
                 )
@@ -218,6 +229,15 @@ fun BarberoPanelScreen(
                     }
                 }
                 1 -> {
+                    // Tab de Mis Ganancias
+                    MisGananciasTab(
+                        idBarbero = idBarbero,
+                        nombreBarbero = barbero?.nombre ?: "Barbero",
+                        dashboardViewModel = dashboardViewModel,
+                        snackbarHostState = snackbarHostState
+                    )
+                }
+                2 -> {
                     // Tab de Galería
                     GestionGaleriaTab(
                         idBarbero = idBarbero,
@@ -665,5 +685,326 @@ fun AgregarFotoDialog(
         containerColor = Color.White,
         shape = RoundedCornerShape(16.dp)
     )
+}
+
+@Composable
+fun MisGananciasTab(
+    idBarbero: Long,
+    nombreBarbero: String,
+    dashboardViewModel: DashboardViewModel,
+    snackbarHostState: SnackbarHostState
+) {
+    val estadisticasBarberos by dashboardViewModel.estadisticasBarberos.collectAsState()
+    val isLoading by dashboardViewModel.isLoading.collectAsState()
+    val error by dashboardViewModel.error.collectAsState()
+    
+    // Encontrar las estadísticas de este barbero
+    val miEstadistica = estadisticasBarberos.find { it.idBarbero == idBarbero }
+    
+    LaunchedEffect(error) {
+        error?.let {
+            snackbarHostState.showSnackbar(it)
+            dashboardViewModel.limpiarError()
+        }
+    }
+
+    if (isLoading && miEstadistica == null) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator(color = AzulBarberi)
+        }
+    } else {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // Header con nombre del barbero
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = AzulBarberi),
+                    elevation = CardDefaults.cardElevation(6.dp)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(48.dp)
+                        )
+                        Spacer(Modifier.height(12.dp))
+                        Text(
+                            nombreBarbero,
+                            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+                            color = Color.White
+                        )
+                        Text(
+                            "Panel de Ganancias",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = Color.White.copy(alpha = 0.9f)
+                        )
+                    }
+                }
+            }
+
+            miEstadistica?.let { stats ->
+                // Total de cortes
+                item {
+                    StatCardBarbero(
+                        title = "Total de Cortes Realizados",
+                        value = "${stats.totalCortes}",
+                        icon = Icons.Default.Build,
+                        color = Color(0xFF2196F3)
+                    )
+                }
+
+                // Ingresos generados
+                item {
+                    StatCardBarbero(
+                        title = "Ingresos Totales Generados",
+                        value = formatearPrecio(stats.ingresosGenerados),
+                        icon = Icons.Default.AttachMoney,
+                        color = Color(0xFF4CAF50),
+                        subtitle = "Total generado para la barbería"
+                    )
+                }
+
+                // Mis ganancias (comisión del barbero)
+                item {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = DoradoBarberia),
+                        elevation = CardDefaults.cardElevation(8.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(24.dp)
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.AttachMoney,
+                                    contentDescription = null,
+                                    tint = Color.White,
+                                    modifier = Modifier.size(40.dp)
+                                )
+                                Spacer(Modifier.width(16.dp))
+                                Column {
+                                    Text(
+                                        "Mis Ganancias",
+                                        style = MaterialTheme.typography.titleLarge,
+                                        color = Color.White.copy(alpha = 0.9f)
+                                    )
+                                    Text(
+                                        "Tu comisión",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = Color.White.copy(alpha = 0.7f)
+                                    )
+                                }
+                            }
+                            
+                            Spacer(Modifier.height(20.dp))
+                            
+                            Text(
+                                formatearPrecio(stats.comisionBarbero),
+                                style = MaterialTheme.typography.displaySmall.copy(fontWeight = FontWeight.Bold),
+                                color = Color.White
+                            )
+                            
+                            Spacer(Modifier.height(8.dp))
+                            
+                            // Calcular el porcentaje
+                            val porcentaje = if (stats.ingresosGenerados > 0) {
+                                (stats.comisionBarbero / stats.ingresosGenerados * 100).toInt()
+                            } else 0
+                            
+                            Text(
+                                "Tu porcentaje: ${porcentaje}%",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = Color.White.copy(alpha = 0.9f)
+                            )
+                        }
+                    }
+                }
+
+                // Comisión de la barbería (referencia)
+                item {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        elevation = CardDefaults.cardElevation(2.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(20.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column {
+                                Text(
+                                    "Comisión de la Barbería",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = Color.Gray
+                                )
+                                
+                                val porcentajeAdmin = if (stats.ingresosGenerados > 0) {
+                                    (stats.comisionAdmin / stats.ingresosGenerados * 100).toInt()
+                                } else 0
+                                
+                                Text(
+                                    "$porcentajeAdmin%",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = Color.Gray
+                                )
+                            }
+                            Text(
+                                formatearPrecio(stats.comisionAdmin),
+                                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                                color = Color.Gray
+                            )
+                        }
+                    }
+                }
+
+                // Promedio por corte
+                item {
+                    val promedioPorCorte = if (stats.totalCortes > 0) {
+                        stats.comisionBarbero / stats.totalCortes
+                    } else 0.0
+                    
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFFE3F2FD)),
+                        elevation = CardDefaults.cardElevation(2.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(20.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column {
+                                Text(
+                                    "Promedio por Corte",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = AzulBarberi
+                                )
+                                Text(
+                                    "Tus ganancias promedio",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = Color.Gray
+                                )
+                            }
+                            Text(
+                                formatearPrecio(promedioPorCorte),
+                                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                                color = AzulBarberi
+                            )
+                        }
+                    }
+                }
+            } ?: item {
+                // Si no hay estadísticas
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 48.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(
+                            imageVector = Icons.Default.AttachMoney,
+                            contentDescription = null,
+                            modifier = Modifier.size(64.dp),
+                            tint = Color.Gray
+                        )
+                        Spacer(Modifier.height(16.dp))
+                        Text(
+                            "No hay estadísticas disponibles",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = Color.Gray
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            "Realiza tu primer corte para ver tus ganancias",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color.Gray,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun StatCardBarbero(
+    title: String,
+    value: String,
+    icon: ImageVector,
+    color: Color,
+    subtitle: String? = null
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = color),
+        elevation = CardDefaults.cardElevation(4.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(48.dp)
+            )
+            Spacer(Modifier.width(16.dp))
+            Column {
+                Text(
+                    title,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Color.White.copy(alpha = 0.9f)
+                )
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    value,
+                    style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+                    color = Color.White
+                )
+                subtitle?.let {
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        it,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.White.copy(alpha = 0.7f)
+                    )
+                }
+            }
+        }
+    }
 }
 

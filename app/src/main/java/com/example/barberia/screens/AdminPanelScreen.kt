@@ -13,10 +13,12 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -45,6 +47,7 @@ import com.example.barberia.viewmodel.ReservaViewModel
 import com.example.barberia.model.Reserva
 import com.example.barberia.model.ServicioIdOnly
 import com.example.barberia.viewmodel.HorarioDisponibleViewModel
+import com.example.barberia.viewmodel.DashboardViewModel
 import kotlinx.coroutines.launch
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
@@ -69,12 +72,13 @@ fun AdminPanelScreen(
     navController: NavHostController,
     barberoViewModel: BarberoViewModel = viewModel(),
     servicioViewModel: ServicioViewModel = viewModel(),
+    dashboardViewModel: DashboardViewModel = viewModel(),
     idAdministrador: Long = 1L
 ) {
     var showErrorDialog by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
 
-    val tabTitles = listOf("Barberos", "Servicios","Reservas")
+    val tabTitles = listOf("Dashboard", "Barberos", "Servicios","Reservas")
     var selectedTab by remember { mutableStateOf(0) }
 
     var showBarberoDialog by remember { mutableStateOf(false) }
@@ -131,10 +135,10 @@ fun AdminPanelScreen(
     Scaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         floatingActionButton = {
-            if (selectedTab != 2) {
+            if (selectedTab == 1 || selectedTab == 2) {
                 FloatingActionButton(
                     onClick = {
-                        if (selectedTab == 0) {
+                        if (selectedTab == 1) {
                             barberoToEdit = null
                             showBarberoDialog = true
                         } else {
@@ -189,17 +193,21 @@ fun AdminPanelScreen(
             }
 
             when (selectedTab) {
-                0 -> BarberosTab(
+                0 -> DashboardTab(
+                    dashboardViewModel = dashboardViewModel,
+                    navController = navController
+                )
+                1 -> BarberosTab(
                     barberos = barberos,
                     onEdit = { barberoToEdit = it; showBarberoDialog = true },
                     onDelete = { barberoToDelete = it }
                 )
-                1 -> ServiciosTab(
+                2 -> ServiciosTab(
                     servicios = servicios,
                     onEdit = { servicioToEdit = it; showServicioDialog = true },
                     onDelete = { servicioToDelete = it }
                 )
-                2 -> ReservasTab(
+                3 -> ReservasTab(
                     reservas = reservas,
                     barberos = barberos,
                     servicios = servicios,

@@ -28,6 +28,9 @@ import io.github.boguszpawlowski.composecalendar.selection.SelectionMode
 import kotlinx.datetime.Clock
 import kotlinx.datetime.toLocalDateTime
 import java.net.URLEncoder
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 
 @Composable
 fun HorarioDisponibleScreen(
@@ -51,6 +54,33 @@ fun HorarioDisponibleScreen(
     
     val servicios by servicioViewModel.servicios.collectAsState()
     val barberos by barberoViewModel.barberos.collectAsState()
+    
+    // Filtrar horarios que ya pasaron si es el día de hoy
+    val horasFiltradas = remember(horasDisponibles, fechaSeleccionada) {
+        val fechaActual = LocalDate.now()
+        val horaActual = LocalTime.now()
+        val fechaSeleccionadaLocal = try {
+            LocalDate.parse(fechaSeleccionada)
+        } catch (e: Exception) {
+            null
+        }
+        
+        if (fechaSeleccionadaLocal != null && fechaSeleccionadaLocal.isEqual(fechaActual)) {
+            // Es el día de hoy, filtrar horarios que ya pasaron
+            horasDisponibles.filter { horarioUi ->
+                try {
+                    val horaInicio = LocalTime.parse(horarioUi.horaInicio, DateTimeFormatter.ofPattern("HH:mm"))
+                    horaInicio.isAfter(horaActual)
+                } catch (e: Exception) {
+                    // Si hay error al parsear, mantener el horario
+                    true
+                }
+            }
+        } else {
+            // No es hoy, mostrar todos los horarios
+            horasDisponibles
+        }
+    }
 
     // Recarga datos necesarios
     LaunchedEffect(Unit) {
@@ -63,6 +93,13 @@ fun HorarioDisponibleScreen(
         android.util.Log.d("HorarioScreen", "LaunchedEffect: barbero=$idBarbero, fecha=$fechaSeleccionada")
         viewModel.cargarHorasDisponibles(idBarbero, fechaSeleccionada)
         horarioSeleccionado = null
+    }
+    
+    // Resetear selección si el horario seleccionado ya no está en la lista filtrada
+    LaunchedEffect(horasFiltradas) {
+        if (horarioSeleccionado != null && !horasFiltradas.contains(horarioSeleccionado)) {
+            horarioSeleccionado = null
+        }
     }
 
     Column(
@@ -145,18 +182,31 @@ fun HorarioDisponibleScreen(
                     }
                 }
             }
-        } else if (horasDisponibles.isEmpty()) {
+        } else if (horasFiltradas.isEmpty()) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 32.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "No hay horarios disponibles para este día.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(
+                        imageVector = Icons.Default.Schedule,
+                        contentDescription = null,
+                        modifier = Modifier.size(48.dp),
+                        tint = Color.Gray
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = if (horasDisponibles.isEmpty()) 
+                            "No hay horarios disponibles para este día."
+                        else 
+                            "No hay horarios disponibles. Todos los horarios de hoy ya pasaron.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
+                }
             }
         } else {
             LazyColumn(
@@ -164,7 +214,7 @@ fun HorarioDisponibleScreen(
                     .fillMaxWidth()
                     .weight(1f, fill = false)
             ) {
-                items(horasDisponibles) { horarioUi ->
+                items(horasFiltradas) { horarioUi ->
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
