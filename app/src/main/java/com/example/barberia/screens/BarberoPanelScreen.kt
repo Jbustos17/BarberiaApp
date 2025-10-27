@@ -31,6 +31,18 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.outlined.Campaign
+import androidx.compose.material.icons.filled.PhotoLibrary
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.graphics.Brush
+import coil.compose.AsyncImage
+import com.example.barberia.viewmodel.GaleriaViewModel
+import kotlinx.coroutines.launch
 
 
 @Composable
@@ -38,7 +50,8 @@ fun BarberoPanelScreen(
     idBarbero: Long,
     navController: NavHostController,
     reservaViewModel: ReservaViewModel = viewModel(),
-    barberoViewModel: BarberoViewModel = viewModel()
+    barberoViewModel: BarberoViewModel = viewModel(),
+    galeriaViewModel: GaleriaViewModel = viewModel()
 ) {
     val reservas by reservaViewModel.reservas.collectAsState()
     val barberos by barberoViewModel.barberos.collectAsState()
@@ -48,11 +61,14 @@ fun BarberoPanelScreen(
     val error by reservaViewModel.error.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
+    
+    var selectedTab by remember { mutableStateOf(0) }
 
     LaunchedEffect(idBarbero) {
         barberoViewModel.obtenerBarberos()
         reservaViewModel.cargarReservasPorBarbero(idBarbero)
         horarioDisponibleViewModel.cargarTodosLosHorarios()
+        galeriaViewModel.cargarGaleria(idBarbero)
     }
     
     // Mostrar mensajes de error
@@ -68,14 +84,14 @@ fun BarberoPanelScreen(
     Scaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(GrisClaro)
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(GrisClaro)
                 .padding(paddingValues)
-        ) {
-            // Canvas decorativo de fondo
-            Canvas(
+    ) {
+        // Canvas decorativo de fondo
+        Canvas(
             modifier = Modifier
                 .fillMaxSize()
                 .matchParentSize()
@@ -142,6 +158,31 @@ fun BarberoPanelScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Tabs para Reservas y Galería
+            TabRow(
+                selectedTabIndex = selectedTab,
+                containerColor = Color.Transparent,
+                contentColor = AzulBarberi
+            ) {
+                Tab(
+                    selected = selectedTab == 0,
+                    onClick = { selectedTab = 0 },
+                    text = { Text("Reservas") },
+                    icon = { Icon(Icons.Default.Schedule, null) }
+                )
+                Tab(
+                    selected = selectedTab == 1,
+                    onClick = { selectedTab = 1 },
+                    text = { Text("Mi Galería") },
+                    icon = { Icon(Icons.Default.PhotoLibrary, null) }
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            when (selectedTab) {
+                0 -> {
+                    // Tab de Reservas
             if (reservas.isEmpty()) {
                 Box(
                     Modifier.fillMaxSize(),
@@ -159,23 +200,33 @@ fun BarberoPanelScreen(
                     modifier = Modifier.fillMaxSize()
                 ) {
                     items(reservas) { reserva ->
-                        ReservaCard(
-                            reserva = reserva, 
-                            horarios = horarios,
-                            onEliminar = { reservaAEliminar ->
-                                reservaAEliminar.idReserva?.let { id ->
-                                    reservaViewModel.eliminarReserva(
-                                        id = id,
-                                        idAdministrador = 1L,
-                                        idBarbero = idBarbero
-                                    )
-                                }
+                                ReservaCard(
+                                    reserva = reserva, 
+                                    horarios = horarios,
+                                    onEliminar = { reservaAEliminar ->
+                                        reservaAEliminar.idReserva?.let { id ->
+                                            reservaViewModel.eliminarReserva(
+                                                id = id,
+                                                idAdministrador = 1L,
+                                                idBarbero = idBarbero
+                                            )
+                                        }
+                                    }
+                                )
                             }
-                        )
+                        }
+                    }
+                }
+                1 -> {
+                    // Tab de Galería
+                    GestionGaleriaTab(
+                        idBarbero = idBarbero,
+                        galeriaViewModel = galeriaViewModel,
+                        snackbarHostState = snackbarHostState
+                    )
                     }
                 }
             }
-        }
         }
     }
 }
@@ -348,5 +399,271 @@ fun ReservaCard(
             shape = RoundedCornerShape(16.dp)
         )
     }
+}
+
+@Composable
+fun GestionGaleriaTab(
+    idBarbero: Long,
+    galeriaViewModel: GaleriaViewModel,
+    snackbarHostState: SnackbarHostState
+) {
+    val galeria by galeriaViewModel.galeria.collectAsState()
+    val isLoading by galeriaViewModel.isLoading.collectAsState()
+    val error by galeriaViewModel.error.collectAsState()
+    val coroutineScope = rememberCoroutineScope()
+    
+    var mostrarDialogoAgregar by remember { mutableStateOf(false) }
+    
+    // Mostrar errores
+    LaunchedEffect(error) {
+        error?.let {
+            snackbarHostState.showSnackbar(it)
+            galeriaViewModel.limpiarError()
+        }
+    }
+    
+    Column(modifier = Modifier.fillMaxSize()) {
+        // Botón para agregar foto
+        Button(
+            onClick = { mostrarDialogoAgregar = true },
+            colors = ButtonDefaults.buttonColors(containerColor = AzulBarberi),
+            shape = RoundedCornerShape(12.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Icon(
+                imageVector = Icons.Default.Add,
+                contentDescription = "Agregar foto",
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(Modifier.width(8.dp))
+            Text("Agregar Foto a mi Galería")
+        }
+        
+        Spacer(Modifier.height(16.dp))
+        
+        if (isLoading && galeria.isEmpty()) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = AzulBarberi)
+            }
+        } else if (galeria.isEmpty()) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(
+                        imageVector = Icons.Default.PhotoLibrary,
+                        contentDescription = null,
+                        modifier = Modifier.size(80.dp),
+                        tint = Color.Gray
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        "No tienes fotos en tu galería",
+                        style = MaterialTheme.typography.titleLarge.copy(fontSize = 20.sp),
+                        color = Color.Gray
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        "Agrega fotos de tus mejores cortes",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.Gray
+                    )
+                }
+            }
+        } else {
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.fillMaxSize()
+            ) {
+                items(galeria) { foto ->
+                    FotoGaleriaCard(
+                        foto = foto,
+                        onEliminar = {
+                            foto.id?.let { id ->
+                                coroutineScope.launch {
+                                    galeriaViewModel.eliminarFoto(id, idBarbero)
+                                    snackbarHostState.showSnackbar("Foto eliminada")
+                                }
+                            }
+                        }
+                    )
+                }
+            }
+        }
+    }
+    
+    // Diálogo para agregar foto
+    if (mostrarDialogoAgregar) {
+        AgregarFotoDialog(
+            onDismiss = { mostrarDialogoAgregar = false },
+            onConfirm = { fotoUrl, descripcion ->
+                coroutineScope.launch {
+                    galeriaViewModel.subirFoto(idBarbero, fotoUrl, descripcion)
+                    mostrarDialogoAgregar = false
+                    snackbarHostState.showSnackbar("Foto agregada exitosamente")
+                }
+            }
+        )
+    }
+}
+
+@Composable
+fun FotoGaleriaCard(
+    foto: com.example.barberia.model.GaleriaCorte,
+    onEliminar: () -> Unit
+) {
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .aspectRatio(1f),
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(4.dp)
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            AsyncImage(
+                model = foto.fotoUrl,
+                contentDescription = foto.descripcion,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(RoundedCornerShape(12.dp)),
+                contentScale = ContentScale.Crop
+            )
+            
+            // Botón de eliminar en la esquina superior derecha
+            IconButton(
+                onClick = { showDeleteDialog = true },
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(4.dp)
+                    .size(36.dp)
+                    .background(Color.Red.copy(alpha = 0.8f), shape = RoundedCornerShape(8.dp))
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "Eliminar",
+                    tint = Color.White,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+            
+            // Overlay con descripción si existe
+            foto.descripcion?.let {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.BottomCenter)
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.7f))
+                            )
+                        )
+                        .padding(8.dp)
+                ) {
+                    Text(
+                        text = it,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.White,
+                        maxLines = 2
+                    )
+                }
+            }
+        }
+    }
+    
+    // Diálogo de confirmación de eliminación
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Confirmar eliminación") },
+            text = { Text("¿Estás seguro de que deseas eliminar esta foto de tu galería?") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        onEliminar()
+                        showDeleteDialog = false
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                ) {
+                    Text("Eliminar", color = Color.White)
+                }
+            },
+            dismissButton = {
+                OutlinedButton(onClick = { showDeleteDialog = false }) {
+                    Text("Cancelar", color = AzulBarberi)
+                }
+            },
+            containerColor = Color.White,
+            shape = RoundedCornerShape(16.dp)
+        )
+    }
+}
+
+@Composable
+fun AgregarFotoDialog(
+    onDismiss: () -> Unit,
+    onConfirm: (String, String?) -> Unit
+) {
+    var fotoUrl by remember { mutableStateOf("") }
+    var descripcion by remember { mutableStateOf("") }
+    
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                "Agregar Foto",
+                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                color = AzulBarberi
+            )
+        },
+        text = {
+            Column {
+                OutlinedTextField(
+                    value = fotoUrl,
+                    onValueChange = { fotoUrl = it },
+                    label = { Text("URL de la foto") },
+                    placeholder = { Text("https://ejemplo.com/foto.jpg") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+                Spacer(Modifier.height(12.dp))
+                OutlinedTextField(
+                    value = descripcion,
+                    onValueChange = { descripcion = it },
+                    label = { Text("Descripción (opcional)") },
+                    placeholder = { Text("Corte degradado...") },
+                    modifier = Modifier.fillMaxWidth(),
+                    maxLines = 3
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    if (fotoUrl.isNotBlank()) {
+                        onConfirm(fotoUrl, descripcion.ifBlank { null })
+                    }
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = AzulBarberi),
+                enabled = fotoUrl.isNotBlank()
+            ) {
+                Text("Agregar")
+            }
+        },
+        dismissButton = {
+            OutlinedButton(onClick = onDismiss) {
+                Text("Cancelar", color = AzulBarberi)
+            }
+        },
+        containerColor = Color.White,
+        shape = RoundedCornerShape(16.dp)
+    )
 }
 

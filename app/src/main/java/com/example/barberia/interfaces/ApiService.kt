@@ -3,6 +3,7 @@ package com.example.barberia.interfaces
 import com.example.barberia.model.Administrador
 import com.example.barberia.model.Barbero
 import com.example.barberia.model.Cliente
+import com.example.barberia.model.GaleriaCorte
 import com.example.barberia.model.HorarioDisponible
 import com.example.barberia.model.HorarioUi
 import com.example.barberia.model.Reserva
@@ -139,6 +140,21 @@ interface ApiService {
  @GET("/horarios")
  suspend fun obtenerTodosLosHorarios(): List<HorarioDisponible>
 
+ // Galería de cortes
+ @GET("/galeria/barbero/{idBarbero}")
+ suspend fun obtenerGaleriaPorBarbero(@Path("idBarbero") idBarbero: Long): Response<List<GaleriaCorte>>
+
+ @POST("/galeria/barbero/{idBarbero}")
+ suspend fun subirFotoGaleria(
+  @Path("idBarbero") idBarbero: Long,
+  @Body galeriaCorte: GaleriaCorte
+ ): Response<GaleriaCorte>
+
+ @DELETE("/galeria/{idGaleria}")
+ suspend fun eliminarFotoGaleria(@Path("idGaleria") idGaleria: Long): Response<Void>
+
+ @GET("/galeria/{idGaleria}")
+ suspend fun obtenerFotoGaleria(@Path("idGaleria") idGaleria: Long): Response<GaleriaCorte>
 
 }
 

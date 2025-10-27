@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -138,7 +139,8 @@ fun BarberoScreen(
                 ) { barbero ->
                     BarberoCardPersonalizado(
                         barbero = barbero,
-                        onClick = { navController.navigate("horarios/${barbero.idBarbero}/$servicioId") }
+                        onClick = { navController.navigate("horarios/${barbero.idBarbero}/$servicioId") },
+                        onGaleriaClick = { navController.navigate("galeria/${barbero.idBarbero}") }
                     )
                 }
             }
@@ -150,7 +152,8 @@ fun BarberoScreen(
 @Composable
 fun BarberoCardPersonalizado(
     barbero: Barbero,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onGaleriaClick: () -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -160,41 +163,68 @@ fun BarberoCardPersonalizado(
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(8.dp)
     ) {
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.White)
         ) {
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(getDriveDirectUrl(barbero.fotoUrl))
-                    .crossfade(true)
-                    .build(),
-                contentDescription = barbero.nombre,
-                placeholder = painterResource(R.drawable.ic_barbero_placeholder),
-                error = painterResource(R.drawable.ic_barbero_placeholder),
-                fallback = painterResource(R.drawable.ic_barbero_placeholder),
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(110.dp)
-                    .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
-            )
+            Column(modifier = Modifier.fillMaxSize()) {
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(getDriveDirectUrl(barbero.fotoUrl))
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = barbero.nombre,
+                    placeholder = painterResource(R.drawable.ic_barbero_placeholder),
+                    error = painterResource(R.drawable.ic_barbero_placeholder),
+                    fallback = painterResource(R.drawable.ic_barbero_placeholder),
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(110.dp)
+                        .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
+                )
 
-            Spacer(Modifier.height(8.dp))
-            Text(
-                text = barbero.nombre,
-                fontWeight = FontWeight.Bold,
-                fontSize = 19.sp,
-                modifier = Modifier.padding(horizontal = 12.dp)
-            )
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    text = barbero.nombre,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 19.sp,
+                    modifier = Modifier.padding(horizontal = 12.dp)
+                )
 
-            Text(
-                text = barbero.telefono ?: "",
-                color = Color.Gray,
-                fontSize = 15.sp,
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 2.dp)
-            )
+                Text(
+                    text = barbero.telefono ?: "",
+                    color = Color.Gray,
+                    fontSize = 15.sp,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 2.dp)
+                )
+                
+                Spacer(Modifier.height(4.dp))
+                
+                // Botón pequeño para ver galería
+                OutlinedButton(
+                    onClick = { onGaleriaClick() },
+                    modifier = Modifier
+                        .padding(horizontal = 12.dp)
+                        .fillMaxWidth()
+                        .height(32.dp),
+                    contentPadding = PaddingValues(4.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.PhotoLibrary,
+                        contentDescription = "Ver galería",
+                        modifier = Modifier.size(16.dp),
+                        tint = AzulBarberi
+                    )
+                    Spacer(Modifier.width(4.dp))
+                    Text(
+                        "Ver galería",
+                        fontSize = 12.sp,
+                        color = AzulBarberi
+                    )
+                }
+            }
         }
     }
 }

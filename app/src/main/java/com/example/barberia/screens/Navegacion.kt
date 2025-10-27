@@ -104,5 +104,16 @@ fun Navegacion(navController: NavHostController) {
                 carritoViewModel = carritoViewModel
             )
         }
+        
+        // Galería de cortes del barbero
+        composable("galeria/{idBarbero}") { backStackEntry ->
+            val idBarbero = backStackEntry.arguments?.getString("idBarbero")?.toLongOrNull()
+            if (idBarbero != null) {
+                GaleriaScreen(
+                    navController = navController,
+                    idBarbero = idBarbero
+                )
+            }
+        }
     }
 }
