@@ -8,6 +8,9 @@ import java.net.URLDecoder
 
 @Composable
 fun Navegacion(navController: NavHostController) {
+    // ViewModel compartido a nivel de navegación
+    val carritoViewModel: com.example.barberia.viewmodel.CarritoViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+    
     NavHost(
         navController = navController,
         startDestination = "splash"
@@ -29,7 +32,12 @@ fun Navegacion(navController: NavHostController) {
         
         // Pantallas principales (requieren autenticación de cliente)
         composable("servicios") { ServicioScreen(navController) }
-        composable("barberos") { BarberoScreen(navController) }
+        composable("barberos/{servicioId}") { backStackEntry ->
+            val servicioId = backStackEntry.arguments?.getString("servicioId")?.toLongOrNull()
+            if (servicioId != null) {
+                BarberoScreen(navController, servicioId)
+            }
+        }
 
 
         composable("barberoLogin") { BarberoLoginScreen(navController) }
@@ -42,10 +50,16 @@ fun Navegacion(navController: NavHostController) {
             }
         }
 
-        composable("horarios/{idBarbero}") { backStackEntry ->
+        composable("horarios/{idBarbero}/{servicioId}") { backStackEntry ->
             val idBarbero = backStackEntry.arguments?.getString("idBarbero")?.toLongOrNull()
-            if (idBarbero != null) {
-                HorarioDisponibleScreen(idBarbero = idBarbero, navController = navController)
+            val servicioId = backStackEntry.arguments?.getString("servicioId")?.toLongOrNull()
+            if (idBarbero != null && servicioId != null) {
+                HorarioDisponibleScreen(
+                    idBarbero = idBarbero, 
+                    servicioId = servicioId,
+                    navController = navController,
+                    carritoViewModel = carritoViewModel
+                )
             }
         }
 
@@ -73,6 +87,22 @@ fun Navegacion(navController: NavHostController) {
                     navController = navController
                 )
             }
+        }
+        
+        // Carrito de compras
+        composable("carrito") { 
+            CarritoScreen(
+                navController = navController,
+                carritoViewModel = carritoViewModel
+            )
+        }
+        
+        // Pantalla de pago
+        composable("pago") { 
+            PagoScreen(
+                navController = navController,
+                carritoViewModel = carritoViewModel
+            )
         }
     }
 }

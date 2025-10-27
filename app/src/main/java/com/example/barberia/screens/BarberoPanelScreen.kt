@@ -45,20 +45,37 @@ fun BarberoPanelScreen(
     val barbero = barberos.find { it.idBarbero == idBarbero }
     val horarioDisponibleViewModel: HorarioDisponibleViewModel = viewModel()
     val horarios by horarioDisponibleViewModel.horarios.collectAsState()
+    val error by reservaViewModel.error.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(idBarbero) {
         barberoViewModel.obtenerBarberos()
         reservaViewModel.cargarReservasPorBarbero(idBarbero)
         horarioDisponibleViewModel.cargarTodosLosHorarios()
     }
+    
+    // Mostrar mensajes de error
+    LaunchedEffect(error) {
+        error?.let { errorMsg ->
+            snackbarHostState.showSnackbar(
+                message = errorMsg,
+                duration = SnackbarDuration.Short
+            )
+        }
+    }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(GrisClaro)
-    ) {
-        // Canvas decorativo de fondo
-        Canvas(
+    Scaffold(
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
+    ) { paddingValues ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(GrisClaro)
+                .padding(paddingValues)
+        ) {
+            // Canvas decorativo de fondo
+            Canvas(
             modifier = Modifier
                 .fillMaxSize()
                 .matchParentSize()
@@ -142,22 +159,41 @@ fun BarberoPanelScreen(
                     modifier = Modifier.fillMaxSize()
                 ) {
                     items(reservas) { reserva ->
-                        ReservaCard(reserva, horarios)
+                        ReservaCard(
+                            reserva = reserva, 
+                            horarios = horarios,
+                            onEliminar = { reservaAEliminar ->
+                                reservaAEliminar.idReserva?.let { id ->
+                                    reservaViewModel.eliminarReserva(
+                                        id = id,
+                                        idAdministrador = 1L,
+                                        idBarbero = idBarbero
+                                    )
+                                }
+                            }
+                        )
                     }
                 }
             }
+        }
         }
     }
 }
 
 @Composable
-fun ReservaCard(reserva: Reserva, horarios: List<HorarioDisponible>) {
+fun ReservaCard(
+    reserva: Reserva, 
+    horarios: List<HorarioDisponible>,
+    onEliminar: (Reserva) -> Unit
+) {
     val horario = horarios.find { it.idHorario == reserva.horarioDisponible.idHorario }
     val textoHorario = if (horario != null) {
         "Fecha: ${horario.fecha} - Hora: ${horario.horaInicio} a ${horario.horaFin}"
     } else {
         "Horario no encontrado"
     }
+    
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
@@ -251,8 +287,66 @@ fun ReservaCard(reserva: Reserva, horarios: List<HorarioDisponible>) {
                     style = MaterialTheme.typography.bodyLarge.copy(fontSize = 18.sp),
                     color = AzulBarberi.copy(alpha = 0.8f)
                 )
+                
+                Spacer(Modifier.height(16.dp))
+                
+                // Botón de eliminar (solo si idReserva no es null)
+                if (reserva.idReserva != null) {
+                    Button(
+                        onClick = { showDeleteDialog = true },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            "Eliminar Reserva",
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                            color = Color.White
+                        )
+                    }
+                }
             }
         }
+    }
+    
+    // Diálogo de confirmación
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = {
+                Text(
+                    text = "Confirmar eliminación",
+                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                    color = AzulBarberi
+                )
+            },
+            text = {
+                Text(
+                    text = "¿Estás seguro de que deseas eliminar la reserva de ${reserva.nombreCliente}?\n\nEsta acción no se puede deshacer.",
+                    style = MaterialTheme.typography.bodyLarge
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        onEliminar(reserva)
+                        showDeleteDialog = false
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                ) {
+                    Text("Eliminar", color = Color.White)
+                }
+            },
+            dismissButton = {
+                OutlinedButton(
+                    onClick = { showDeleteDialog = false }
+                ) {
+                    Text("Cancelar", color = AzulBarberi)
+                }
+            },
+            containerColor = Color.White,
+            shape = RoundedCornerShape(16.dp)
+        )
     }
 }
 

@@ -49,6 +49,7 @@ fun toDirectDriveUrl(url: String?): String? {
 @Composable
 fun BarberoScreen(
     navController: NavHostController,
+    servicioId: Long,
     viewModel: BarberoViewModel = viewModel()
 ) {
     val barberos by viewModel.barberos.collectAsState()
@@ -94,7 +95,7 @@ fun BarberoScreen(
                     .padding(bottom = 8.dp)
             ) {
                 IconButton(
-                    onClick = { navController.navigate("servicios") },
+                    onClick = { navController.popBackStack() },
                     modifier = Modifier.size(40.dp)
                 ) {
                     Icon(
@@ -127,7 +128,7 @@ fun BarberoScreen(
                         nombre = "Cualquier profesional",
                         descripcion = "Máxima disponibilidad",
                         iconRes = R.drawable.ic_random, // Usa tu icono de "aleatorio"
-                        onClick = { navController.navigate("horarios/0") }
+                        onClick = { navController.navigate("horarios/0/$servicioId") }
                     )
                 }
 
@@ -137,7 +138,7 @@ fun BarberoScreen(
                 ) { barbero ->
                     BarberoCardPersonalizado(
                         barbero = barbero,
-                        onClick = { navController.navigate("horarios/${barbero.idBarbero}") }
+                        onClick = { navController.navigate("horarios/${barbero.idBarbero}/$servicioId") }
                     )
                 }
             }

@@ -71,14 +71,26 @@ class ReservaViewModel : ViewModel() {
         }
     }
 
-    fun eliminarReserva(id: Long, idAdministrador: Long) {
+    fun eliminarReserva(id: Long, idAdministrador: Long, idBarbero: Long? = null) {
         viewModelScope.launch {
             try {
+                _error.value = null
                 repository.eliminarReserva(id, idAdministrador)
-                cargarReservas() // refresca la lista
+                // Si se proporciona idBarbero, recargar solo las reservas de ese barbero
+                if (idBarbero != null) {
+                    cargarReservasPorBarbero(idBarbero)
+                } else {
+                    cargarReservas() // refresca la lista completa
+                }
+            } catch (e: retrofit2.HttpException) {
+                when (e.code()) {
+                    403 -> _error.value = "No tienes permisos para eliminar reservas"
+                    401 -> _error.value = "Sesión expirada. Por favor, inicia sesión nuevamente"
+                    404 -> _error.value = "Reserva no encontrada"
+                    else -> _error.value = "Error al eliminar reserva: ${e.message()}"
+                }
             } catch (e: Exception) {
-                // Aquí puedes mostrar un error en la UI
-                _error.value = "No se pudo eliminar la reserva: ${e.message}"
+                _error.value = "Error de conexión: ${e.message}"
             }
         }
     }

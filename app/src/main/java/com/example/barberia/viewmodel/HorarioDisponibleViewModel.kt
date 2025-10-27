@@ -32,7 +32,25 @@ class HorarioDisponibleViewModel : ViewModel() {
 
     fun cargarHorasDisponibles(idBarbero: Long, fecha: String) {
         viewModelScope.launch {
-            _horasDisponibles.value = repository.obtenerHorariosDisponibles(idBarbero, fecha)
+            try {
+                android.util.Log.d("HorarioViewModel", "Cargando horarios para barbero: $idBarbero, fecha: $fecha")
+                _error.value = null
+                _horasDisponibles.value = repository.obtenerHorariosDisponibles(idBarbero, fecha)
+                android.util.Log.d("HorarioViewModel", "Horarios cargados exitosamente: ${_horasDisponibles.value.size}")
+            } catch (e: retrofit2.HttpException) {
+                android.util.Log.e("HorarioViewModel", "Error HTTP al cargar horarios: ${e.code()}", e)
+                when (e.code()) {
+                    401 -> _error.value = "Sesión expirada. Por favor, inicia sesión nuevamente"
+                    403 -> _error.value = "No tienes permisos para ver los horarios"
+                    404 -> _error.value = "No se encontraron horarios para esta fecha"
+                    else -> _error.value = "Error al cargar horarios: ${e.message()}"
+                }
+                _horasDisponibles.value = emptyList()
+            } catch (e: Exception) {
+                android.util.Log.e("HorarioViewModel", "Error al cargar horarios", e)
+                _error.value = "Error de conexión: ${e.message}"
+                _horasDisponibles.value = emptyList()
+            }
         }
     }
 

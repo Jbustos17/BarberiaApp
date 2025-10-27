@@ -120,7 +120,7 @@ fun InicioScreen(navController: NavHostController) {
             )
 
             Text(
-                "Bienvenido a Kalu Barberia",
+                "Bienvenido a BarberAPP",
                 style = MaterialTheme.typography.headlineMedium.copy(
                     fontWeight = FontWeight.Bold,
                     color = AzulBarberi,

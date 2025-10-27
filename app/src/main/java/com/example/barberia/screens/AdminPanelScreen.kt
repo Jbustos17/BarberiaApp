@@ -11,6 +11,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
@@ -29,6 +30,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
 import com.example.barberia.model.Barbero
 import com.example.barberia.model.Servicio
 import com.example.barberia.viewmodel.BarberoViewModel
@@ -732,6 +735,23 @@ fun ServicioCardAdmin(
                         style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold, fontSize = 26.sp),
                         color = AzulBarberi
                     )
+                    Spacer(Modifier.height(4.dp))
+                    servicio.precio?.let { precio ->
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.AttachMoney,
+                                contentDescription = "Precio",
+                                tint = DoradoBarberia,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(Modifier.width(4.dp))
+                            Text(
+                                text = formatearPrecio(precio),
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                color = DoradoBarberia
+                            )
+                        }
+                    }
                     Spacer(Modifier.height(8.dp))
 
                 }
@@ -880,6 +900,7 @@ fun ServicioDialog(
     var nombre by remember { mutableStateOf(initialServicio?.nombre ?: "") }
     var descripcion by remember { mutableStateOf(initialServicio?.descripcion ?: "") }
     var fotoUrl by remember { mutableStateOf(initialServicio?.fotoUrl ?: "") }
+    var precio by remember { mutableStateOf(initialServicio?.precio?.toString() ?: "") }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -905,6 +926,28 @@ fun ServicioDialog(
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = precio,
+                    onValueChange = { 
+                        // Solo permitir números y punto decimal
+                        if (it.isEmpty() || it.matches(Regex("^\\d*\\.?\\d*$"))) {
+                            precio = it
+                        }
+                    },
+                    label = { Text("Precio (COP)") },
+                    placeholder = { Text("Ej: 25000") },
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Decimal
+                    ),
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.AttachMoney,
+                            contentDescription = "Precio"
+                        )
+                    }
+                )
+                Spacer(Modifier.height(8.dp))
                 // Previsualización de la imagen
                 AsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)
@@ -923,15 +966,18 @@ fun ServicioDialog(
         confirmButton = {
             TextButton(
                 onClick = {
+                    val precioDouble = precio.toDoubleOrNull()
                     onSave(
                         Servicio(
                             id = initialServicio?.id,
                             nombre = nombre,
                             descripcion = descripcion,
-                            fotoUrl = fotoUrl
+                            fotoUrl = fotoUrl,
+                            precio = precioDouble
                         )
                     )
-                }
+                },
+                enabled = nombre.isNotBlank() && descripcion.isNotBlank() && precio.isNotBlank()
             ) { Text("Guardar") }
         },
         dismissButton = {

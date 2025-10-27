@@ -32,8 +32,12 @@ import java.net.URLEncoder
 @Composable
 fun HorarioDisponibleScreen(
     idBarbero: Long,
+    servicioId: Long,
     navController: NavHostController,
-    viewModel: HorarioDisponibleViewModel = viewModel()
+    viewModel: HorarioDisponibleViewModel = viewModel(),
+    carritoViewModel: com.example.barberia.viewmodel.CarritoViewModel,
+    servicioViewModel: com.example.barberia.viewmodel.ServicioViewModel = viewModel(),
+    barberoViewModel: com.example.barberia.viewmodel.BarberoViewModel = viewModel()
 ) {
     val calendarState = rememberSelectableCalendarState(
         initialSelectionMode = SelectionMode.Single
@@ -42,10 +46,21 @@ fun HorarioDisponibleScreen(
         ?: Clock.System.now().toLocalDateTime(kotlinx.datetime.TimeZone.currentSystemDefault()).date
     val fechaSeleccionada = selectedDay.toString()
     val horasDisponibles by viewModel.horasDisponibles.collectAsState()
+    val error by viewModel.error.collectAsState()
     var horarioSeleccionado by remember { mutableStateOf<com.example.barberia.model.HorarioUi?>(null) }
+    
+    val servicios by servicioViewModel.servicios.collectAsState()
+    val barberos by barberoViewModel.barberos.collectAsState()
+
+    // Recarga datos necesarios
+    LaunchedEffect(Unit) {
+        servicioViewModel.cargarServicios(idAdministrador = 1L)
+        barberoViewModel.obtenerBarberos()
+    }
 
     // Recarga horas cada vez que cambia el barbero o el día
     LaunchedEffect(idBarbero, fechaSeleccionada) {
+        android.util.Log.d("HorarioScreen", "LaunchedEffect: barbero=$idBarbero, fecha=$fechaSeleccionada")
         viewModel.cargarHorasDisponibles(idBarbero, fechaSeleccionada)
         horarioSeleccionado = null
     }
@@ -63,7 +78,7 @@ fun HorarioDisponibleScreen(
                 .padding(bottom = 8.dp)
         ) {
             IconButton(
-                onClick = { navController.navigate("barberos") },
+                onClick = { navController.popBackStack() },
                 modifier = Modifier.size(40.dp)
             ) {
                 Icon(
@@ -107,7 +122,30 @@ fun HorarioDisponibleScreen(
             modifier = Modifier.padding(vertical = 8.dp)
         )
 
-        if (horasDisponibles.isEmpty()) {
+        if (error != null) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 32.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = error ?: "Error desconocido",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.error,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Button(
+                        onClick = { viewModel.cargarHorasDisponibles(idBarbero, fechaSeleccionada) },
+                        colors = ButtonDefaults.buttonColors(containerColor = AzulBarberi)
+                    ) {
+                        Text("Reintentar")
+                    }
+                }
+            }
+        } else if (horasDisponibles.isEmpty()) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -192,14 +230,24 @@ fun HorarioDisponibleScreen(
 
         Button(
             onClick = {
-                val horaCodificada = URLEncoder.encode(horarioSeleccionado?.horaInicio ?: "", "UTF-8")
-                val servicioId = 1L // Reemplaza con el valor real
-                val horarioDisponibleId = horarioSeleccionado?.idHorario ?: 0L
-                val idAdministrador = 1L // Reemplaza con el valor real
-
-                navController.navigate(
-                    "reserva/$idBarbero/$fechaSeleccionada/$horaCodificada/$servicioId/$horarioDisponibleId/$idAdministrador"
-                )
+                horarioSeleccionado?.let { horario ->
+                    val servicio = servicios.find { it.id == servicioId }
+                    val barbero = barberos.find { it.idBarbero == idBarbero }
+                    
+                    if (servicio != null) {
+                        val carritoItem = com.example.barberia.model.CarritoItem(
+                            servicio = servicio,
+                            barberoId = idBarbero,
+                            barberoNombre = barbero?.nombre ?: "Cualquier profesional",
+                            fecha = fechaSeleccionada,
+                            hora = horario.horaInicio,
+                            horarioDisponibleId = horario.idHorario
+                        )
+                        
+                        carritoViewModel.agregarItem(carritoItem)
+                        navController.navigate("carrito")
+                    }
+                }
             },
             enabled = horarioSeleccionado != null,
             colors = ButtonDefaults.buttonColors(containerColor = AzulBarberi),
@@ -207,7 +255,7 @@ fun HorarioDisponibleScreen(
                 .fillMaxWidth()
                 .height(52.dp)
         ) {
-            Text("Confirmar reserva", style = MaterialTheme.typography.titleMedium, color = Color.White)
+            Text("Agregar al Carrito", style = MaterialTheme.typography.titleMedium, color = Color.White)
         }
     }
 }

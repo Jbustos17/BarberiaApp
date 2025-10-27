@@ -30,6 +30,13 @@ import coil.request.ImageRequest
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import com.example.barberia.R
+import java.text.NumberFormat
+import java.util.Locale
+
+fun formatearPrecio(precio: Double): String {
+    val formato = NumberFormat.getCurrencyInstance(Locale("es", "CO"))
+    return formato.format(precio)
+}
 
 fun getDriveDirectUrl(url: String?): String? {
     if (url.isNullOrBlank()) return null
@@ -139,7 +146,7 @@ fun ServicioScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(180.dp)
-                            .clickable { navController.navigate("barberos") },
+                            .clickable { navController.navigate("barberos/${servicio.id}") },
                         shape = RoundedCornerShape(22.dp),
                         elevation = CardDefaults.cardElevation(8.dp)
                     ) {
@@ -183,11 +190,19 @@ fun ServicioScreen(
                                     servicio.descripcion ?: "No disponible",
                                     style = MaterialTheme.typography.bodyLarge,
                                     color = Color.Gray,
-                                    maxLines = 3
+                                    maxLines = 2
                                 )
+                                Spacer(Modifier.height(4.dp))
+                                servicio.precio?.let { precio ->
+                                    Text(
+                                        formatearPrecio(precio),
+                                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                                        color = DoradoBarberia
+                                    )
+                                }
                             }
                             Button(
-                                onClick = { navController.navigate("barberos") },
+                                onClick = { navController.navigate("barberos/${servicio.id}") },
                                 colors = ButtonDefaults.buttonColors(containerColor = AzulBarberi),
                                 shape = RoundedCornerShape(10.dp),
                                 modifier = Modifier
