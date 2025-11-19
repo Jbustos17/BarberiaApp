@@ -30,12 +30,28 @@ fun Navegacion(navController: NavHostController) {
         composable("clienteRegistro") { ClienteRegistroScreen(navController) }
         composable("perfil") { PerfilScreen(navController) }
         
+        // Selección de modalidad (presencial o domicilio)
+        composable("modalidadServicio/{idCliente}") { backStackEntry ->
+            val idCliente = backStackEntry.arguments?.getString("idCliente")?.toLongOrNull()
+            if (idCliente != null) {
+                ModalidadServicioScreen(idCliente = idCliente, navController = navController)
+            }
+        }
+        
         // Pantallas principales (requieren autenticación de cliente)
-        composable("servicios") { ServicioScreen(navController) }
-        composable("barberos/{servicioId}") { backStackEntry ->
+        composable("servicio/{idCliente}/{modalidad}") { backStackEntry ->
+            val idCliente = backStackEntry.arguments?.getString("idCliente")?.toLongOrNull()
+            val modalidad = backStackEntry.arguments?.getString("modalidad") ?: "PRESENCIAL"
+            if (idCliente != null) {
+                ServicioScreen(navController, idCliente, modalidad)
+            }
+        }
+        
+        composable("barberos/{servicioId}/{modalidad}") { backStackEntry ->
             val servicioId = backStackEntry.arguments?.getString("servicioId")?.toLongOrNull()
+            val modalidad = backStackEntry.arguments?.getString("modalidad") ?: "PRESENCIAL"
             if (servicioId != null) {
-                BarberoScreen(navController, servicioId)
+                BarberoScreen(navController, servicioId, modalidad)
             }
         }
 
@@ -50,13 +66,15 @@ fun Navegacion(navController: NavHostController) {
             }
         }
 
-        composable("horarios/{idBarbero}/{servicioId}") { backStackEntry ->
+        composable("horarios/{idBarbero}/{servicioId}/{modalidad}") { backStackEntry ->
             val idBarbero = backStackEntry.arguments?.getString("idBarbero")?.toLongOrNull()
             val servicioId = backStackEntry.arguments?.getString("servicioId")?.toLongOrNull()
+            val modalidad = backStackEntry.arguments?.getString("modalidad") ?: "PRESENCIAL"
             if (idBarbero != null && servicioId != null) {
                 HorarioDisponibleScreen(
                     idBarbero = idBarbero, 
                     servicioId = servicioId,
+                    modalidad = modalidad,
                     navController = navController,
                     carritoViewModel = carritoViewModel
                 )

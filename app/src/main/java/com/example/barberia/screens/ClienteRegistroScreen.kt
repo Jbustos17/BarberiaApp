@@ -7,6 +7,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -14,6 +15,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
@@ -51,6 +53,8 @@ fun ClienteRegistroScreen(
     var showPassword by remember { mutableStateOf(false) }
     var showConfirmPassword by remember { mutableStateOf(false) }
     var showForm by remember { mutableStateOf(false) }
+    var aceptaTerminos by remember { mutableStateOf(false) }
+    var showTerminosDialog by remember { mutableStateOf(false) }
 
     val isLoading by authViewModel.isLoading.collectAsState()
     val errorMessage by authViewModel.errorMessage.collectAsState()
@@ -64,8 +68,12 @@ fun ClienteRegistroScreen(
     LaunchedEffect(authState) {
         when (authState) {
             is AuthViewModel.AuthState.Authenticated -> {
-                navController.navigate("servicios") {
-                    popUpTo("clienteRegistro") { inclusive = true }
+                // Obtener el ID del cliente autenticado
+                val cliente = (authState as AuthViewModel.AuthState.Authenticated).cliente
+                if (cliente != null) {
+                    navController.navigate("modalidadServicio/${cliente.id}") {
+                        popUpTo("clienteRegistro") { inclusive = true }
+                    }
                 }
             }
             else -> {}
@@ -78,22 +86,30 @@ fun ClienteRegistroScreen(
     }
 
     fun isValidPhone(phone: String): Boolean {
-        return phone.matches(Regex("^[+]?[0-9]{10,15}$"))
+        // Acepta números colombianos: 10 dígitos (celular) o números internacionales
+        val cleaned = phone.replace(Regex("[^0-9]"), "")
+        return cleaned.length >= 10 && cleaned.length <= 15
     }
 
     fun validateForm(): String? {
-        return when {
+        val error = when {
             nombre.isBlank() -> "El nombre es obligatorio"
             celular.isBlank() -> "El celular es obligatorio"
-            !isValidPhone(celular) -> "Ingresa un número de celular válido"
+            !isValidPhone(celular) -> "Ingresa un número de celular válido (mínimo 10 dígitos)"
             email.isBlank() -> "El correo es obligatorio"
             !isValidEmail(email) -> "Ingresa un correo electrónico válido"
             direccion.isBlank() -> "La dirección es obligatoria"
             password.isBlank() -> "La contraseña es obligatoria"
             password.length < 6 -> "La contraseña debe tener al menos 6 caracteres"
             confirmPassword != password -> "Las contraseñas no coinciden"
+            !aceptaTerminos -> "Debes aceptar los términos y condiciones"
             else -> null
         }
+        // Limpiar mensaje de error anterior si hay un nuevo error
+        if (error != null) {
+            authViewModel.setErrorMessage(error)
+        }
+        return error
     }
 
     Box(
@@ -301,28 +317,63 @@ fun ClienteRegistroScreen(
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(bottom = 20.dp)
+                                .padding(bottom = 12.dp)
                         )
+
+                        // Checkbox de términos y condiciones
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 20.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Checkbox(
+                                checked = aceptaTerminos,
+                                onCheckedChange = { aceptaTerminos = it },
+                                colors = CheckboxDefaults.colors(
+                                    checkedColor = AzulBarberi,
+                                    uncheckedColor = Color.Gray
+                                )
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Acepto los ",
+                                fontSize = 14.sp,
+                                color = Color.Gray
+                            )
+                            Text(
+                                text = "términos y condiciones",
+                                fontSize = 14.sp,
+                                color = AzulBarberi,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.clickable { showTerminosDialog = true }
+                            )
+                        }
 
                         Button(
                             onClick = {
+                                // Limpiar error anterior
+                                authViewModel.clearError()
+                                
                                 val validationError = validateForm()
                                 if (validationError == null) {
+                                    // Si la validación pasa, proceder con el registro
                                     authViewModel.registrarCliente(
                                         com.example.barberia.model.ClienteRegistro(
-                                            nombre = nombre,
-                                            celular = celular,
-                                            correo = email,
+                                            nombre = nombre.trim(),
+                                            celular = celular.trim(),
+                                            correo = email.trim(),
                                             contraseña = password,
-                                            direccion = direccion
+                                            direccion = direccion.trim()
                                         )
                                     )
-                                } else {
-                                    authViewModel.setErrorMessage(validationError)
                                 }
                             },
-                            enabled = !isLoading,
-                            colors = ButtonDefaults.buttonColors(containerColor = AzulBarberi),
+                            enabled = !isLoading && aceptaTerminos,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = AzulBarberi,
+                                disabledContainerColor = Color.Gray.copy(alpha = 0.5f)
+                            ),
                             shape = RoundedCornerShape(20.dp),
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -365,18 +416,322 @@ fun ClienteRegistroScreen(
                         ) {
                             if (errorMessage != null) {
                                 Spacer(modifier = Modifier.height(16.dp))
-                                Text(
-                                    errorMessage!!,
-                                    color = Color(0xFFD32F2F),
-                                    style = TextStyle(fontWeight = FontWeight.Bold, fontSize = 16.sp),
-                                    textAlign = TextAlign.Center,
-                                    modifier = Modifier.fillMaxWidth()
-                                )
+                                Card(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = Color(0xFFFFEBEE)
+                                    ),
+                                    shape = RoundedCornerShape(12.dp)
+                                ) {
+                                    Text(
+                                        errorMessage!!,
+                                        color = Color(0xFFD32F2F),
+                                        style = TextStyle(fontWeight = FontWeight.Medium, fontSize = 14.sp),
+                                        textAlign = TextAlign.Center,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(16.dp)
+                                    )
+                                }
                             }
                         }
                     }
                 }
             }
         }
+        
+        // Diálogo de términos y condiciones
+        if (showTerminosDialog) {
+            TerminosCondicionesDialog(
+                onDismiss = { showTerminosDialog = false }
+            )
+        }
     }
+}
+
+@Composable
+fun TerminosCondicionesDialog(
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Términos y Condiciones",
+                    style = TextStyle(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 20.sp,
+                        color = AzulBarberi
+                    )
+                )
+                IconButton(onClick = onDismiss) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Cerrar",
+                        tint = Color.Gray
+                    )
+                }
+            }
+        },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+            ) {
+                Text(
+                    text = "BarberApp Kalu Estilo",
+                    style = TextStyle(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp,
+                        color = AzulBarberi
+                    ),
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                Text(
+                    text = "Última actualización: 2025",
+                    style = TextStyle(
+                        fontSize = 12.sp,
+                        color = Color.Gray
+                    ),
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+                Text(
+                    text = "Bienvenido a BarberApp, la aplicación oficial de Kalu Barbería Estilo, ubicada en Zipaquirá, Colombia.\n\nAl utilizar la app, aceptas los siguientes términos:",
+                    style = TextStyle(fontSize = 14.sp),
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+                
+                Text(
+                    text = "1. Uso de la aplicación",
+                    style = TextStyle(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
+                        color = AzulBarberi
+                    ),
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                Text(
+                    text = "La app permite:\n• Crear una cuenta\n• Reservar servicios de barbería\n• Realizar pagos digitales\n• Solicitar servicios a domicilio\n• Gestionar información personal y de reservas\n\nEl usuario debe utilizar la aplicación de manera responsable y con información verídica.",
+                    style = TextStyle(fontSize = 14.sp),
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+                
+                Text(
+                    text = "2. Requisitos del usuario",
+                    style = TextStyle(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
+                        color = AzulBarberi
+                    ),
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                Text(
+                    text = "El usuario es responsable de:\n• Mantener sus credenciales seguras\n• Verificar la disponibilidad de servicios\n• Usar la app con fines legítimos",
+                    style = TextStyle(fontSize = 14.sp),
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+                
+                Text(
+                    text = "3. Disponibilidad del servicio",
+                    style = TextStyle(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
+                        color = AzulBarberi
+                    ),
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                Text(
+                    text = "Kalu Estilo puede suspender temporalmente la aplicación por mantenimiento, fallos técnicos o actualizaciones.",
+                    style = TextStyle(fontSize = 14.sp),
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+                
+                Text(
+                    text = "4. Prohibiciones",
+                    style = TextStyle(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
+                        color = AzulBarberi
+                    ),
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                Text(
+                    text = "Está prohibido:\n• Intentar manipular la app o sus bases de datos\n• Usar la plataforma con fines fraudulentos\n• Copiar, distribuir o modificar la aplicación sin autorización",
+                    style = TextStyle(fontSize = 14.sp),
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+                
+                Text(
+                    text = "5. Limitación de responsabilidad",
+                    style = TextStyle(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
+                        color = AzulBarberi
+                    ),
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                Text(
+                    text = "Kalu Estilo no responde por:\n• Fallos del dispositivo del usuario\n• Problemas de red o conectividad\n• Daños derivados del uso o imposibilidad de uso de la app",
+                    style = TextStyle(fontSize = 14.sp),
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+                
+                Text(
+                    text = "6. Modificaciones",
+                    style = TextStyle(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
+                        color = AzulBarberi
+                    ),
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                Text(
+                    text = "Los términos podrán actualizarse. La app notificará los cambios relevantes.",
+                    style = TextStyle(fontSize = 14.sp),
+                    modifier = Modifier.padding(bottom = 24.dp)
+                )
+                
+                Divider(modifier = Modifier.padding(vertical = 16.dp))
+                
+                Text(
+                    text = "🔐 Política de Privacidad",
+                    style = TextStyle(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp,
+                        color = AzulBarberi
+                    ),
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                Text(
+                    text = "Esta política explica cómo tratamos tus datos personales en cumplimiento de las leyes colombianas.",
+                    style = TextStyle(fontSize = 14.sp),
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+                
+                Text(
+                    text = "1. Datos que recolectamos",
+                    style = TextStyle(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
+                        color = AzulBarberi
+                    ),
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                Text(
+                    text = "La app puede solicitar:\n• Nombre, correo y teléfono\n• Ubicación (solo para servicios a domicilio)\n• Historial de reservas\n• Información necesaria para pagos (a través de una pasarela segura)",
+                    style = TextStyle(fontSize = 14.sp),
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+                
+                Text(
+                    text = "2. Finalidad",
+                    style = TextStyle(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
+                        color = AzulBarberi
+                    ),
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                Text(
+                    text = "Tus datos se utilizan para:\n• Gestión de tu cuenta y reservas\n• Procesamiento de pagos\n• Enviar confirmaciones y notificaciones\n• Mejorar el servicio y la experiencia del usuario",
+                    style = TextStyle(fontSize = 14.sp),
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+                
+                Text(
+                    text = "3. Almacenamiento y seguridad",
+                    style = TextStyle(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
+                        color = AzulBarberi
+                    ),
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                Text(
+                    text = "Utilizamos servidores y protocolos seguros. No vendemos ni compartimos tu información con terceros, excepto obligación legal.",
+                    style = TextStyle(fontSize = 14.sp),
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+                
+                Text(
+                    text = "4. Ubicación",
+                    style = TextStyle(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
+                        color = AzulBarberi
+                    ),
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                Text(
+                    text = "La app usa tu ubicación únicamente para servicios a domicilio. No se almacena de forma permanente sin tu autorización.",
+                    style = TextStyle(fontSize = 14.sp),
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+                
+                Text(
+                    text = "5. Derechos del usuario",
+                    style = TextStyle(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
+                        color = AzulBarberi
+                    ),
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                Text(
+                    text = "Puedes:\n• Solicitar acceso a tus datos\n• Rectificarlos\n• Eliminarlos\n• Revocar autorización de uso\n\nPara ejercer estos derechos:\n📩 soporte@kaluestilo.com",
+                    style = TextStyle(fontSize = 14.sp),
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+                
+                Text(
+                    text = "6. Eliminación de datos",
+                    style = TextStyle(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
+                        color = AzulBarberi
+                    ),
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                Text(
+                    text = "Si ya no deseas usar la app, puedes solicitar la eliminación de tu cuenta y tu información personal.",
+                    style = TextStyle(fontSize = 14.sp),
+                    modifier = Modifier.padding(bottom = 24.dp)
+                )
+                
+                Divider(modifier = Modifier.padding(vertical = 16.dp))
+                
+                Text(
+                    text = "📞 Soporte",
+                    style = TextStyle(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp,
+                        color = AzulBarberi
+                    ),
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                Text(
+                    text = "Si tienes dudas o problemas con la app:\n\n📱 WhatsApp: 000 000 0000\n📧 Correo: soporte@kaluestilo.com\n\n🕘 Horario: lunes a sábado, 9:00 a.m. – 7:00 p.m.",
+                    style = TextStyle(fontSize = 14.sp),
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = onDismiss,
+                colors = ButtonDefaults.buttonColors(containerColor = AzulBarberi),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text("Entendido", color = Color.White)
+            }
+        },
+        shape = RoundedCornerShape(20.dp),
+        containerColor = Color.White
+    )
 }

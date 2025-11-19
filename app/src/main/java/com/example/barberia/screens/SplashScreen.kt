@@ -50,8 +50,16 @@ fun SplashScreen(
         // Verificar estado de autenticación
         when (authState) {
             is AuthViewModel.AuthState.Authenticated -> {
-                navController.navigate("servicios") {
-                    popUpTo("splash") { inclusive = true }
+                // Obtener el ID del cliente autenticado
+                val cliente = (authState as AuthViewModel.AuthState.Authenticated).cliente
+                if (cliente != null) {
+                    navController.navigate("modalidadServicio/${cliente.id}") {
+                        popUpTo("splash") { inclusive = true }
+                    }
+                } else {
+                    navController.navigate("inicio") {
+                        popUpTo("splash") { inclusive = true }
+                    }
                 }
             }
             is AuthViewModel.AuthState.Unauthenticated -> {
@@ -137,7 +145,7 @@ fun SplashScreen(
             Spacer(modifier = Modifier.height(32.dp))
 
             Text(
-                text = "Barbería App",
+                text = "KALU Estilo Barberia",
                 style = MaterialTheme.typography.headlineLarge.copy(
                     fontWeight = FontWeight.Bold,
                     color = AzulBarberi

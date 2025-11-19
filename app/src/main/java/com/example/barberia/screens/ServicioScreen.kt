@@ -55,8 +55,9 @@ fun getDriveDirectUrl(url: String?): String? {
 
 @Composable
 fun ServicioScreen(
-
     navController: NavHostController,
+    idCliente: Long,
+    modalidad: String,
     viewModel: ServicioViewModel = viewModel()
 ) {
     val servicios by viewModel.servicios.collectAsState()
@@ -146,7 +147,7 @@ fun ServicioScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(180.dp)
-                            .clickable { navController.navigate("barberos/${servicio.id}") },
+                            .clickable { navController.navigate("barberos/${servicio.id}/$modalidad") },
                         shape = RoundedCornerShape(22.dp),
                         elevation = CardDefaults.cardElevation(8.dp)
                     ) {
@@ -202,7 +203,7 @@ fun ServicioScreen(
                                 }
                             }
                             Button(
-                                onClick = { navController.navigate("barberos/${servicio.id}") },
+                                onClick = { navController.navigate("barberos/${servicio.id}/$modalidad") },
                                 colors = ButtonDefaults.buttonColors(containerColor = AzulBarberi),
                                 shape = RoundedCornerShape(10.dp),
                                 modifier = Modifier

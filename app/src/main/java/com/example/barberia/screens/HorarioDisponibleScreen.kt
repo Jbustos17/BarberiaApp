@@ -36,6 +36,7 @@ import java.time.format.DateTimeFormatter
 fun HorarioDisponibleScreen(
     idBarbero: Long,
     servicioId: Long,
+    modalidad: String,
     navController: NavHostController,
     viewModel: HorarioDisponibleViewModel = viewModel(),
     carritoViewModel: com.example.barberia.viewmodel.CarritoViewModel,
@@ -291,7 +292,13 @@ fun HorarioDisponibleScreen(
                             barberoNombre = barbero?.nombre ?: "Cualquier profesional",
                             fecha = fechaSeleccionada,
                             hora = horario.horaInicio,
-                            horarioDisponibleId = horario.idHorario
+                            horarioDisponibleId = horario.idHorario,
+                            esADomicilio = (modalidad == "DOMICILIO"),
+                            precioAdicionalDomicilio = if (modalidad == "DOMICILIO") {
+                                barbero?.precioAdicionalDomicilio ?: 10000.0
+                            } else {
+                                0.0
+                            }
                         )
                         
                         carritoViewModel.agregarItem(carritoItem)

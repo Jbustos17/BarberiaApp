@@ -26,7 +26,8 @@ data class Reserva(
     @SerializedName("cliente") val cliente: ClienteIdOnly,
     @SerializedName("nombreCliente") val nombreCliente: String,
     @SerializedName("celularCliente") val celularCliente: String,
-    @SerializedName("correoCliente") val correoCliente: String
+    @SerializedName("correoCliente") val correoCliente: String,
+    @SerializedName("esADomicilio") val esADomicilio: Boolean = false
 )
 
 

@@ -163,6 +163,109 @@ fun DashboardScreen(
                         )
                     }
 
+                    // Desglose por modalidad
+                    item {
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            "Desglose por Modalidad",
+                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                            color = AzulBarberi
+                        )
+                    }
+
+                    item {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            // Presencial
+                            Card(
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(16.dp),
+                                colors = CardDefaults.cardColors(containerColor = Color(0xFF1976D2)),
+                                elevation = CardDefaults.cardElevation(6.dp)
+                            ) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(20.dp)
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            imageVector = Icons.Default.Store,
+                                            contentDescription = null,
+                                            tint = Color.White,
+                                            modifier = Modifier.size(32.dp)
+                                        )
+                                        Spacer(Modifier.width(12.dp))
+                                        Text(
+                                            "Presencial",
+                                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                                            color = Color.White
+                                        )
+                                    }
+                                    Spacer(Modifier.height(16.dp))
+                                    HorizontalDivider(color = Color.White.copy(alpha = 0.3f))
+                                    Spacer(Modifier.height(16.dp))
+                                    Text(
+                                        "${estadisticas!!.reservasPresenciales} reservas",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        color = Color.White.copy(alpha = 0.9f)
+                                    )
+                                    Spacer(Modifier.height(8.dp))
+                                    Text(
+                                        formatearPrecio(estadisticas!!.ingresosPresenciales),
+                                        style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+                                        color = Color.White
+                                    )
+                                }
+                            }
+
+                            // Domicilio
+                            Card(
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(16.dp),
+                                colors = CardDefaults.cardColors(containerColor = Color(0xFF4CAF50)),
+                                elevation = CardDefaults.cardElevation(6.dp)
+                            ) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(20.dp)
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            imageVector = Icons.Default.Home,
+                                            contentDescription = null,
+                                            tint = Color.White,
+                                            modifier = Modifier.size(32.dp)
+                                        )
+                                        Spacer(Modifier.width(12.dp))
+                                        Text(
+                                            "Domicilio",
+                                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                                            color = Color.White
+                                        )
+                                    }
+                                    Spacer(Modifier.height(16.dp))
+                                    HorizontalDivider(color = Color.White.copy(alpha = 0.3f))
+                                    Spacer(Modifier.height(16.dp))
+                                    Text(
+                                        "${estadisticas!!.reservasDomicilio} reservas",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        color = Color.White.copy(alpha = 0.9f)
+                                    )
+                                    Spacer(Modifier.height(8.dp))
+                                    Text(
+                                        formatearPrecio(estadisticas!!.ingresosDomicilio),
+                                        style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+                                        color = Color.White
+                                    )
+                                }
+                            }
+                        }
+                    }
+
                     // Estadísticas por barbero
                     item {
                         Spacer(Modifier.height(8.dp))

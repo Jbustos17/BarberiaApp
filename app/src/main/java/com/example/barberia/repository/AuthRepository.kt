@@ -8,6 +8,8 @@ import com.example.barberia.model.ClienteResponse
 import com.example.barberia.utils.SessionManager
 import com.example.barberia.config.AppConfig
 import retrofit2.Response
+import okhttp3.ResponseBody
+import java.io.IOException
 
 class AuthRepository(
     private val authService: AuthService,
@@ -19,27 +21,45 @@ class AuthRepository(
             val response = authService.registrarCliente(cliente)
             when (response.code()) {
                 201 -> {
-                    val authResponse = response.body()!!
-                    if (authResponse.success && authResponse.token != null && authResponse.cliente != null) {
+                    val authResponse = response.body()
+                    if (authResponse != null && authResponse.success && authResponse.token != null && authResponse.cliente != null) {
                         sessionManager.saveToken(authResponse.token!!)
                         sessionManager.saveCliente(authResponse.cliente!!)
                         Result.success(authResponse)
                     } else {
-                        Result.failure(Exception(authResponse.message))
+                        val errorMsg = authResponse?.message ?: "Error: Respuesta inválida del servidor"
+                        Result.failure(Exception(errorMsg))
                     }
                 }
                 400 -> {
-                    Result.failure(Exception(AppConfig.ErrorMessages.EMAIL_ALREADY_EXISTS))
+                    val errorBody = try {
+                        response.errorBody()?.string() ?: ""
+                    } catch (e: IOException) {
+                        ""
+                    }
+                    Result.failure(Exception("Error de validación: ${response.message()}. $errorBody"))
                 }
                 409 -> {
-                    Result.failure(Exception(AppConfig.ErrorMessages.EMAIL_ALREADY_EXISTS))
+                    Result.failure(Exception("El correo electrónico ya está registrado"))
+                }
+                500 -> {
+                    Result.failure(Exception("Error del servidor. Por favor intenta más tarde"))
                 }
                 else -> {
-                    Result.failure(Exception("Error en el registro: ${response.message()}"))
+                    val errorBody = try {
+                        response.errorBody()?.string() ?: ""
+                    } catch (e: IOException) {
+                        ""
+                    }
+                    Result.failure(Exception("Error en el registro (${response.code()}): ${response.message()}. $errorBody"))
                 }
             }
+        } catch (e: java.net.UnknownHostException) {
+            Result.failure(Exception("Error de conexión. Verifica tu conexión a internet"))
+        } catch (e: java.net.SocketTimeoutException) {
+            Result.failure(Exception("Tiempo de espera agotado. Verifica tu conexión"))
         } catch (e: Exception) {
-            Result.failure(e)
+            Result.failure(Exception("Error al registrar: ${e.message ?: e.javaClass.simpleName}"))
         }
     }
 

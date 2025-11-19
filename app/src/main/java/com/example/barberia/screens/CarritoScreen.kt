@@ -22,12 +22,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.compose.ui.platform.LocalContext
 import com.example.barberia.viewmodel.CarritoViewModel
 import com.example.barberia.viewmodel.ServicioViewModel
 import com.example.barberia.viewmodel.BarberoViewModel
 import com.example.barberia.model.CarritoItem
 import com.example.barberia.model.Servicio
 import com.example.barberia.model.Barbero
+import com.example.barberia.utils.SessionManager
 
 @Composable
 fun CarritoScreen(
@@ -36,6 +38,10 @@ fun CarritoScreen(
     servicioViewModel: ServicioViewModel = viewModel(),
     barberoViewModel: BarberoViewModel = viewModel()
 ) {
+    val context = LocalContext.current
+    val sessionManager = remember { SessionManager(context) }
+    val cliente = sessionManager.getCliente()
+    
     val carritoItems by carritoViewModel.carritoItems.collectAsState()
     val servicios by servicioViewModel.servicios.collectAsState()
     val barberos by barberoViewModel.barberos.collectAsState()
@@ -46,6 +52,33 @@ fun CarritoScreen(
     }
     
     val total = carritoViewModel.getTotal()
+    
+    // Función para navegar a servicios
+    val navegarAServicios: () -> Unit = {
+        val idCliente = cliente?.id
+        if (idCliente != null) {
+            // Si hay items en el carrito, usar la modalidad de esos items
+            if (carritoItems.isNotEmpty()) {
+                // Determinar la modalidad basándose en los items del carrito
+                // Si algún item es a domicilio, usar DOMICILIO, si no PRESENCIAL
+                val modalidad = if (carritoItems.any { it.esADomicilio }) {
+                    "DOMICILIO"
+                } else {
+                    "PRESENCIAL"
+                }
+                // Navegar directamente a la pantalla de servicios con la modalidad
+                navController.navigate("servicio/$idCliente/$modalidad")
+            } else {
+                // Si el carrito está vacío, ir a seleccionar modalidad
+                navController.navigate("modalidadServicio/$idCliente")
+            }
+        } else {
+            // Si no hay cliente, navegar al inicio
+            navController.navigate("inicio") {
+                popUpTo("inicio") { inclusive = false }
+            }
+        }
+    }
     
     Box(
         modifier = Modifier
@@ -122,7 +155,7 @@ fun CarritoScreen(
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Button(
-                            onClick = { navController.navigate("servicios") },
+                            onClick = navegarAServicios,
                             colors = ButtonDefaults.buttonColors(containerColor = AzulBarberi)
                         ) {
                             Text("Agregar Servicios")
@@ -151,7 +184,7 @@ fun CarritoScreen(
                 
                 // Botón para agregar más servicios
                 OutlinedButton(
-                    onClick = { navController.navigate("servicios") },
+                    onClick = navegarAServicios,
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.outlinedButtonColors(
                         contentColor = AzulBarberi
@@ -315,12 +348,74 @@ fun ItemCarritoCard(
                     
                     Spacer(modifier = Modifier.height(12.dp))
                     
-                    // Precio
-                    Text(
-                        formatearPrecio(servicio?.precio ?: 0.0),
-                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                        color = Color(0xFF4CAF50) // Verde
-                    )
+                    // Precio - mostrar desglose si es a domicilio
+                    if (item.esADomicilio) {
+                        Column {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    "Servicio:",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = Color.Gray
+                                )
+                                Text(
+                                    formatearPrecio(servicio?.precio ?: 0.0),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = Color.Gray
+                                )
+                            }
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = Icons.Default.Home,
+                                        contentDescription = null,
+                                        tint = Color(0xFF4CAF50),
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        "Domicilio:",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = Color.Gray
+                                    )
+                                }
+                                Text(
+                                    "+${formatearPrecio(item.precioAdicionalDomicilio)}",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = Color(0xFF4CAF50)
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    "Total:",
+                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                    color = Color.Black
+                                )
+                                Text(
+                                    formatearPrecio(item.calcularTotal()),
+                                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                                    color = Color(0xFF4CAF50)
+                                )
+                            }
+                        }
+                    } else {
+                        // Precio normal sin desglose
+                        Text(
+                            formatearPrecio(servicio?.precio ?: 0.0),
+                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                            color = Color(0xFF4CAF50)
+                        )
+                    }
                 }
                 
                 // Botón eliminar

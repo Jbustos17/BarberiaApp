@@ -6,10 +6,17 @@ data class CarritoItem(
     val barberoNombre: String,
     val fecha: String,
     val hora: String,
-    val horarioDisponibleId: Long
+    val horarioDisponibleId: Long,
+    val esADomicilio: Boolean = false,
+    val precioAdicionalDomicilio: Double = 0.0
 ) {
     fun calcularTotal(): Double {
-        return servicio.precio ?: 0.0
+        val precioBase = servicio.precio ?: 0.0
+        return if (esADomicilio) {
+            precioBase + precioAdicionalDomicilio
+        } else {
+            precioBase
+        }
     }
 }
 

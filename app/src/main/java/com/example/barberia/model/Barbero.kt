@@ -9,7 +9,9 @@ data class Barbero(
     val telefono: String?,
     val usuario: String?,
     val fotoUrl: String? = null,
-    @SerializedName("contraseña") val contrasenia: String
+    @SerializedName("contraseña") val contrasenia: String,
+    val modalidadActual: String? = "PRESENCIAL", // PRESENCIAL o DOMICILIO (no puede ser AMBOS)
+    val precioAdicionalDomicilio: Double? = 10000.0 // Precio adicional que cobra por servicio a domicilio
 ) {
     fun fotoResId(): Int = when (nombre.lowercase().trim()) {
         "andrés ramirez" -> R.drawable.foto_andres_ramirez

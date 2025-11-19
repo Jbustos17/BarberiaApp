@@ -16,6 +16,7 @@ import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Settings
@@ -760,6 +761,23 @@ fun ServicioCardAdmin(
                             )
                         }
                     }
+                    servicio.precioAdicionalDomicilio?.let { precioAdicional ->
+                        Spacer(Modifier.height(4.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.Home,
+                                contentDescription = "Precio domicilio",
+                                tint = Color(0xFF4CAF50),
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(Modifier.width(4.dp))
+                            Text(
+                                text = "+ ${formatearPrecio(precioAdicional)} (domicilio)",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Color(0xFF4CAF50)
+                            )
+                        }
+                    }
                     Spacer(Modifier.height(8.dp))
 
                 }
@@ -909,6 +927,7 @@ fun ServicioDialog(
     var descripcion by remember { mutableStateOf(initialServicio?.descripcion ?: "") }
     var fotoUrl by remember { mutableStateOf(initialServicio?.fotoUrl ?: "") }
     var precio by remember { mutableStateOf(initialServicio?.precio?.toString() ?: "") }
+    var precioAdicionalDomicilio by remember { mutableStateOf(initialServicio?.precioAdicionalDomicilio?.toString() ?: "") }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -956,6 +975,28 @@ fun ServicioDialog(
                     }
                 )
                 Spacer(Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = precioAdicionalDomicilio,
+                    onValueChange = { 
+                        // Solo permitir números y punto decimal
+                        if (it.isEmpty() || it.matches(Regex("^\\d*\\.?\\d*$"))) {
+                            precioAdicionalDomicilio = it
+                        }
+                    },
+                    label = { Text("Precio adicional domicilio (opcional)") },
+                    placeholder = { Text("Ej: 5000") },
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Decimal
+                    ),
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Home,
+                            contentDescription = "Domicilio"
+                        )
+                    }
+                )
+                Spacer(Modifier.height(8.dp))
                 // Previsualización de la imagen
                 AsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)
@@ -975,13 +1016,19 @@ fun ServicioDialog(
             TextButton(
                 onClick = {
                     val precioDouble = precio.toDoubleOrNull()
+                    val precioAdicionalDouble = if (precioAdicionalDomicilio.isNotBlank()) {
+                        precioAdicionalDomicilio.toDoubleOrNull()
+                    } else {
+                        null
+                    }
                     onSave(
                         Servicio(
                             id = initialServicio?.id,
                             nombre = nombre,
                             descripcion = descripcion,
                             fotoUrl = fotoUrl,
-                            precio = precioDouble
+                            precio = precioDouble,
+                            precioAdicionalDomicilio = precioAdicionalDouble
                         )
                     )
                 },

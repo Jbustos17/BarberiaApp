@@ -11,6 +11,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.PhotoLibrary
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -44,18 +45,23 @@ fun toDirectDriveUrl(url: String?): String? {
     }
 }
 
-
-
-
 @Composable
 fun BarberoScreen(
     navController: NavHostController,
     servicioId: Long,
+    modalidad: String,
     viewModel: BarberoViewModel = viewModel()
 ) {
     val barberos by viewModel.barberos.collectAsState()
 
     LaunchedEffect(Unit) { viewModel.obtenerBarberos() }
+
+    // Filtrar barberos según modalidad seleccionada (solo muestra los que están en esa modalidad exacta)
+    val barberosFiltrados = remember(barberos, modalidad) {
+        barberos.filter { barbero ->
+            barbero.modalidadActual == modalidad
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -102,7 +108,7 @@ fun BarberoScreen(
                     Icon(
                         imageVector = Icons.Filled.ArrowBack,
                         contentDescription = "Volver",
-                        tint = AzulBarberi // O el color que prefieras
+                        tint = AzulBarberi
                     )
                 }
             }
@@ -128,18 +134,19 @@ fun BarberoScreen(
                     BarberoCardEspecial(
                         nombre = "Cualquier profesional",
                         descripcion = "Máxima disponibilidad",
-                        iconRes = R.drawable.ic_random, // Usa tu icono de "aleatorio"
-                        onClick = { navController.navigate("horarios/0/$servicioId") }
+                        iconRes = R.drawable.ic_random,
+                        onClick = { navController.navigate("horarios/0/$servicioId/$modalidad") }
                     )
                 }
 
                 items(
-                    barberos,
+                    barberosFiltrados,
                     key = { it.idBarbero!! }
                 ) { barbero ->
                     BarberoCardPersonalizado(
                         barbero = barbero,
-                        onClick = { navController.navigate("horarios/${barbero.idBarbero}/$servicioId") },
+                        modalidad = modalidad,
+                        onClick = { navController.navigate("horarios/${barbero.idBarbero}/$servicioId/$modalidad") },
                         onGaleriaClick = { navController.navigate("galeria/${barbero.idBarbero}") }
                     )
                 }
@@ -148,17 +155,20 @@ fun BarberoScreen(
     }
 }
 
-
 @Composable
 fun BarberoCardPersonalizado(
     barbero: Barbero,
+    modalidad: String,
     onClick: () -> Unit,
     onGaleriaClick: () -> Unit
 ) {
+    // Ajustar altura según si es domicilio o no
+    val cardHeight = if (modalidad == "DOMICILIO") 270.dp else 220.dp
+    
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(220.dp)
+            .height(cardHeight)
             .clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(8.dp)
@@ -171,7 +181,7 @@ fun BarberoCardPersonalizado(
             Column(modifier = Modifier.fillMaxSize()) {
                 AsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)
-                        .data(getDriveDirectUrl(barbero.fotoUrl))
+                        .data(toDirectDriveUrl(barbero.fotoUrl))
                         .crossfade(true)
                         .build(),
                     contentDescription = barbero.nombre,
@@ -201,6 +211,44 @@ fun BarberoCardPersonalizado(
                 )
                 
                 Spacer(Modifier.height(4.dp))
+                
+                // Mostrar precio adicional si es servicio a domicilio
+                if (modalidad == "DOMICILIO") {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .padding(horizontal = 12.dp)
+                            .fillMaxWidth()
+                            .background(
+                                color = Color(0xFF4CAF50).copy(alpha = 0.15f),
+                                shape = RoundedCornerShape(8.dp)
+                            )
+                            .padding(8.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Home,
+                            contentDescription = "Domicilio",
+                            tint = Color(0xFF4CAF50),
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(Modifier.width(6.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Cargo adicional:",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color.Gray,
+                                fontSize = 10.sp
+                            )
+                            Text(
+                                text = "+$${String.format("%,d", barbero.precioAdicionalDomicilio?.toInt() ?: 10000)} COP",
+                                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                                color = Color(0xFF4CAF50),
+                                fontSize = 14.sp
+                            )
+                        }
+                    }
+                    Spacer(Modifier.height(4.dp))
+                }
                 
                 // Botón pequeño para ver galería
                 OutlinedButton(

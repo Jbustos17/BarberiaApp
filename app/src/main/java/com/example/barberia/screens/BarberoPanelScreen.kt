@@ -36,6 +36,9 @@ import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.AttachMoney
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Store
+import androidx.compose.material.icons.filled.History
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -46,6 +49,11 @@ import coil.compose.AsyncImage
 import com.example.barberia.viewmodel.GaleriaViewModel
 import com.example.barberia.viewmodel.DashboardViewModel
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
+import android.util.Log
 
 
 @Composable
@@ -67,6 +75,27 @@ fun BarberoPanelScreen(
     val coroutineScope = rememberCoroutineScope()
     
     var selectedTab by remember { mutableStateOf(0) }
+    var modalidadActual by remember { mutableStateOf(barbero?.modalidadActual ?: "PRESENCIAL") }
+    var isChangingModalidad by remember { mutableStateOf(false) }
+    
+    // Filtrar reservas futuras y pasadas
+    val reservasFuturas = remember(reservas, horarios) {
+        Log.d("BarberoPanel", "Total reservas: ${reservas.size}, Total horarios: ${horarios.size}")
+        val futuras = filtrarReservasFuturas(reservas, horarios)
+        Log.d("BarberoPanel", "Reservas futuras: ${futuras.size}")
+        futuras
+    }
+    
+    val reservasPasadas = remember(reservas, horarios) {
+        val pasadas = filtrarReservasPasadas(reservas, horarios)
+        Log.d("BarberoPanel", "Reservas pasadas: ${pasadas.size}")
+        pasadas
+    }
+
+    // Actualizar modalidadActual cuando se carga el barbero
+    LaunchedEffect(barbero) {
+        barbero?.modalidadActual?.let { modalidadActual = it }
+    }
 
     LaunchedEffect(idBarbero) {
         barberoViewModel.obtenerBarberos()
@@ -163,7 +192,242 @@ fun BarberoPanelScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Tabs para Reservas, Ganancias y Galería
+            // Configuración de trabajo a domicilio
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 12.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(4.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                ) {
+                    Text(
+                        text = "Configuración de servicios",
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                        color = AzulBarberi,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+                    
+                    Text(
+                        text = "Modalidad de trabajo",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        color = AzulBarberi,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                    
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        // Botón Presencial
+                        FilterChip(
+                            selected = modalidadActual == "PRESENCIAL",
+                            onClick = {
+                                if (!isChangingModalidad && modalidadActual != "PRESENCIAL") {
+                                    isChangingModalidad = true
+                                    coroutineScope.launch {
+                                        try {
+                                            val resultado = barberoViewModel.cambiarModalidadBarbero(
+                                                idBarbero = idBarbero,
+                                                modalidad = "PRESENCIAL"
+                                            )
+                                            if (resultado) {
+                                                modalidadActual = "PRESENCIAL"
+                                                snackbarHostState.showSnackbar("Ahora trabajas en modo Presencial")
+                                            } else {
+                                                snackbarHostState.showSnackbar("Error al cambiar modalidad")
+                                            }
+                                        } finally {
+                                            isChangingModalidad = false
+                                        }
+                                    }
+                                }
+                            },
+                            label = { Text("Presencial", fontSize = 16.sp) },
+                            leadingIcon = {
+                                Icon(Icons.Default.Store, contentDescription = null)
+                            },
+                            modifier = Modifier.weight(1f),
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = Color(0xFF1976D2),
+                                selectedLabelColor = Color.White,
+                                selectedLeadingIconColor = Color.White
+                            )
+                        )
+                        
+                        // Botón Domicilio
+                        FilterChip(
+                            selected = modalidadActual == "DOMICILIO",
+                            onClick = {
+                                if (!isChangingModalidad && modalidadActual != "DOMICILIO") {
+                                    isChangingModalidad = true
+                                    coroutineScope.launch {
+                                        try {
+                                            val resultado = barberoViewModel.cambiarModalidadBarbero(
+                                                idBarbero = idBarbero,
+                                                modalidad = "DOMICILIO"
+                                            )
+                                            if (resultado) {
+                                                modalidadActual = "DOMICILIO"
+                                                snackbarHostState.showSnackbar("Ahora trabajas en modo Domicilio")
+                                            } else {
+                                                snackbarHostState.showSnackbar("Error al cambiar modalidad")
+                                            }
+                                        } finally {
+                                            isChangingModalidad = false
+                                        }
+                                    }
+                                }
+                            },
+                            label = { Text("Domicilio", fontSize = 16.sp) },
+                            leadingIcon = {
+                                Icon(Icons.Default.Home, contentDescription = null)
+                            },
+                            modifier = Modifier.weight(1f),
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = Color(0xFF4CAF50),
+                                selectedLabelColor = Color.White,
+                                selectedLeadingIconColor = Color.White
+                            )
+                        )
+                    }
+                    
+                    // Separador
+                    Spacer(Modifier.height(20.dp))
+                    HorizontalDivider(color = Color.LightGray)
+                    Spacer(Modifier.height(16.dp))
+                    
+                    // Precio adicional por domicilio
+                    Text(
+                        text = "Precio adicional por domicilio",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        color = AzulBarberi,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                    
+                    Text(
+                        text = "Cobra adicional cuando ofrezcas servicios a domicilio",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.Gray,
+                        modifier = Modifier.padding(bottom = 12.dp)
+                    )
+                    
+                    var precioInput by remember { mutableStateOf(barbero?.precioAdicionalDomicilio?.toInt()?.toString() ?: "10000") }
+                    var showPrecioDialog by remember { mutableStateOf(false) }
+                    
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Precio actual:",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = Color.Gray
+                            )
+                            Text(
+                                text = "$${String.format("%,d", barbero?.precioAdicionalDomicilio?.toInt() ?: 10000)} COP",
+                                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                                color = Color(0xFF4CAF50)
+                            )
+                        }
+                        
+                        Button(
+                            onClick = { 
+                                precioInput = barbero?.precioAdicionalDomicilio?.toInt()?.toString() ?: "10000"
+                                showPrecioDialog = true 
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = AzulBarberi),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Text("Modificar")
+                        }
+                    }
+                    
+                    // Diálogo para modificar precio
+                    if (showPrecioDialog) {
+                        AlertDialog(
+                            onDismissRequest = { showPrecioDialog = false },
+                            title = {
+                                Text(
+                                    "Modificar precio adicional",
+                                    fontWeight = FontWeight.Bold,
+                                    color = AzulBarberi
+                                )
+                            },
+                            text = {
+                                Column {
+                                    Text(
+                                        "Ingresa el precio adicional que cobrarás por servicios a domicilio:",
+                                        modifier = Modifier.padding(bottom = 16.dp)
+                                    )
+                                    OutlinedTextField(
+                                        value = precioInput,
+                                        onValueChange = { 
+                                            if (it.isEmpty() || it.matches(Regex("^\\d{1,7}$"))) {
+                                                precioInput = it
+                                            }
+                                        },
+                                        label = { Text("Precio (COP)") },
+                                        placeholder = { Text("10000") },
+                                        leadingIcon = {
+                                            Text("$", fontWeight = FontWeight.Bold)
+                                        },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                                            keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
+                                        ),
+                                        singleLine = true
+                                    )
+                                }
+                            },
+                            confirmButton = {
+                                Button(
+                                    onClick = {
+                                        val precio = precioInput.toDoubleOrNull()
+                                        if (precio != null && precio >= 0) {
+                                            coroutineScope.launch {
+                                                val resultado = barberoViewModel.actualizarPrecioDomicilio(
+                                                    idBarbero = idBarbero,
+                                                    precio = precio
+                                                )
+                                                if (resultado) {
+                                                    snackbarHostState.showSnackbar("Precio actualizado correctamente")
+                                                    showPrecioDialog = false
+                                                } else {
+                                                    snackbarHostState.showSnackbar("Error al actualizar precio")
+                                                }
+                                            }
+                                        } else {
+                                            coroutineScope.launch {
+                                                snackbarHostState.showSnackbar("Precio inválido")
+                                            }
+                                        }
+                                    },
+                                    colors = ButtonDefaults.buttonColors(containerColor = AzulBarberi)
+                                ) {
+                                    Text("Guardar")
+                                }
+                            },
+                            dismissButton = {
+                                OutlinedButton(onClick = { showPrecioDialog = false }) {
+                                    Text("Cancelar", color = AzulBarberi)
+                                }
+                            },
+                            containerColor = Color.White,
+                            shape = RoundedCornerShape(16.dp)
+                        )
+                    }
+                }
+            }
+
+            // Tabs para Reservas, Histórico, Ganancias y Galería
             TabRow(
                 selectedTabIndex = selectedTab,
                 containerColor = Color.Transparent,
@@ -178,12 +442,18 @@ fun BarberoPanelScreen(
                 Tab(
                     selected = selectedTab == 1,
                     onClick = { selectedTab = 1 },
-                    text = { Text("Mis Ganancias") },
-                    icon = { Icon(Icons.Default.AttachMoney, null) }
+                    text = { Text("Histórico") },
+                    icon = { Icon(Icons.Default.History, null) }
                 )
                 Tab(
                     selected = selectedTab == 2,
                     onClick = { selectedTab = 2 },
+                    text = { Text("Mis Ganancias") },
+                    icon = { Icon(Icons.Default.AttachMoney, null) }
+                )
+                Tab(
+                    selected = selectedTab == 3,
+                    onClick = { selectedTab = 3 },
                     text = { Text("Mi Galería") },
                     icon = { Icon(Icons.Default.PhotoLibrary, null) }
                 )
@@ -193,24 +463,68 @@ fun BarberoPanelScreen(
 
             when (selectedTab) {
                 0 -> {
-                    // Tab de Reservas
-            if (reservas.isEmpty()) {
-                Box(
-                    Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        "No tienes reservas asignadas.",
-                        style = MaterialTheme.typography.titleLarge.copy(fontSize = 22.sp),
-                        color = Color.Gray
-                    )
-                }
-            } else {
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(18.dp),
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    items(reservas) { reserva ->
+                    // Tab de Reservas Futuras
+                    if (reservas.isEmpty()) {
+                        Box(
+                            Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Icon(
+                                    imageVector = Icons.Default.Schedule,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(64.dp),
+                                    tint = Color.Gray
+                                )
+                                Spacer(Modifier.height(16.dp))
+                                Text(
+                                    "No tienes reservas",
+                                    style = MaterialTheme.typography.titleLarge.copy(fontSize = 22.sp),
+                                    color = Color.Gray
+                                )
+                                Spacer(Modifier.height(8.dp))
+                                Text(
+                                    "Las reservas aparecerán aquí cuando estén programadas",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = Color.Gray,
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                )
+                            }
+                        }
+                    } else if (reservasFuturas.isEmpty() && horarios.isNotEmpty()) {
+                        // Si hay reservas pero no se filtraron correctamente, mostrar todas
+                        Box(
+                            Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Icon(
+                                    imageVector = Icons.Default.Schedule,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(64.dp),
+                                    tint = Color.Gray
+                                )
+                                Spacer(Modifier.height(16.dp))
+                                Text(
+                                    "No tienes reservas futuras",
+                                    style = MaterialTheme.typography.titleLarge.copy(fontSize = 22.sp),
+                                    color = Color.Gray
+                                )
+                                Spacer(Modifier.height(8.dp))
+                                Text(
+                                    "Total reservas: ${reservas.size}, Total horarios: ${horarios.size}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Color.Gray,
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                )
+                            }
+                        }
+                    } else {
+                        LazyColumn(
+                            verticalArrangement = Arrangement.spacedBy(18.dp),
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            items(reservasFuturas) { reserva ->
                                 ReservaCard(
                                     reserva = reserva, 
                                     horarios = horarios,
@@ -229,6 +543,50 @@ fun BarberoPanelScreen(
                     }
                 }
                 1 -> {
+                    // Tab de Histórico (Reservas Pasadas)
+                    if (reservasPasadas.isEmpty()) {
+                        Box(
+                            Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Icon(
+                                    imageVector = Icons.Default.Schedule,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(64.dp),
+                                    tint = Color.Gray
+                                )
+                                Spacer(Modifier.height(16.dp))
+                                Text(
+                                    "No hay reservas en el histórico",
+                                    style = MaterialTheme.typography.titleLarge.copy(fontSize = 22.sp),
+                                    color = Color.Gray
+                                )
+                                Spacer(Modifier.height(8.dp))
+                                Text(
+                                    "Las reservas completadas aparecerán aquí",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = Color.Gray,
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                )
+                            }
+                        }
+                    } else {
+                        LazyColumn(
+                            verticalArrangement = Arrangement.spacedBy(18.dp),
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            items(reservasPasadas) { reserva ->
+                                ReservaCard(
+                                    reserva = reserva, 
+                                    horarios = horarios,
+                                    onEliminar = null // No se pueden eliminar reservas pasadas
+                                )
+                            }
+                        }
+                    }
+                }
+                2 -> {
                     // Tab de Mis Ganancias
                     MisGananciasTab(
                         idBarbero = idBarbero,
@@ -237,7 +595,7 @@ fun BarberoPanelScreen(
                         snackbarHostState = snackbarHostState
                     )
                 }
-                2 -> {
+                3 -> {
                     // Tab de Galería
                     GestionGaleriaTab(
                         idBarbero = idBarbero,
@@ -251,11 +609,125 @@ fun BarberoPanelScreen(
     }
 }
 
+// Funciones para filtrar reservas
+fun filtrarReservasFuturas(
+    reservas: List<Reserva>,
+    horarios: List<HorarioDisponible>
+): List<Reserva> {
+    if (reservas.isEmpty() || horarios.isEmpty()) {
+        Log.d("BarberoPanel", "No hay reservas o horarios para filtrar")
+        return emptyList()
+    }
+    
+    val ahora = LocalDateTime.now()
+    
+    return reservas.filter { reserva ->
+        val horario = horarios.find { it.idHorario == reserva.horarioDisponible.idHorario }
+        if (horario != null) {
+            try {
+                Log.d("BarberoPanel", "Procesando reserva ${reserva.idReserva}, horario: fecha=${horario.fecha}, hora=${horario.horaInicio}")
+                // Intentar parsear fecha (formato ISO: yyyy-MM-dd)
+                val fechaReserva = LocalDate.parse(horario.fecha)
+                
+                // Intentar parsear hora (puede ser HH:mm o HH:mm:ss)
+                val horaReserva = try {
+                    LocalTime.parse(horario.horaInicio) // Intenta formato ISO primero
+                } catch (e: Exception) {
+                    // Si falla, intentar con formato HH:mm
+                    LocalTime.parse(horario.horaInicio, DateTimeFormatter.ofPattern("HH:mm"))
+                }
+                
+                val fechaHoraReserva = LocalDateTime.of(fechaReserva, horaReserva)
+                val esFutura = fechaHoraReserva.isAfter(ahora)
+                Log.d("BarberoPanel", "Reserva ${reserva.idReserva}: $fechaHoraReserva vs $ahora -> esFutura=$esFutura")
+                esFutura
+            } catch (e: Exception) {
+                Log.e("BarberoPanel", "Error al parsear fecha/hora de reserva ${reserva.idReserva}: ${e.message}")
+                Log.e("BarberoPanel", "Fecha: ${horario.fecha}, Hora: ${horario.horaInicio}")
+                e.printStackTrace()
+                false
+            }
+        } else {
+            Log.w("BarberoPanel", "No se encontró horario para reserva ${reserva.idReserva}, idHorario: ${reserva.horarioDisponible.idHorario}")
+            false
+        }
+    }.sortedBy { reserva ->
+        val horario = horarios.find { it.idHorario == reserva.horarioDisponible.idHorario }
+        if (horario != null) {
+            try {
+                val fechaReserva = LocalDate.parse(horario.fecha)
+                val horaReserva = try {
+                    LocalTime.parse(horario.horaInicio)
+                } catch (e: Exception) {
+                    LocalTime.parse(horario.horaInicio, DateTimeFormatter.ofPattern("HH:mm"))
+                }
+                LocalDateTime.of(fechaReserva, horaReserva)
+            } catch (e: Exception) {
+                LocalDateTime.MAX
+            }
+        } else {
+            LocalDateTime.MAX
+        }
+    }
+}
+
+fun filtrarReservasPasadas(
+    reservas: List<Reserva>,
+    horarios: List<HorarioDisponible>
+): List<Reserva> {
+    if (reservas.isEmpty() || horarios.isEmpty()) {
+        return emptyList()
+    }
+    
+    val ahora = LocalDateTime.now()
+    
+    return reservas.filter { reserva ->
+        val horario = horarios.find { it.idHorario == reserva.horarioDisponible.idHorario }
+        if (horario != null) {
+            try {
+                val fechaReserva = LocalDate.parse(horario.fecha)
+                val horaReserva = try {
+                    LocalTime.parse(horario.horaInicio)
+                } catch (e: Exception) {
+                    LocalTime.parse(horario.horaInicio, DateTimeFormatter.ofPattern("HH:mm"))
+                }
+                val fechaHoraReserva = LocalDateTime.of(fechaReserva, horaReserva)
+                // Una reserva es pasada solo si es estrictamente anterior a ahora (no igual)
+                val esPasada = fechaHoraReserva.isBefore(ahora)
+                Log.d("BarberoPanel", "Reserva ${reserva.idReserva}: $fechaHoraReserva vs $ahora -> esPasada=$esPasada")
+                esPasada
+            } catch (e: Exception) {
+                Log.e("BarberoPanel", "Error al parsear fecha/hora de reserva pasada ${reserva.idReserva}: ${e.message}")
+                false
+            }
+        } else {
+            false
+        }
+    }.sortedByDescending { reserva ->
+        val horario = horarios.find { it.idHorario == reserva.horarioDisponible.idHorario }
+        if (horario != null) {
+            try {
+                val fechaReserva = LocalDate.parse(horario.fecha)
+                val horaReserva = try {
+                    LocalTime.parse(horario.horaInicio)
+                } catch (e: Exception) {
+                    LocalTime.parse(horario.horaInicio, DateTimeFormatter.ofPattern("HH:mm"))
+                }
+                LocalDateTime.of(fechaReserva, horaReserva)
+            } catch (e: Exception) {
+                LocalDateTime.MIN
+            }
+        } else {
+            LocalDateTime.MIN
+        }
+    }
+}
+
 @Composable
 fun ReservaCard(
     reserva: Reserva, 
     horarios: List<HorarioDisponible>,
-    onEliminar: (Reserva) -> Unit
+    onEliminar: ((Reserva) -> Unit)?
 ) {
     val horario = horarios.find { it.idHorario == reserva.horarioDisponible.idHorario }
     val textoHorario = if (horario != null) {
@@ -361,8 +833,8 @@ fun ReservaCard(
                 
                 Spacer(Modifier.height(16.dp))
                 
-                // Botón de eliminar (solo si idReserva no es null)
-                if (reserva.idReserva != null) {
+                // Botón de eliminar (solo si idReserva no es null y onEliminar no es null)
+                if (reserva.idReserva != null && onEliminar != null) {
                     Button(
                         onClick = { showDeleteDialog = true },
                         colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
@@ -400,7 +872,7 @@ fun ReservaCard(
             confirmButton = {
                 Button(
                     onClick = {
-                        onEliminar(reserva)
+                        onEliminar?.invoke(reserva)
                         showDeleteDialog = false
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Red)

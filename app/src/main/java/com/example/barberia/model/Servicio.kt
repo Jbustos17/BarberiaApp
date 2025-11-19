@@ -8,7 +8,8 @@ data class Servicio(
     @SerializedName("nombreServicio") val nombre: String?,
     @SerializedName("descripcion") val descripcion: String?,
     val fotoUrl: String? = null,
-    @SerializedName("precio") val precio: Double? = null
+    @SerializedName("precio") val precio: Double? = null,
+    @SerializedName("precioAdicionalDomicilio") val precioAdicionalDomicilio: Double? = null
 )
  {
     fun iconoResId(): Int = when (nombre?.lowercase()?.trim()) {

@@ -57,8 +57,12 @@ fun ClienteLoginScreen(
     LaunchedEffect(authState) {
         when (authState) {
             is AuthViewModel.AuthState.Authenticated -> {
-                navController.navigate("servicios") {
-                    popUpTo("clienteLogin") { inclusive = true }
+                // Obtener el ID del cliente autenticado
+                val cliente = (authState as AuthViewModel.AuthState.Authenticated).cliente
+                if (cliente != null) {
+                    navController.navigate("modalidadServicio/${cliente.id}") {
+                        popUpTo("clienteLogin") { inclusive = true }
+                    }
                 }
             }
             else -> {}

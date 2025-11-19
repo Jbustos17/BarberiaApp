@@ -99,7 +99,8 @@ fun PagoScreen(
                         cliente = ClienteIdOnly(cliente.id),
                         nombreCliente = cliente.nombre,
                         celularCliente = cliente.celular ?: "",
-                        correoCliente = cliente.correo
+                        correoCliente = cliente.correo,
+                        esADomicilio = item.esADomicilio
                     )
                     reservaViewModel.guardarReserva(reserva, 1L)
                 }

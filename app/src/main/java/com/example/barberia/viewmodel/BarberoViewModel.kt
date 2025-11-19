@@ -93,4 +93,42 @@ class BarberoViewModel : ViewModel() {
         }
     }
 
+    suspend fun cambiarModalidadBarbero(idBarbero: Long, modalidad: String): Boolean {
+        return try {
+            _error.value = null
+            val body = mapOf("modalidad" to modalidad)
+            val response = barberoRepository.cambiarModalidadBarbero(idBarbero, body)
+            if (response.isSuccessful) {
+                // Refrescar la lista para obtener el estado actualizado
+                obtenerBarberos()
+                true
+            } else {
+                _error.value = "Error al cambiar modalidad: ${response.message()}"
+                false
+            }
+        } catch (e: Exception) {
+            _error.value = "Error de conexión: ${e.message}"
+            false
+        }
+    }
+
+    suspend fun actualizarPrecioDomicilio(idBarbero: Long, precio: Double): Boolean {
+        return try {
+            _error.value = null
+            val body = mapOf("precio" to precio)
+            val response = barberoRepository.actualizarPrecioDomicilioBarbero(idBarbero, body)
+            if (response.isSuccessful) {
+                // Refrescar la lista para obtener el estado actualizado
+                obtenerBarberos()
+                true
+            } else {
+                _error.value = "Error al actualizar precio: ${response.message()}"
+                false
+            }
+        } catch (e: Exception) {
+            _error.value = "Error de conexión: ${e.message}"
+            false
+        }
+    }
+
 }

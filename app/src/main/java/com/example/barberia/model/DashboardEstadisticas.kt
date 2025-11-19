@@ -13,7 +13,12 @@ data class DashboardEstadisticas(
     @SerializedName("porcentajeComisionAdmin") val porcentajeComisionAdmin: Double = 40.0,
     @SerializedName("porcentajeComisionBarbero") val porcentajeComisionBarbero: Double = 60.0,
     @SerializedName("estadisticasPorBarbero") val estadisticasPorBarbero: List<EstadisticasBarbero> = emptyList(),
-    @SerializedName("reservasPorMes") val reservasPorMes: List<ReservaPorMes> = emptyList()
+    @SerializedName("reservasPorMes") val reservasPorMes: List<ReservaPorMes> = emptyList(),
+    // Estadísticas segmentadas por modalidad
+    @SerializedName("reservasPresenciales") val reservasPresenciales: Long = 0,
+    @SerializedName("reservasDomicilio") val reservasDomicilio: Long = 0,
+    @SerializedName("ingresosPresenciales") val ingresosPresenciales: Double = 0.0,
+    @SerializedName("ingresosDomicilio") val ingresosDomicilio: Double = 0.0
 )
 
 data class EstadisticasBarbero(
@@ -22,7 +27,12 @@ data class EstadisticasBarbero(
     @SerializedName("totalCortes") val totalCortes: Long,
     @SerializedName("ingresosGenerados") val ingresosGenerados: Double,
     @SerializedName("comisionBarbero") val comisionBarbero: Double,
-    @SerializedName("comisionAdmin") val comisionAdmin: Double
+    @SerializedName("comisionAdmin") val comisionAdmin: Double,
+    // Estadísticas segmentadas por modalidad
+    @SerializedName("cortesPresenciales") val cortesPresenciales: Long = 0,
+    @SerializedName("cortesDomicilio") val cortesDomicilio: Long = 0,
+    @SerializedName("ingresosPresenciales") val ingresosPresenciales: Double = 0.0,
+    @SerializedName("ingresosDomicilio") val ingresosDomicilio: Double = 0.0
 )
 
 data class ReservaPorMes(
