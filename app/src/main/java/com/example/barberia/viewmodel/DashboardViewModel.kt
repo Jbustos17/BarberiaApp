@@ -99,5 +99,35 @@ class DashboardViewModel : ViewModel() {
     fun limpiarMensaje() {
         _mensaje.value = null
     }
+
+    fun enviarCorreosInformativos(idAdministrador: Long, mensaje: String) {
+        viewModelScope.launch {
+            try {
+                _isLoading.value = true
+                _error.value = null
+                val resultado = repository.enviarCorreosInformativos(idAdministrador, mensaje)
+                _mensaje.value = resultado
+            } catch (e: Exception) {
+                _error.value = e.message ?: "Error al enviar correos informativos"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun enviarCorreosPromocion(idAdministrador: Long, nombreCupon: String, porcentajeDescuento: Int, fechaValidez: String) {
+        viewModelScope.launch {
+            try {
+                _isLoading.value = true
+                _error.value = null
+                val resultado = repository.enviarCorreosPromocion(idAdministrador, nombreCupon, porcentajeDescuento, fechaValidez)
+                _mensaje.value = resultado
+            } catch (e: Exception) {
+                _error.value = e.message ?: "Error al enviar correos de promoción"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
 }
 

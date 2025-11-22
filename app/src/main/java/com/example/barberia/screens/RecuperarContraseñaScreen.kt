@@ -3,7 +3,6 @@ package com.example.barberia.screens
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -12,8 +11,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.filled.Email
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,8 +20,6 @@ import androidx.compose.ui.graphics.*
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -34,39 +30,21 @@ import androidx.compose.ui.platform.LocalContext
 import com.example.barberia.factory.AuthViewModelFactory
 
 @Composable
-fun ClienteLoginScreen(
+fun RecuperarContraseñaScreen(
     navController: NavController,
     authViewModel: AuthViewModel = viewModel(
         factory = AuthViewModelFactory(LocalContext.current)
     )
 ) {
     var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var showPassword by remember { mutableStateOf(false) }
     var showForm by remember { mutableStateOf(false) }
 
     val isLoading by authViewModel.isLoading.collectAsState()
     val errorMessage by authViewModel.errorMessage.collectAsState()
-    val authState by authViewModel.authState.collectAsState()
+    val recuperacionMessage by authViewModel.recuperacionMessage.collectAsState()
 
     LaunchedEffect(Unit) {
         showForm = true
-    }
-
-    // Navegar si el login es exitoso
-    LaunchedEffect(authState) {
-        when (authState) {
-            is AuthViewModel.AuthState.Authenticated -> {
-                // Obtener el ID del cliente autenticado
-                val cliente = (authState as AuthViewModel.AuthState.Authenticated).cliente
-                if (cliente != null) {
-                    navController.navigate("modalidadServicio/${cliente.id}") {
-                        popUpTo("clienteLogin") { inclusive = true }
-                    }
-                }
-            }
-            else -> {}
-        }
     }
 
     Box(
@@ -156,7 +134,7 @@ fun ClienteLoginScreen(
                                 .padding(bottom = 8.dp)
                         ) {
                             IconButton(
-                                onClick = { navController.navigate("inicio") },
+                                onClick = { navController.popBackStack() },
                                 modifier = Modifier.size(46.dp)
                             ) {
                                 Icon(
@@ -167,12 +145,22 @@ fun ClienteLoginScreen(
                             }
                         }
 
+                        // Icono de email
+                        Icon(
+                            imageVector = Icons.Filled.Email,
+                            contentDescription = null,
+                            tint = AzulBarberi,
+                            modifier = Modifier
+                                .size(64.dp)
+                                .padding(bottom = 16.dp)
+                        )
+
                         Text(
-                            "Iniciar Sesión",
+                            "Recuperar Contraseña",
                             style = TextStyle(
                                 fontWeight = FontWeight.ExtraBold,
                                 color = AzulBarberi,
-                                fontSize = 34.sp,
+                                fontSize = 28.sp,
                                 letterSpacing = 1.sp
                             ),
                             modifier = Modifier
@@ -182,10 +170,10 @@ fun ClienteLoginScreen(
                         )
 
                         Text(
-                            "Ingresa tus credenciales para acceder",
+                            "Ingresa tu correo electrónico y te enviaremos una nueva contraseña",
                             style = TextStyle(
                                 color = Color.Gray,
-                                fontSize = 16.sp
+                                fontSize = 15.sp
                             ),
                             modifier = Modifier
                                 .padding(bottom = 32.dp)
@@ -200,23 +188,12 @@ fun ClienteLoginScreen(
                             singleLine = true,
                             textStyle = TextStyle(fontSize = 18.sp),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 16.dp)
-                        )
-
-                        OutlinedTextField(
-                            value = password,
-                            onValueChange = { password = it },
-                            label = { Text("Contraseña", fontSize = 18.sp) },
-                            singleLine = true,
-                            textStyle = TextStyle(fontSize = 18.sp),
-                            visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
-                            trailingIcon = {
-                                val icon = if (showPassword) Icons.Filled.VisibilityOff else Icons.Filled.Visibility
-                                IconButton(onClick = { showPassword = !showPassword }) {
-                                    Icon(imageVector = icon, contentDescription = if (showPassword) "Ocultar contraseña" else "Mostrar contraseña")
-                                }
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Filled.Email,
+                                    contentDescription = null,
+                                    tint = AzulBarberi
+                                )
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -225,13 +202,11 @@ fun ClienteLoginScreen(
 
                         Button(
                             onClick = {
-                                if (email.isNotBlank() && password.isNotBlank()) {
-                                    authViewModel.loginCliente(
-                                        com.example.barberia.model.ClienteLogin(email, password)
-                                    )
+                                if (email.isNotBlank()) {
+                                    authViewModel.recuperarContraseña(email)
                                 }
                             },
-                            enabled = !isLoading && email.isNotBlank() && password.isNotBlank(),
+                            enabled = !isLoading && email.isNotBlank(),
                             colors = ButtonDefaults.buttonColors(containerColor = AzulBarberi),
                             shape = RoundedCornerShape(26.dp),
                             modifier = Modifier
@@ -245,9 +220,9 @@ fun ClienteLoginScreen(
                                 )
                             } else {
                                 Text(
-                                    text = "Iniciar sesión", 
-                                    fontSize = 20.sp, 
-                                    fontWeight = FontWeight.Bold, 
+                                    text = "Enviar nueva contraseña",
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold,
                                     color = Color.White
                                 )
                             }
@@ -255,45 +230,76 @@ fun ClienteLoginScreen(
 
                         Spacer(modifier = Modifier.height(16.dp))
 
-                        // Botón para recuperar contraseña
-                        TextButton(
-                            onClick = { navController.navigate("recuperarContraseña") }
+                        // Mostrar mensaje de éxito
+                        AnimatedVisibility(
+                            visible = recuperacionMessage != null,
+                            enter = fadeIn(),
+                            exit = fadeOut()
                         ) {
-                            Text(
-                                "¿Olvidaste tu contraseña?",
-                                color = AzulBarberi,
-                                fontSize = 15.sp,
-                                fontWeight = FontWeight.Medium
-                            )
-                        }
-
-                        // Botón para ir a registro
-                        TextButton(
-                            onClick = { navController.navigate("clienteRegistro") }
-                        ) {
-                            Text(
-                                "¿No tienes cuenta? Regístrate aquí",
-                                color = AzulBarberi,
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Medium
-                            )
+                            if (recuperacionMessage != null) {
+                                Card(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = CardDefaults.cardColors(containerColor = Color(0xFF4CAF50).copy(alpha = 0.1f)),
+                                    border = BorderStroke(1.dp, Color(0xFF4CAF50))
+                                ) {
+                                    Column(
+                                        modifier = Modifier.padding(16.dp)
+                                    ) {
+                                        Text(
+                                            recuperacionMessage!!,
+                                            color = Color(0xFF2E7D32),
+                                            style = TextStyle(
+                                                fontWeight = FontWeight.Medium,
+                                                fontSize = 15.sp
+                                            ),
+                                            textAlign = TextAlign.Center,
+                                            modifier = Modifier.fillMaxWidth()
+                                        )
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        TextButton(
+                                            onClick = {
+                                                authViewModel.clearRecuperacionMessage()
+                                                navController.popBackStack()
+                                            },
+                                            modifier = Modifier.fillMaxWidth()
+                                        ) {
+                                            Text(
+                                                "Volver al login",
+                                                color = Color(0xFF2E7D32),
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
+                                    }
+                                }
+                            }
                         }
 
                         // Mostrar mensaje de error
                         AnimatedVisibility(
-                            visible = errorMessage != null,
+                            visible = errorMessage != null && recuperacionMessage == null,
                             enter = fadeIn(),
                             exit = fadeOut()
                         ) {
                             if (errorMessage != null) {
                                 Spacer(modifier = Modifier.height(16.dp))
-                                Text(
-                                    errorMessage!!,
-                                    color = Color(0xFFD32F2F),
-                                    style = TextStyle(fontWeight = FontWeight.Bold, fontSize = 16.sp),
-                                    textAlign = TextAlign.Center,
-                                    modifier = Modifier.fillMaxWidth()
-                                )
+                                Card(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = CardDefaults.cardColors(containerColor = Color(0xFFD32F2F).copy(alpha = 0.1f)),
+                                    border = BorderStroke(1.dp, Color(0xFFD32F2F))
+                                ) {
+                                    Text(
+                                        errorMessage!!,
+                                        color = Color(0xFFD32F2F),
+                                        style = TextStyle(
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 15.sp
+                                        ),
+                                        textAlign = TextAlign.Center,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(16.dp)
+                                    )
+                                }
                             }
                         }
                     }
@@ -302,3 +308,6 @@ fun ClienteLoginScreen(
         }
     }
 }
+
+
+

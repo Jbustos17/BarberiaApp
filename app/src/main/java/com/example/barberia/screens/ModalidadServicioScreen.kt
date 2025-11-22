@@ -11,6 +11,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Store
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -82,6 +83,17 @@ fun ModalidadServicioScreen(
                             }
                         }) {
                             Icon(Icons.Default.ArrowBack, "Volver")
+                        }
+                    },
+                    actions = {
+                        IconButton(onClick = { 
+                            navController.navigate("perfil")
+                        }) {
+                            Icon(
+                                Icons.Filled.Person, 
+                                "Mi Perfil",
+                                tint = AzulBarberi
+                            )
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(

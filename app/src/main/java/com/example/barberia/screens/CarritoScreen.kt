@@ -9,6 +9,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
+import kotlinx.coroutines.launch
+import com.example.barberia.interfaces.RetrofitClient
+import com.example.barberia.interfaces.ApiService
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -45,13 +50,77 @@ fun CarritoScreen(
     val carritoItems by carritoViewModel.carritoItems.collectAsState()
     val servicios by servicioViewModel.servicios.collectAsState()
     val barberos by barberoViewModel.barberos.collectAsState()
+    val porcentajeDescuento by carritoViewModel.porcentajeDescuento.collectAsState()
+    val codigoCupon by carritoViewModel.codigoCupon.collectAsState()
+    
+    var codigoCuponInput by remember { mutableStateOf("") }
+    var isLoadingCupon by remember { mutableStateOf(false) }
+    var mensajeCupon by remember { mutableStateOf<String?>(null) }
+    var cuponValido by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
+    
+    // Inicializar RetrofitClient si no está inicializado
+    LaunchedEffect(Unit) {
+        RetrofitClient.initialize(context)
+    }
+    
+    val apiService = remember { RetrofitClient.apiService }
     
     LaunchedEffect(Unit) {
         servicioViewModel.cargarServicios(idAdministrador = 1L)
         barberoViewModel.obtenerBarberos()
     }
     
+    val subtotal = carritoViewModel.getSubtotal()
+    val descuento = carritoViewModel.getDescuento()
     val total = carritoViewModel.getTotal()
+    
+    // Cargar cupón si ya hay uno aplicado
+    LaunchedEffect(codigoCupon) {
+        if (codigoCupon != null) {
+            codigoCuponInput = codigoCupon ?: ""
+            cuponValido = true
+        }
+    }
+    
+    val validarCupon: () -> Unit = {
+        if (codigoCuponInput.trim().isEmpty()) {
+            mensajeCupon = "Por favor ingresa un código de cupón"
+        } else {
+            coroutineScope.launch {
+                isLoadingCupon = true
+                mensajeCupon = null
+                try {
+                    val response = apiService.validarCupon(codigoCuponInput.trim().uppercase())
+                    if (response.isSuccessful && response.body() != null) {
+                        val body = response.body()!!
+                        val valido = body["valido"] as? Boolean ?: false
+                        if (valido) {
+                            val cupon = body["cupon"] as? Map<*, *>
+                            val porcentaje = (cupon?.get("porcentajeDescuento") as? Number)?.toInt() ?: 0
+                            carritoViewModel.aplicarCupon(porcentaje, codigoCuponInput.trim().uppercase())
+                            cuponValido = true
+                            mensajeCupon = "¡Cupón aplicado exitosamente! Descuento: $porcentaje%"
+                        } else {
+                            mensajeCupon = body["message"] as? String ?: "Cupón inválido o expirado"
+                            cuponValido = false
+                            carritoViewModel.removerCupon()
+                        }
+                    } else {
+                        mensajeCupon = "Error al validar el cupón"
+                        cuponValido = false
+                        carritoViewModel.removerCupon()
+                    }
+                } catch (e: Exception) {
+                    mensajeCupon = "Error de conexión. Intenta nuevamente"
+                    cuponValido = false
+                    carritoViewModel.removerCupon()
+                } finally {
+                    isLoadingCupon = false
+                }
+            }
+        }
+    }
     
     // Función para navegar a servicios
     val navegarAServicios: () -> Unit = {
@@ -202,6 +271,120 @@ fun CarritoScreen(
                 
                 Spacer(modifier = Modifier.height(16.dp))
                 
+                // Sección de cupón de descuento
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(4.dp)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.LocalOffer,
+                                contentDescription = null,
+                                tint = DoradoBarberia,
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                "Cupón de Descuento",
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                color = AzulBarberi
+                            )
+                        }
+                        
+                        Spacer(modifier = Modifier.height(12.dp))
+                        
+                        if (cuponValido && codigoCupon != null) {
+                            // Cupón aplicado
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column {
+                                    Text(
+                                        "Cupón: ${codigoCupon}",
+                                        style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
+                                        color = Color(0xFF4CAF50)
+                                    )
+                                    Text(
+                                        "Descuento: ${porcentajeDescuento}%",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = Color.Gray
+                                    )
+                                }
+                                TextButton(
+                                    onClick = {
+                                        carritoViewModel.removerCupon()
+                                        codigoCuponInput = ""
+                                        cuponValido = false
+                                        mensajeCupon = null
+                                    }
+                                ) {
+                                    Text("Remover", color = Color.Red)
+                                }
+                            }
+                        } else {
+                            // Campo para ingresar cupón
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                OutlinedTextField(
+                                    value = codigoCuponInput,
+                                    onValueChange = { 
+                                        codigoCuponInput = it.uppercase()
+                                        mensajeCupon = null
+                                    },
+                                    label = { Text("Código del cupón") },
+                                    modifier = Modifier.weight(1f),
+                                    enabled = !isLoadingCupon,
+                                    keyboardOptions = KeyboardOptions(
+                                        keyboardType = KeyboardType.Text
+                                    ),
+                                    placeholder = { Text("Ej: BLACKFRIDAY25") }
+                                )
+                                Button(
+                                    onClick = validarCupon,
+                                    enabled = !isLoadingCupon && codigoCuponInput.trim().isNotEmpty(),
+                                    colors = ButtonDefaults.buttonColors(containerColor = DoradoBarberia)
+                                ) {
+                                    if (isLoadingCupon) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(20.dp),
+                                            color = Color.White,
+                                            strokeWidth = 2.dp
+                                        )
+                                    } else {
+                                        Text("Aplicar")
+                                    }
+                                }
+                            }
+                            
+                            mensajeCupon?.let { mensaje ->
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    mensaje,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = if (cuponValido) Color(0xFF4CAF50) else Color.Red
+                                )
+                            }
+                        }
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
                 // Card de resumen total
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -214,6 +397,57 @@ fun CarritoScreen(
                             .fillMaxWidth()
                             .padding(20.dp)
                     ) {
+                        // Subtotal
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                "Subtotal",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = Color.White.copy(alpha = 0.9f)
+                            )
+                            Text(
+                                formatearPrecio(subtotal),
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = Color.White.copy(alpha = 0.9f)
+                            )
+                        }
+                        
+                        // Descuento (si hay cupón aplicado)
+                        if (descuento > 0) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = Icons.Default.LocalOffer,
+                                        contentDescription = null,
+                                        tint = Color(0xFF4CAF50),
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        "Descuento (${porcentajeDescuento}%)",
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = Color(0xFF4CAF50)
+                                    )
+                                }
+                                Text(
+                                    "-${formatearPrecio(descuento)}",
+                                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
+                                    color = Color(0xFF4CAF50)
+                                )
+                            }
+                        }
+                        
+                        Spacer(modifier = Modifier.height(12.dp))
+                        HorizontalDivider(color = Color.White.copy(alpha = 0.3f))
+                        Spacer(modifier = Modifier.height(12.dp))
+                        
+                        // Total
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -222,8 +456,8 @@ fun CarritoScreen(
                             Column {
                                 Text(
                                     "Total a pagar",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = Color.White.copy(alpha = 0.9f)
+                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                    color = Color.White
                                 )
                                 Text(
                                     "${carritoItems.size} ${if(carritoItems.size == 1) "servicio" else "servicios"}",

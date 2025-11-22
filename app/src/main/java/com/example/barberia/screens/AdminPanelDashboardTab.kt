@@ -5,7 +5,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Store
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -20,11 +22,14 @@ import androidx.navigation.NavHostController
 import com.example.barberia.viewmodel.DashboardViewModel
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 
 @Composable
 fun DashboardTab(
     dashboardViewModel: DashboardViewModel,
-    navController: NavHostController
+    navController: NavHostController,
+    idAdministrador: Long = 1L
 ) {
     val estadisticas by dashboardViewModel.estadisticas.collectAsState()
     val comisiones by dashboardViewModel.comisiones.collectAsState()
@@ -34,6 +39,7 @@ fun DashboardTab(
     val snackbarHostState = remember { SnackbarHostState() }
     
     var showComisionDialog by remember { mutableStateOf(false) }
+    var showCorreoDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         dashboardViewModel.cargarEstadisticas()
@@ -80,6 +86,56 @@ fun DashboardTab(
                         Icon(Icons.Default.Dashboard, contentDescription = null)
                         Spacer(Modifier.width(8.dp))
                         Text("Ver Dashboard Completo", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+
+                // Envío de correos masivos
+                item {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        elevation = CardDefaults.cardElevation(4.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(20.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = Icons.Default.Email,
+                                        contentDescription = null,
+                                        tint = AzulBarberi,
+                                        modifier = Modifier.size(28.dp)
+                                    )
+                                    Spacer(Modifier.width(12.dp))
+                                    Text(
+                                        "Enviar Correos Masivos",
+                                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                                        color = AzulBarberi
+                                    )
+                                }
+                                IconButton(onClick = { showCorreoDialog = true }) {
+                                    Icon(Icons.Default.Send, "Enviar correos", tint = AzulBarberi)
+                                }
+                            }
+
+                            Spacer(Modifier.height(16.dp))
+                            HorizontalDivider(color = Color.LightGray)
+                            Spacer(Modifier.height(16.dp))
+
+                            Text(
+                                "Envía correos informativos o promociones a todos los clientes registrados",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Color.Gray
+                            )
+                        }
                     }
                 }
 
@@ -309,6 +365,25 @@ fun DashboardTab(
             }
         )
     }
+
+    // Diálogo para enviar correos
+    if (showCorreoDialog) {
+        EnviarCorreoDialog(
+            onDismiss = { showCorreoDialog = false },
+            onEnviar = { categoria, datos ->
+                if (categoria == "Informativo") {
+                    val mensaje = datos["mensaje"] as? String ?: ""
+                    dashboardViewModel.enviarCorreosInformativos(idAdministrador, mensaje)
+                } else {
+                    val nombreCupon = datos["nombreCupon"] as? String ?: ""
+                    val porcentajeDescuento = (datos["porcentajeDescuento"] as? Number)?.toInt() ?: 0
+                    val fechaValidez = datos["fechaValidez"] as? String ?: ""
+                    dashboardViewModel.enviarCorreosPromocion(idAdministrador, nombreCupon, porcentajeDescuento, fechaValidez)
+                }
+                showCorreoDialog = false
+            }
+        )
+    }
 }
 
 @Composable
@@ -448,6 +523,185 @@ fun ComisionDialog(
                 colors = ButtonDefaults.buttonColors(containerColor = AzulBarberi)
             ) {
                 Text("Guardar")
+            }
+        },
+        dismissButton = {
+            OutlinedButton(onClick = onDismiss) {
+                Text("Cancelar", color = AzulBarberi)
+            }
+        },
+        containerColor = Color.White,
+        shape = RoundedCornerShape(16.dp)
+    )
+}
+
+@Composable
+fun EnviarCorreoDialog(
+    onDismiss: () -> Unit,
+    onEnviar: (String, Map<String, Any>) -> Unit
+) {
+    var categoriaSeleccionada by remember { mutableStateOf("Informativo") }
+    var mensajeInformativo by remember { mutableStateOf("") }
+    var nombreCupon by remember { mutableStateOf("") }
+    var porcentajeDescuento by remember { mutableStateOf("") }
+    var fechaValidez by remember { mutableStateOf("") }
+    var errorTexto by remember { mutableStateOf<String?>(null) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                "Enviar Correos Masivos",
+                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                color = AzulBarberi
+            )
+        },
+        text = {
+            Column(
+                modifier = Modifier
+                    .verticalScroll(rememberScrollState())
+                    .fillMaxWidth()
+            ) {
+                // Selector de categoría
+                Text(
+                    "Categoría:",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    FilterChip(
+                        selected = categoriaSeleccionada == "Informativo",
+                        onClick = { categoriaSeleccionada = "Informativo" },
+                        label = { Text("Informativo") },
+                        modifier = Modifier.weight(1f)
+                    )
+                    FilterChip(
+                        selected = categoriaSeleccionada == "Promoción",
+                        onClick = { categoriaSeleccionada = "Promoción" },
+                        label = { Text("Promoción") },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
+                Spacer(Modifier.height(16.dp))
+
+                if (categoriaSeleccionada == "Informativo") {
+                    // Formulario para correo informativo
+                    OutlinedTextField(
+                        value = mensajeInformativo,
+                        onValueChange = { 
+                            mensajeInformativo = it
+                            errorTexto = null
+                        },
+                        label = { Text("Mensaje") },
+                        modifier = Modifier.fillMaxWidth(),
+                        minLines = 5,
+                        maxLines = 10,
+                        placeholder = { Text("Escribe el mensaje que quieres enviar a todos los clientes...") }
+                    )
+                } else {
+                    // Formulario para promoción
+                    OutlinedTextField(
+                        value = nombreCupon,
+                        onValueChange = { 
+                            nombreCupon = it
+                            errorTexto = null
+                        },
+                        label = { Text("Nombre del Cupón") },
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = { Text("Ej: DESCUENTO2024") }
+                    )
+
+                    Spacer(Modifier.height(12.dp))
+
+                    OutlinedTextField(
+                        value = porcentajeDescuento,
+                        onValueChange = { 
+                            if (it.isEmpty() || it.matches(Regex("^\\d+$"))) {
+                                porcentajeDescuento = it
+                                errorTexto = null
+                            }
+                        },
+                        label = { Text("Porcentaje de Descuento (%)") },
+                        modifier = Modifier.fillMaxWidth(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        placeholder = { Text("Ej: 20") },
+                        leadingIcon = {
+                            Icon(Icons.Default.AttachMoney, contentDescription = null)
+                        }
+                    )
+
+                    Spacer(Modifier.height(12.dp))
+
+                    OutlinedTextField(
+                        value = fechaValidez,
+                        onValueChange = { 
+                            fechaValidez = it
+                            errorTexto = null
+                        },
+                        label = { Text("Fecha de Validez (DD/MM/YYYY)") },
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = { Text("Ej: 31/12/2024") },
+                        leadingIcon = {
+                            Icon(Icons.Default.CalendarToday, contentDescription = null)
+                        }
+                    )
+                }
+
+                errorTexto?.let {
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        it,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.Red
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    errorTexto = null
+                    
+                    if (categoriaSeleccionada == "Informativo") {
+                        if (mensajeInformativo.trim().isEmpty()) {
+                            errorTexto = "El mensaje es requerido"
+                            return@Button
+                        }
+                        onEnviar("Informativo", mapOf("mensaje" to mensajeInformativo.trim()))
+                    } else {
+                        if (nombreCupon.trim().isEmpty()) {
+                            errorTexto = "El nombre del cupón es requerido"
+                            return@Button
+                        }
+                        if (porcentajeDescuento.isEmpty()) {
+                            errorTexto = "El porcentaje de descuento es requerido"
+                            return@Button
+                        }
+                        val porcentaje = porcentajeDescuento.toIntOrNull()
+                        if (porcentaje == null || porcentaje <= 0 || porcentaje > 100) {
+                            errorTexto = "El porcentaje debe ser un número entre 1 y 100"
+                            return@Button
+                        }
+                        if (fechaValidez.trim().isEmpty()) {
+                            errorTexto = "La fecha de validez es requerida"
+                            return@Button
+                        }
+                        onEnviar("Promoción", mapOf(
+                            "nombreCupon" to nombreCupon.trim(),
+                            "porcentajeDescuento" to porcentaje,
+                            "fechaValidez" to fechaValidez.trim()
+                        ))
+                    }
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = AzulBarberi)
+            ) {
+                Text("Enviar")
             }
         },
         dismissButton = {

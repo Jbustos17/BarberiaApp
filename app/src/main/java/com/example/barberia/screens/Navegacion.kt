@@ -28,7 +28,9 @@ fun Navegacion(navController: NavHostController) {
         // Autenticación de clientes
         composable("clienteLogin") { ClienteLoginScreen(navController) }
         composable("clienteRegistro") { ClienteRegistroScreen(navController) }
+        composable("recuperarContraseña") { RecuperarContraseñaScreen(navController) }
         composable("perfil") { PerfilScreen(navController) }
+        composable("editarPerfil") { EditarPerfilScreen(navController) }
         
         // Selección de modalidad (presencial o domicilio)
         composable("modalidadServicio/{idCliente}") { backStackEntry ->

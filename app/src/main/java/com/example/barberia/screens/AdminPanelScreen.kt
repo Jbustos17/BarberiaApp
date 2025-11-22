@@ -49,6 +49,15 @@ import com.example.barberia.model.Reserva
 import com.example.barberia.model.ServicioIdOnly
 import com.example.barberia.viewmodel.HorarioDisponibleViewModel
 import com.example.barberia.viewmodel.DashboardViewModel
+import com.example.barberia.viewmodel.CuponViewModel
+import com.example.barberia.model.Cupon
+import androidx.compose.material.icons.filled.LocalOffer
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Cancel
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.text.input.TextFieldValue
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import kotlinx.coroutines.launch
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
@@ -79,7 +88,14 @@ fun AdminPanelScreen(
     var showErrorDialog by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
 
-    val tabTitles = listOf("Dashboard", "Barberos", "Servicios","Reservas")
+    val tabTitles = listOf("Dashboard", "Barberos", "Servicios", "Reservas", "Cupones")
+    val tabIcons = listOf(
+        Icons.Default.Dashboard,
+        Icons.Default.Person,
+        Icons.Default.Build,
+        Icons.Default.Schedule,
+        Icons.Default.LocalOffer
+    )
     var selectedTab by remember { mutableStateOf(0) }
 
     var showBarberoDialog by remember { mutableStateOf(false) }
@@ -188,7 +204,20 @@ fun AdminPanelScreen(
                     Tab(
                         selected = selectedTab == index,
                         onClick = { selectedTab = index },
-                        text = { Text(title, fontWeight = FontWeight.Medium, fontSize = 24.sp)  }
+                        icon = {
+                            Icon(
+                                imageVector = tabIcons[index],
+                                contentDescription = title,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        },
+                        text = { 
+                            Text(
+                                text = title, 
+                                fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Normal,
+                                fontSize = 12.sp
+                            )
+                        }
                     )
                 }
             }
@@ -196,7 +225,8 @@ fun AdminPanelScreen(
             when (selectedTab) {
                 0 -> DashboardTab(
                     dashboardViewModel = dashboardViewModel,
-                    navController = navController
+                    navController = navController,
+                    idAdministrador = idAdministrador
                 )
                 1 -> BarberosTab(
                     barberos = barberos,
@@ -216,6 +246,13 @@ fun AdminPanelScreen(
                     onEdit = { reservaToEdit = it; showReservaDialog = true },
                     onDelete = { reservaToDelete = it }
                 )
+                4 -> {
+                    val cuponViewModel: CuponViewModel = remember { CuponViewModel() }
+                    com.example.barberia.screens.CuponesTab(
+                        cuponViewModel = cuponViewModel,
+                        idAdministrador = idAdministrador
+                    )
+                }
             }
 
 

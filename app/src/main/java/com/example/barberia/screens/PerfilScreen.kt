@@ -237,7 +237,7 @@ fun PerfilScreen(
                 ) {
                     // Botón de editar perfil
                     OutlinedButton(
-                        onClick = { /* TODO: Implementar edición de perfil */ },
+                        onClick = { navController.navigate("editarPerfil") },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(48.dp),

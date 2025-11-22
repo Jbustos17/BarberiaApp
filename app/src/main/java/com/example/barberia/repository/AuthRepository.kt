@@ -149,5 +149,125 @@ class AuthRepository(
     fun getCurrentCliente(): ClienteResponse? {
         return sessionManager.getCliente()
     }
+    
+    suspend fun recuperarContraseña(correo: String): Result<String> {
+        return try {
+            val request = mapOf("correo" to correo)
+            val response = authService.recuperarContraseña(request)
+            when (response.code()) {
+                200 -> {
+                    val body = response.body()
+                    val message = body?.get("message") as? String ?: "Se ha enviado una nueva contraseña a tu correo electrónico"
+                    Result.success(message)
+                }
+                400 -> {
+                    val message = (response.body()?.get("message") as? String) ?: "El correo es requerido"
+                    Result.failure(Exception(message))
+                }
+                else -> {
+                    Result.failure(Exception("Error al recuperar contraseña: ${response.message()}"))
+                }
+            }
+        } catch (e: java.net.UnknownHostException) {
+            Result.failure(Exception("Error de conexión. Verifica tu conexión a internet"))
+        } catch (e: java.net.SocketTimeoutException) {
+            Result.failure(Exception("Tiempo de espera agotado. Verifica tu conexión"))
+        } catch (e: Exception) {
+            Result.failure(Exception("Error al recuperar contraseña: ${e.message ?: e.javaClass.simpleName}"))
+        }
+    }
+    
+    suspend fun actualizarPerfil(nombre: String, celular: String, direccion: String): Result<ClienteResponse> {
+        return try {
+            val token = sessionManager.getToken()
+            if (token != null) {
+                val datosPerfil = mapOf(
+                    "nombre" to nombre,
+                    "celular" to celular,
+                    "direccion" to direccion
+                )
+                val response = authService.actualizarPerfil("Bearer $token", datosPerfil)
+                when (response.code()) {
+                    200 -> {
+                        val body = response.body()
+                        val clienteMap = body?.get("cliente") as? Map<*, *>
+                        if (clienteMap != null) {
+                            val cliente = ClienteResponse(
+                                id = (clienteMap["id"] as? Number)?.toLong() ?: 0L,
+                                nombre = clienteMap["nombre"] as? String ?: "",
+                                celular = clienteMap["celular"] as? String ?: "",
+                                correo = clienteMap["correo"] as? String ?: "",
+                                direccion = clienteMap["direccion"] as? String ?: ""
+                            )
+                            sessionManager.saveCliente(cliente)
+                            Result.success(cliente)
+                        } else {
+                            Result.failure(Exception("Error: Respuesta inválida del servidor"))
+                        }
+                    }
+                    400 -> {
+                        val body = response.body()
+                        val message = (body?.get("message") as? String) ?: "Error al actualizar perfil"
+                        Result.failure(Exception(message))
+                    }
+                    401 -> {
+                        sessionManager.logout()
+                        Result.failure(Exception("Sesión expirada. Por favor, inicia sesión nuevamente"))
+                    }
+                    else -> {
+                        Result.failure(Exception("Error al actualizar perfil: ${response.message()}"))
+                    }
+                }
+            } else {
+                Result.failure(Exception("No hay token guardado"))
+            }
+        } catch (e: java.net.UnknownHostException) {
+            Result.failure(Exception("Error de conexión. Verifica tu conexión a internet"))
+        } catch (e: java.net.SocketTimeoutException) {
+            Result.failure(Exception("Tiempo de espera agotado. Verifica tu conexión"))
+        } catch (e: Exception) {
+            Result.failure(Exception("Error al actualizar perfil: ${e.message ?: e.javaClass.simpleName}"))
+        }
+    }
+    
+    suspend fun cambiarContraseña(contraseñaActual: String, nuevaContraseña: String): Result<String> {
+        return try {
+            val token = sessionManager.getToken()
+            if (token != null) {
+                val datosContraseña = mapOf(
+                    "contraseñaActual" to contraseñaActual,
+                    "nuevaContraseña" to nuevaContraseña
+                )
+                val response = authService.cambiarContraseña("Bearer $token", datosContraseña)
+                when (response.code()) {
+                    200 -> {
+                        val body = response.body()
+                        val message = body?.get("message") as? String ?: "Contraseña cambiada exitosamente"
+                        Result.success(message)
+                    }
+                    400 -> {
+                        val body = response.body()
+                        val message = (body?.get("message") as? String) ?: "Error al cambiar contraseña"
+                        Result.failure(Exception(message))
+                    }
+                    401 -> {
+                        sessionManager.logout()
+                        Result.failure(Exception("Sesión expirada. Por favor, inicia sesión nuevamente"))
+                    }
+                    else -> {
+                        Result.failure(Exception("Error al cambiar contraseña: ${response.message()}"))
+                    }
+                }
+            } else {
+                Result.failure(Exception("No hay token guardado"))
+            }
+        } catch (e: java.net.UnknownHostException) {
+            Result.failure(Exception("Error de conexión. Verifica tu conexión a internet"))
+        } catch (e: java.net.SocketTimeoutException) {
+            Result.failure(Exception("Tiempo de espera agotado. Verifica tu conexión"))
+        } catch (e: Exception) {
+            Result.failure(Exception("Error al cambiar contraseña: ${e.message ?: e.javaClass.simpleName}"))
+        }
+    }
 }
 

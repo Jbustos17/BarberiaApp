@@ -54,5 +54,35 @@ class DashboardRepository {
             throw Exception(errorBody ?: "Error al actualizar comisiones")
         }
     }
+
+    suspend fun enviarCorreosInformativos(idAdministrador: Long, mensaje: String): String {
+        val request = mapOf("mensaje" to mensaje)
+        val response = apiService.enviarCorreosInformativos(idAdministrador, request)
+        if (response.isSuccessful && response.body() != null) {
+            val body = response.body()!!
+            val enviados = body["enviados"] as? Number ?: 0
+            return "Correos enviados exitosamente. Total: $enviados"
+        } else {
+            val errorBody = response.errorBody()?.string()
+            throw Exception(errorBody ?: "Error al enviar correos informativos")
+        }
+    }
+
+    suspend fun enviarCorreosPromocion(idAdministrador: Long, nombreCupon: String, porcentajeDescuento: Int, fechaValidez: String): String {
+        val request = mapOf(
+            "nombreCupon" to nombreCupon,
+            "porcentajeDescuento" to porcentajeDescuento.toString(),
+            "fechaValidez" to fechaValidez
+        )
+        val response = apiService.enviarCorreosPromocion(idAdministrador, request)
+        if (response.isSuccessful && response.body() != null) {
+            val body = response.body()!!
+            val enviados = body["enviados"] as? Number ?: 0
+            return "Correos de promoción enviados exitosamente. Total: $enviados"
+        } else {
+            val errorBody = response.errorBody()?.string()
+            throw Exception(errorBody ?: "Error al enviar correos de promoción")
+        }
+    }
 }
 
