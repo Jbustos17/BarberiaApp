@@ -2,14 +2,16 @@ package com.example.barberia.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.barberia.interfaces.RetrofitClient
 import com.example.barberia.model.Cupon
 import com.example.barberia.repository.CuponRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import retrofit2.Response
 
 class CuponViewModel : ViewModel() {
-    private val repository = CuponRepository()
+    private val repository = CuponRepository(RetrofitClient.apiService)
 
     private val _cupones = MutableStateFlow<List<Cupon>>(emptyList())
     val cupones: StateFlow<List<Cupon>> = _cupones
@@ -28,9 +30,18 @@ class CuponViewModel : ViewModel() {
             try {
                 _isLoading.value = true
                 _error.value = null
-                _cupones.value = repository.listarCupones(idAdministrador, filtro)
+                val response: Response<List<Cupon>> = repository.listarCupones(idAdministrador, filtro)
+                if (response.isSuccessful) {
+                    _cupones.value = response.body() ?: emptyList()
+                } else {
+                    when (response.code()) {
+                        403 -> _error.value = "No tienes permisos de administrador"
+                        401 -> _error.value = "Sesión expirada. Por favor, inicia sesión nuevamente"
+                        else -> _error.value = "Error al cargar cupones: ${response.message()}"
+                    }
+                }
             } catch (e: Exception) {
-                _error.value = "Error al cargar cupones: ${e.message}"
+                _error.value = "Error de conexión: ${e.message}"
             } finally {
                 _isLoading.value = false
             }
@@ -42,11 +53,19 @@ class CuponViewModel : ViewModel() {
             try {
                 _isLoading.value = true
                 _error.value = null
-                repository.actualizarCupon(idAdministrador, id, codigo, porcentajeDescuento, fechaValidez, activo)
-                _mensaje.value = "Cupón actualizado exitosamente"
-                cargarCupones(idAdministrador, "todos")
+                val response: Response<Cupon> = repository.actualizarCupon(idAdministrador, id, codigo, porcentajeDescuento, fechaValidez, activo)
+                if (response.isSuccessful) {
+                    _mensaje.value = "Cupón actualizado exitosamente"
+                    cargarCupones(idAdministrador, "todos")
+                } else {
+                    when (response.code()) {
+                        403 -> _error.value = "No tienes permisos de administrador"
+                        401 -> _error.value = "Sesión expirada. Por favor, inicia sesión nuevamente"
+                        else -> _error.value = "Error al actualizar cupón: ${response.message()}"
+                    }
+                }
             } catch (e: Exception) {
-                _error.value = e.message ?: "Error al actualizar cupón"
+                _error.value = "Error de conexión: ${e.message}"
             } finally {
                 _isLoading.value = false
             }
@@ -58,11 +77,19 @@ class CuponViewModel : ViewModel() {
             try {
                 _isLoading.value = true
                 _error.value = null
-                repository.eliminarCupon(idAdministrador, id)
-                _mensaje.value = "Cupón eliminado exitosamente"
-                cargarCupones(idAdministrador, "todos")
+                val response: Response<Void> = repository.eliminarCupon(idAdministrador, id)
+                if (response.isSuccessful) {
+                    _mensaje.value = "Cupón eliminado exitosamente"
+                    cargarCupones(idAdministrador, "todos")
+                } else {
+                    when (response.code()) {
+                        403 -> _error.value = "No tienes permisos de administrador"
+                        401 -> _error.value = "Sesión expirada. Por favor, inicia sesión nuevamente"
+                        else -> _error.value = "Error al eliminar cupón: ${response.message()}"
+                    }
+                }
             } catch (e: Exception) {
-                _error.value = e.message ?: "Error al eliminar cupón"
+                _error.value = "Error de conexión: ${e.message}"
             } finally {
                 _isLoading.value = false
             }

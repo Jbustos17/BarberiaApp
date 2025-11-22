@@ -1,6 +1,7 @@
 package com.example.barberia.screens
 
 import androidx.compose.animation.*
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -21,7 +22,10 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -67,6 +71,8 @@ fun PagoScreen(
     var procesandoPago by remember { mutableStateOf(false) }
     var pagoExitoso by remember { mutableStateOf(false) }
     var errorPago by remember { mutableStateOf<String?>(null) }
+    var mensajeProcesamiento by remember { mutableStateOf("") }
+    var pasoProcesamiento by remember { mutableStateOf(0) }
     
     val coroutineScope = rememberCoroutineScope()
     
@@ -75,21 +81,90 @@ fun PagoScreen(
         barberoViewModel.obtenerBarberos()
     }
     
+    // Función para formatear número de tarjeta (agregar espacios cada 4 dígitos)
+    fun formatearNumeroTarjeta(input: String): String {
+        val digitsOnly = input.filter { it.isDigit() }
+        return digitsOnly.chunked(4).joinToString(" ").take(19) // Máximo 16 dígitos + 3 espacios
+    }
+    
+    // Función para formatear fecha MM/YY
+    fun formatearFechaVencimiento(input: String): String {
+        val digitsOnly = input.filter { it.isDigit() }
+        return when {
+            digitsOnly.length <= 2 -> digitsOnly
+            else -> "${digitsOnly.take(2)}/${digitsOnly.drop(2).take(2)}"
+        }
+    }
+    
+    // Validar formulario de tarjeta
+    fun validarFormularioTarjeta(): String? {
+        val numeroLimpio = numeroTarjeta.replace(" ", "")
+        if (numeroLimpio.length < 16) {
+            return "El número de tarjeta debe tener 16 dígitos"
+        }
+        if (nombreTitular.trim().isEmpty()) {
+            return "El nombre del titular es requerido"
+        }
+        if (fechaVencimiento.length < 5) {
+            return "La fecha de vencimiento es requerida"
+        }
+        if (cvv.length < 3) {
+            return "El código CVV es requerido"
+        }
+        return null
+    }
+    
     fun procesarPago() {
         if (carritoItems.isEmpty() || cliente == null) {
             errorPago = "Error: Información de sesión no disponible"
             return
         }
         
+        // Validar formulario si es pago con tarjeta
+        if (metodoPago == "tarjeta") {
+            val errorValidacion = validarFormularioTarjeta()
+            if (errorValidacion != null) {
+                errorPago = errorValidacion
+                return
+            }
+        }
+        
         procesandoPago = true
         errorPago = null
+        pasoProcesamiento = 0
         
-        // Simular procesamiento de pago y crear múltiples reservas
+        // Simular procesamiento de pago con pasos
         coroutineScope.launch {
-            delay(2000) // Simular tiempo de procesamiento
-            
             try {
-                // Crear una reserva por cada item del carrito
+                // Paso 1: Validando información
+                pasoProcesamiento = 1
+                mensajeProcesamiento = "Validando información de pago..."
+                delay(1500)
+                
+                // Paso 2: Verificando tarjeta (solo si es tarjeta)
+                if (metodoPago == "tarjeta") {
+                    pasoProcesamiento = 2
+                    mensajeProcesamiento = "Verificando tarjeta de crédito..."
+                    delay(2000)
+                    
+                    // Paso 3: Procesando pago
+                    pasoProcesamiento = 3
+                    mensajeProcesamiento = "Procesando pago..."
+                    delay(2000)
+                    
+                    // Paso 4: Confirmando transacción
+                    pasoProcesamiento = 4
+                    mensajeProcesamiento = "Confirmando transacción..."
+                    delay(1500)
+                } else {
+                    pasoProcesamiento = 2
+                    mensajeProcesamiento = "Procesando reserva..."
+                    delay(1500)
+                }
+                
+                // Crear reservas
+                pasoProcesamiento = 5
+                mensajeProcesamiento = "Creando reservas..."
                 for (item in carritoItems) {
                     val reserva = Reserva(
                         idReserva = null,
@@ -105,8 +180,10 @@ fun PagoScreen(
                     reservaViewModel.guardarReserva(reserva, 1L)
                 }
                 
+                delay(1000)
+                procesandoPago = false
                 pagoExitoso = true
-                delay(2000)
+                delay(5000) // Mostrar confirmación por 5 segundos
                 carritoViewModel.limpiarCarrito()
                 navController.navigate("inicio") {
                     popUpTo("inicio") { inclusive = false }
@@ -114,6 +191,7 @@ fun PagoScreen(
             } catch (e: Exception) {
                 errorPago = "Error al procesar el pago: ${e.message}"
                 procesandoPago = false
+                pasoProcesamiento = 0
             }
         }
     }
@@ -168,8 +246,8 @@ fun PagoScreen(
                 )
             }
             
-            if (pagoExitoso) {
-                // Animación de pago exitoso
+            // Pantalla de procesamiento
+            if (procesandoPago) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -177,34 +255,247 @@ fun PagoScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.fillMaxWidth()
                     ) {
+                        // Indicador de carga animado
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(80.dp),
+                            color = AzulBarberi,
+                            strokeWidth = 6.dp
+                        )
+                        Spacer(modifier = Modifier.height(32.dp))
+                        
+                        // Mensaje de procesamiento
+                        Text(
+                            mensajeProcesamiento,
+                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                            color = AzulBarberi
+                        )
+                        
+                        Spacer(modifier = Modifier.height(16.dp))
+                        
+                        // Indicador de pasos
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.padding(horizontal = 32.dp)
+                        ) {
+                            repeat(5) { index ->
+                                Box(
+                                    modifier = Modifier
+                                        .size(12.dp)
+                                        .clip(CircleShape)
+                                        .background(
+                                            if (index < pasoProcesamiento) Color(0xFF4CAF50)
+                                            else Color.LightGray
+                                        )
+                                )
+                            }
+                        }
+                        
+                        Spacer(modifier = Modifier.height(24.dp))
+                        
+                        // Mensaje adicional
+                        Text(
+                            "Por favor, no cierres la aplicación",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color.Gray
+                        )
+                    }
+                }
+            } else if (pagoExitoso) {
+                // Pantalla de confirmación exitosa
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(32.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        // Animación de check con círculo
                         Box(
                             modifier = Modifier
-                                .size(120.dp)
+                                .size(140.dp)
                                 .clip(CircleShape)
-                                .background(Color(0xFF4CAF50)),
+                                .background(
+                                    Brush.radialGradient(
+                                        colors = listOf(
+                                            Color(0xFF4CAF50),
+                                            Color(0xFF45A049)
+                                        )
+                                    )
+                                ),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Check,
+                                imageVector = Icons.Default.CheckCircle,
                                 contentDescription = null,
                                 tint = Color.White,
-                                modifier = Modifier.size(80.dp)
+                                modifier = Modifier.size(100.dp)
                             )
                         }
-                        Spacer(modifier = Modifier.height(24.dp))
+                        
+                        Spacer(modifier = Modifier.height(32.dp))
+                        
+                        // Título principal
                         Text(
-                            "¡Pago Exitoso!",
-                            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+                            "¡Pago Verificado!",
+                            style = MaterialTheme.typography.headlineLarge.copy(
+                                fontWeight = FontWeight.Bold
+                            ),
                             color = Color(0xFF4CAF50)
                         )
-                        Spacer(modifier = Modifier.height(8.dp))
+                        
+                        Spacer(modifier = Modifier.height(16.dp))
+                        
+                        // Mensaje de confirmación
                         Text(
-                            "Tu reserva ha sido confirmada",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = Color.Gray
+                            "Tu pago ha sido procesado exitosamente",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = AzulBarberi,
+                            textAlign = TextAlign.Center
                         )
+                        
+                        Spacer(modifier = Modifier.height(8.dp))
+                        
+                        Text(
+                            "Reserva confirmada",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = Color.Gray,
+                            textAlign = TextAlign.Center
+                        )
+                        
+                        Spacer(modifier = Modifier.height(32.dp))
+                        
+                        // Card con detalles
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = Color.White
+                            ),
+                            elevation = CardDefaults.cardElevation(4.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(20.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column {
+                                        Text(
+                                            "Total pagado",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = Color.Gray
+                                        )
+                                        Text(
+                                            formatearPrecio(total),
+                                            style = MaterialTheme.typography.titleLarge.copy(
+                                                fontWeight = FontWeight.Bold
+                                            ),
+                                            color = AzulBarberi
+                                        )
+                                    }
+                                    Icon(
+                                        imageVector = Icons.Default.Payment,
+                                        contentDescription = null,
+                                        tint = Color(0xFF4CAF50),
+                                        modifier = Modifier.size(32.dp)
+                                    )
+                                }
+                                
+                                Spacer(modifier = Modifier.height(16.dp))
+                                HorizontalDivider()
+                                Spacer(modifier = Modifier.height(16.dp))
+                                
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column {
+                                        Text(
+                                            "Reservas creadas",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = Color.Gray
+                                        )
+                                        Text(
+                                            "${carritoItems.size} ${if(carritoItems.size == 1) "reserva" else "reservas"}",
+                                            style = MaterialTheme.typography.titleMedium.copy(
+                                                fontWeight = FontWeight.Bold
+                                            ),
+                                            color = AzulBarberi
+                                        )
+                                    }
+                                    Icon(
+                                        imageVector = Icons.Default.CheckCircle,
+                                        contentDescription = null,
+                                        tint = Color(0xFF4CAF50),
+                                        modifier = Modifier.size(32.dp)
+                                    )
+                                }
+                            }
+                        }
+                        
+                        Spacer(modifier = Modifier.height(32.dp))
+                        
+                        // Mensaje informativo
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = AzulBarberi.copy(alpha = 0.1f)
+                            )
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Info,
+                                    contentDescription = null,
+                                    tint = AzulBarberi,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Text(
+                                    "Recibirás un correo de confirmación con los detalles de tu reserva",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = AzulBarberi,
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+                        }
+                        
+                        Spacer(modifier = Modifier.height(24.dp))
+                        
+                        // Indicador de redirección
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(16.dp),
+                                color = Color.Gray,
+                                strokeWidth = 2.dp
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                "Redirigiendo a inicio...",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color.Gray
+                            )
+                        }
                     }
                 }
             } else {
@@ -276,74 +567,210 @@ fun PagoScreen(
                 
                 // Formulario de tarjeta (solo si se selecciona tarjeta)
                 AnimatedVisibility(visible = metodoPago == "tarjeta") {
-                    Card(
+                    Column(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
-                        elevation = CardDefaults.cardElevation(2.dp)
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        Column(
+                        // Tarjeta visual
+                        Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(20.dp)
-                        ) {
-                            Text(
-                                "Datos de la tarjeta",
-                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                                color = AzulBarberi
-                            )
-                            
-                            Spacer(modifier = Modifier.height(16.dp))
-                            
-                            OutlinedTextField(
-                                value = numeroTarjeta,
-                                onValueChange = { if (it.length <= 16) numeroTarjeta = it },
-                                label = { Text("Número de tarjeta") },
-                                placeholder = { Text("1234 5678 9012 3456") },
-                                leadingIcon = {
-                                    Icon(Icons.Default.CreditCard, contentDescription = null)
-                                },
-                                modifier = Modifier.fillMaxWidth(),
-                                singleLine = true
-                            )
-                            
-                            Spacer(modifier = Modifier.height(12.dp))
-                            
-                            OutlinedTextField(
-                                value = nombreTitular,
-                                onValueChange = { nombreTitular = it },
-                                label = { Text("Nombre del titular") },
-                                placeholder = { Text("Como aparece en la tarjeta") },
-                                leadingIcon = {
-                                    Icon(Icons.Default.Person, contentDescription = null)
-                                },
-                                modifier = Modifier.fillMaxWidth(),
-                                singleLine = true
-                            )
-                            
-                            Spacer(modifier = Modifier.height(12.dp))
-                            
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                OutlinedTextField(
-                                    value = fechaVencimiento,
-                                    onValueChange = { if (it.length <= 5) fechaVencimiento = it },
-                                    label = { Text("Vencimiento") },
-                                    placeholder = { Text("MM/AA") },
-                                    modifier = Modifier.weight(1f),
-                                    singleLine = true
+                                .height(200.dp)
+                                .clip(RoundedCornerShape(20.dp))
+                                .background(
+                                    Brush.horizontalGradient(
+                                        colors = listOf(AzulBarberi, Color(0xFF0066CC))
+                                    )
                                 )
+                                .then(Modifier.padding(2.dp))
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .clip(RoundedCornerShape(18.dp))
+                                    .background(
+                                        Brush.horizontalGradient(
+                                            colors = listOf(AzulBarberi, Color(0xFF0066CC))
+                                        )
+                                    )
+                            ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(24.dp),
+                                verticalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.CreditCard,
+                                        contentDescription = null,
+                                        tint = Color.White,
+                                        modifier = Modifier.size(40.dp)
+                                    )
+                                    Text(
+                                        "VISA",
+                                        style = MaterialTheme.typography.titleLarge.copy(
+                                            fontWeight = FontWeight.Bold,
+                                            letterSpacing = 4.sp
+                                        ),
+                                        color = Color.White
+                                    )
+                                }
+                                
+                                Column {
+                                    Text(
+                                        numeroTarjeta.ifEmpty { "•••• •••• •••• ••••" },
+                                        style = MaterialTheme.typography.headlineMedium.copy(
+                                            fontWeight = FontWeight.Bold,
+                                            letterSpacing = 2.sp
+                                        ),
+                                        color = Color.White
+                                    )
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Column {
+                                            Text(
+                                                "TITULAR",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = Color.White.copy(alpha = 0.7f)
+                                            )
+                                            Text(
+                                                nombreTitular.ifEmpty { "NOMBRE COMPLETO" },
+                                                style = MaterialTheme.typography.titleSmall.copy(
+                                                    fontWeight = FontWeight.Bold
+                                                ),
+                                                color = Color.White
+                                            )
+                                        }
+                                        Column(horizontalAlignment = Alignment.End) {
+                                            Text(
+                                                "VENCE",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = Color.White.copy(alpha = 0.7f)
+                                            )
+                                            Text(
+                                                fechaVencimiento.ifEmpty { "MM/AA" },
+                                                style = MaterialTheme.typography.titleSmall.copy(
+                                                    fontWeight = FontWeight.Bold
+                                                ),
+                                                color = Color.White
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                            }
+                        }
+                        
+                        // Formulario de datos
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp),
+                            elevation = CardDefaults.cardElevation(2.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(20.dp)
+                            ) {
+                                Text(
+                                    "Información de la tarjeta",
+                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                    color = AzulBarberi
+                                )
+                            
+                                Spacer(modifier = Modifier.height(16.dp))
                                 
                                 OutlinedTextField(
-                                    value = cvv,
-                                    onValueChange = { if (it.length <= 3) cvv = it },
-                                    label = { Text("CVV") },
-                                    placeholder = { Text("123") },
-                                    visualTransformation = PasswordVisualTransformation(),
-                                    modifier = Modifier.weight(1f),
-                                    singleLine = true
+                                    value = numeroTarjeta,
+                                    onValueChange = { 
+                                        val formatted = formatearNumeroTarjeta(it)
+                                        numeroTarjeta = formatted
+                                    },
+                                    label = { Text("Número de tarjeta") },
+                                    placeholder = { Text("1234 5678 9012 3456") },
+                                    leadingIcon = {
+                                        Icon(Icons.Default.CreditCard, contentDescription = null, tint = AzulBarberi)
+                                    },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    singleLine = true,
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                    isError = numeroTarjeta.isNotEmpty() && numeroTarjeta.replace(" ", "").length < 16
                                 )
+                                
+                                if (numeroTarjeta.isNotEmpty() && numeroTarjeta.replace(" ", "").length < 16) {
+                                    Text(
+                                        "El número de tarjeta debe tener 16 dígitos",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = Color.Red,
+                                        modifier = Modifier.padding(start = 16.dp, top = 4.dp)
+                                    )
+                                }
+                                
+                                Spacer(modifier = Modifier.height(12.dp))
+                                
+                                OutlinedTextField(
+                                    value = nombreTitular,
+                                    onValueChange = { nombreTitular = it.uppercase() },
+                                    label = { Text("Nombre del titular") },
+                                    placeholder = { Text("Como aparece en la tarjeta") },
+                                    leadingIcon = {
+                                        Icon(Icons.Default.Person, contentDescription = null, tint = AzulBarberi)
+                                    },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    singleLine = true,
+                                    isError = nombreTitular.isNotEmpty() && nombreTitular.trim().isEmpty()
+                                )
+                                
+                                Spacer(modifier = Modifier.height(12.dp))
+                                
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    OutlinedTextField(
+                                        value = fechaVencimiento,
+                                        onValueChange = { 
+                                            val formatted = formatearFechaVencimiento(it)
+                                            fechaVencimiento = formatted
+                                        },
+                                        label = { Text("Vencimiento") },
+                                        placeholder = { Text("MM/AA") },
+                                        leadingIcon = {
+                                            Icon(Icons.Default.CalendarToday, contentDescription = null, tint = AzulBarberi, modifier = Modifier.size(20.dp))
+                                        },
+                                        modifier = Modifier.weight(1f),
+                                        singleLine = true,
+                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                        isError = fechaVencimiento.isNotEmpty() && fechaVencimiento.length < 5
+                                    )
+                                    
+                                    OutlinedTextField(
+                                        value = cvv,
+                                        onValueChange = { 
+                                            if (it.all { char -> char.isDigit() } && it.length <= 3) {
+                                                cvv = it
+                                            }
+                                        },
+                                        label = { Text("CVV") },
+                                        placeholder = { Text("123") },
+                                        leadingIcon = {
+                                            Icon(Icons.Default.Lock, contentDescription = null, tint = AzulBarberi, modifier = Modifier.size(20.dp))
+                                        },
+                                        visualTransformation = PasswordVisualTransformation(),
+                                        modifier = Modifier.weight(1f),
+                                        singleLine = true,
+                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                        isError = cvv.isNotEmpty() && cvv.length < 3
+                                    )
+                                }
                             }
                         }
                     }
@@ -411,30 +838,45 @@ fun PagoScreen(
                 // Botón de confirmar pago
                 Button(
                     onClick = { procesarPago() },
-                    enabled = !procesandoPago,
+                    enabled = !procesandoPago && (metodoPago == "efectivo" || validarFormularioTarjeta() == null),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)),
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp)
                 ) {
-                    if (procesandoPago) {
-                        CircularProgressIndicator(
-                            color = Color.White,
-                            modifier = Modifier.size(24.dp)
-                        )
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Text("Procesando...")
-                    } else {
+                    Icon(
+                        imageVector = Icons.Default.Payment,
+                        contentDescription = null,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        if (metodoPago == "tarjeta") "Pagar con Tarjeta" else "Confirmar Reserva",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                    )
+                }
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                // Mensaje de seguridad
+                if (metodoPago == "tarjeta") {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
                         Icon(
-                            imageVector = Icons.Default.CheckCircle,
+                            imageVector = Icons.Default.Lock,
                             contentDescription = null,
-                            modifier = Modifier.size(24.dp)
+                            tint = Color.Gray,
+                            modifier = Modifier.size(16.dp)
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            "Confirmar Pago",
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                            "Pago seguro y encriptado",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.Gray
                         )
                     }
                 }
@@ -459,7 +901,7 @@ fun MetodoPagoCard(
         colors = CardDefaults.cardColors(
             containerColor = if (seleccionado) AzulBarberi else Color.White
         ),
-        border = androidx.compose.foundation.BorderStroke(
+        border = BorderStroke(
             width = 2.dp,
             color = if (seleccionado) AzulBarberi else Color.LightGray
         )

@@ -4,6 +4,7 @@ import com.example.barberia.model.Administrador
 import com.example.barberia.model.Barbero
 import com.example.barberia.model.Cliente
 import com.example.barberia.model.ComisionesConfig
+import com.example.barberia.model.Cupon
 import com.example.barberia.model.DashboardEstadisticas
 import com.example.barberia.model.EstadisticasBarbero
 import com.example.barberia.model.GaleriaCorte
@@ -188,6 +189,44 @@ interface ApiService {
 
  @retrofit2.http.PUT("/configuracion/comisiones")
  suspend fun actualizarComisiones(@Body comisiones: ComisionesConfig): Response<Map<String, String>>
+
+ // Cupones
+ @GET("/cupones")
+ suspend fun listarCupones(
+  @Query("idAdministrador") idAdministrador: Long,
+  @Query("filtro") filtro: String = "todos"
+ ): Response<List<Cupon>>
+
+ @PATCH("/cupones/{id}")
+ suspend fun actualizarCupon(
+  @Path("id") id: Long,
+  @Body cupon: Cupon,
+  @Query("idAdministrador") idAdministrador: Long
+ ): Response<Cupon>
+
+ @DELETE("/cupones/{id}")
+ suspend fun eliminarCupon(
+  @Path("id") id: Long,
+  @Query("idAdministrador") idAdministrador: Long
+ ): Response<Void>
+
+ @GET("/cupones/validar/{codigo}")
+ suspend fun validarCupon(
+  @Path("codigo") codigo: String
+ ): Response<Map<String, Any>>
+
+ // Correos
+ @POST("/api/administradores/correos/informativo")
+ suspend fun enviarCorreosInformativos(
+  @Query("idAdministrador") idAdministrador: Long,
+  @Body request: Map<String, String>
+ ): Response<Map<String, Any>>
+
+ @POST("/api/administradores/correos/promocion")
+ suspend fun enviarCorreosPromocion(
+  @Query("idAdministrador") idAdministrador: Long,
+  @Body request: Map<String, Any>
+ ): Response<Map<String, Any>>
 
 }
 
